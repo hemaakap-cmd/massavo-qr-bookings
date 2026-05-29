@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, GraduationCap } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/ssra/Header";
 import Footer from "@/components/ssra/Footer";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,20 @@ export default function Apply() {
         status:          "pending",
       });
       if (error) throw error;
+
+      // Send confirmation + admin notification (non-blocking)
+      supabase.functions.invoke("send-application-email", {
+        body: {
+          fullName:    form.fullName,
+          email:       form.email,
+          country:     form.country,
+          degree:      form.degree,
+          germanLevel: form.germanLevel,
+          courseId:    form.course,
+          motivation:  form.motivation,
+        },
+      }).catch((e) => console.warn("Email notification failed:", e));
+
       setSubmitted(true);
       toast({ title: "Application submitted!", description: "We'll be in touch within 3–5 days." });
     } catch (err: unknown) {
@@ -106,6 +121,11 @@ export default function Apply() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Apply — SSRA Academy</title>
+        <meta name="description" content="Apply to SSRA Academy for free. Open to sports science graduates worldwide. Complete the form in 5 minutes and get a response within 3–5 business days." />
+        <link rel="canonical" href="https://ssra-academy.de/apply" />
+      </Helmet>
       <Header />
 
       {/* Hero */}

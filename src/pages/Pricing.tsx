@@ -4,6 +4,7 @@ import {
   CheckCircle2, ArrowRight, CreditCard, Shield, RefreshCcw,
   Globe2, Zap, Crown,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/ssra/Header";
 import Footer from "@/components/ssra/Footer";
 import { COURSES, SUBSCRIPTION_COURSE, type Course } from "@/lib/stripe";
@@ -123,6 +124,11 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Helmet>
+        <title>Pricing — SSRA Academy</title>
+        <meta name="description" content="Transparent pricing for all SSRA Academy courses. Medical German subscription from €29/month. One-time clinical and career courses from €29–€79." />
+        <link rel="canonical" href="https://ssra-academy.de/pricing" />
+      </Helmet>
       <Header />
 
       {/* Hero */}

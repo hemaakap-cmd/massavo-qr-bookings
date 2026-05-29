@@ -22,7 +22,7 @@ export default function StudentLogin() {
     if (!email) { toast({ title: "Enter your email first", variant: "destructive" }); return; }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/dashboard`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }

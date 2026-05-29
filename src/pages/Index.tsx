@@ -5,6 +5,7 @@ import {
   CheckCircle2, Star, Users, Globe2, Zap, Shield,
   CreditCard, Play, ChevronRight,
 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/ssra/Header";
 import Footer from "@/components/ssra/Footer";
 import { COURSES, SUBSCRIPTION_COURSE } from "@/lib/stripe";
@@ -48,6 +49,15 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>SSRA Academy — Sports Science & Rehabilitation for Arabic Speakers</title>
+        <meta name="description" content="Work in Germany as a sports scientist. Medical German, clinical courses and career support — all taught in Arabic. Join 200+ graduates already enrolled." />
+        <meta property="og:title" content="SSRA Academy — Work in Germany as a Sports Scientist" />
+        <meta property="og:description" content="Medical German, clinical courses and career support for Arabic-speaking sports science graduates. From €29/month." />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://ssra-academy.de/" />
+      </Helmet>
       <Header />
 
       {/* ══ HERO ══ */}

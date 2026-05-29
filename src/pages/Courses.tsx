@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Globe2, Clock, ArrowRight, Filter, CreditCard, Crown } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/ssra/Header";
 import Footer from "@/components/ssra/Footer";
 import { COURSES, type Course } from "@/lib/stripe";
@@ -112,6 +113,11 @@ export default function Courses() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Helmet>
+        <title>Courses — SSRA Academy</title>
+        <meta name="description" content="9 courses for Arabic-speaking sports science graduates. Medical German, clinical rehabilitation, movement analysis, career entry in Germany. From €29." />
+        <link rel="canonical" href="https://ssra-academy.de/courses" />
+      </Helmet>
       <Header />
 
       {/* Hero */}

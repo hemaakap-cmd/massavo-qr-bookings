@@ -20,6 +20,7 @@ const Checkout        = lazy(() => import("./pages/Checkout"));
 const PaymentSuccess  = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCanceled = lazy(() => import("./pages/PaymentCanceled"));
 const StudentLogin    = lazy(() => import("./pages/StudentLogin"));
+const ResetPassword   = lazy(() => import("./pages/ResetPassword"));
 
 /* ── Student dashboard ── */
 const StudentDashboard  = lazy(() => import("./pages/dashboard/StudentDashboard"));
@@ -90,6 +91,7 @@ const App = () => (
                 <Route path="/payment-success"  element={<PaymentSuccess />} />
                 <Route path="/payment-canceled" element={<PaymentCanceled />} />
                 <Route path="/login"            element={<StudentLogin />} />
+                <Route path="/reset-password"  element={<ResetPassword />} />
 
                 {/* Student dashboard — auth required */}
                 <Route path="/dashboard"              element={<RequireAuth><StudentDashboard /></RequireAuth>} />

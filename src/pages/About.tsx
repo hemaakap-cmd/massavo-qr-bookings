@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Globe2, GraduationCap, Target, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import Header from "@/components/ssra/Header";
 import Footer from "@/components/ssra/Footer";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>About — SSRA Academy</title>
+        <meta name="description" content="SSRA Academy helps Arabic-speaking sports science graduates build careers in Germany. Our mission: accessible, high-quality education in Arabic." />
+        <link rel="canonical" href="https://ssra-academy.de/about" />
+      </Helmet>
       <Header />
 
       {/* Page hero */}
