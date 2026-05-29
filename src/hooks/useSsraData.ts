@@ -205,6 +205,90 @@ export function useToggleCourse() {
   });
 }
 
+/* ── Sessions: upcoming for subscriber ── */
+export function useUpcomingSessions() {
+  return useQuery({
+    queryKey: ["ssra-sessions-upcoming"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_sessions")
+        .select("*, ssra_courses(title)")
+        .eq("is_cancelled", false)
+        .gte("scheduled_at", new Date().toISOString())
+        .order("scheduled_at", { ascending: true })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function usePastSessions() {
+  return useQuery({
+    queryKey: ["ssra-sessions-past"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_sessions")
+        .select("*, ssra_courses(title)")
+        .lt("scheduled_at", new Date().toISOString())
+        .order("scheduled_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+/* ── Admin: session management ── */
+export function useAdminSessions() {
+  return useQuery({
+    queryKey: ["ssra-admin-sessions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_sessions")
+        .select("*, ssra_courses(title)")
+        .order("scheduled_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useUpsertSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (session: Record<string, unknown>) => {
+      const { id, ...rest } = session;
+      if (id) {
+        const { error } = await supabase.from("ssra_sessions").update(rest).eq("id", id as string);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("ssra_sessions").insert(rest);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ssra-admin-sessions"] });
+      qc.invalidateQueries({ queryKey: ["ssra-sessions-upcoming"] });
+      qc.invalidateQueries({ queryKey: ["ssra-sessions-past"] });
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("ssra_sessions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ssra-admin-sessions"] });
+      qc.invalidateQueries({ queryKey: ["ssra-sessions-upcoming"] });
+    },
+  });
+}
+
 /* ── Admin: stats overview ── */
 export function useAdminStats() {
   return useQuery({

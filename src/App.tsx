@@ -24,11 +24,13 @@ const StudentLogin    = lazy(() => import("./pages/StudentLogin"));
 /* ── Student dashboard ── */
 const StudentDashboard  = lazy(() => import("./pages/dashboard/StudentDashboard"));
 const MyCourses         = lazy(() => import("./pages/dashboard/MyCourses"));
+const MySessions        = lazy(() => import("./pages/dashboard/MySessions"));
 const MySubscription    = lazy(() => import("./pages/dashboard/MySubscription"));
 
 /* ── Admin dashboard ── */
 const AdminOverview       = lazy(() => import("./pages/ssra-admin/AdminOverview"));
 const AdminCourses        = lazy(() => import("./pages/ssra-admin/AdminCourses"));
+const AdminSessions       = lazy(() => import("./pages/ssra-admin/AdminSessions"));
 const AdminStudents       = lazy(() => import("./pages/ssra-admin/AdminStudents"));
 const AdminVerifications  = lazy(() => import("./pages/ssra-admin/AdminVerifications"));
 const AdminEnrollments    = lazy(() => import("./pages/ssra-admin/AdminEnrollments"));
@@ -91,12 +93,14 @@ const App = () => (
                 {/* Student dashboard — auth required */}
                 <Route path="/dashboard"              element={<RequireAuth><StudentDashboard /></RequireAuth>} />
                 <Route path="/dashboard/courses"      element={<RequireAuth><MyCourses /></RequireAuth>} />
+                <Route path="/dashboard/sessions"     element={<RequireAuth><MySessions /></RequireAuth>} />
                 <Route path="/dashboard/subscription" element={<RequireAuth><MySubscription /></RequireAuth>} />
                 <Route path="/dashboard/*"            element={<RequireAuth><StudentDashboard /></RequireAuth>} />
 
                 {/* Admin — admin role required */}
                 <Route path="/ssra-admin"                   element={<RequireAdmin><AdminOverview /></RequireAdmin>} />
                 <Route path="/ssra-admin/courses"           element={<RequireAdmin><AdminCourses /></RequireAdmin>} />
+                <Route path="/ssra-admin/sessions"          element={<RequireAdmin><AdminSessions /></RequireAdmin>} />
                 <Route path="/ssra-admin/students"          element={<RequireAdmin><AdminStudents /></RequireAdmin>} />
                 <Route path="/ssra-admin/verifications"     element={<RequireAdmin><AdminVerifications /></RequireAdmin>} />
                 <Route path="/ssra-admin/enrollments"       element={<RequireAdmin><AdminEnrollments /></RequireAdmin>} />
