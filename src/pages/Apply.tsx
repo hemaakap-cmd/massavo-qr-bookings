@@ -28,12 +28,15 @@ const STEPS = [
 ];
 
 const COURSES = [
-  "Grundlagen der Sportrehabilitation",
-  "Bewegungsanalyse & Funktionsdiagnostik",
-  "Sporttherapie in der deutschen Praxis",
-  "Medizinisches Deutsch für Sportwissenschaftler",
-  "Telefonkommunikation im Gesundheitswesen",
-  "Berufseinstieg & Anerkennung in Deutschland",
+  { id: "medical-german",        label: "Medizinisches Deutsch (الألمانية الطبية)" },
+  { id: "sport-rehab-basics",    label: "Grundlagen der Sportrehabilitation" },
+  { id: "bewegungsanalyse",      label: "Bewegungsanalyse & Funktionsdiagnostik" },
+  { id: "sporttherapie-praxis",  label: "Sporttherapie in der deutschen Praxis" },
+  { id: "therapeutisches-training", label: "Therapeutisches Training" },
+  { id: "anatomie-rehab",        label: "Anatomie für Sport-Reha" },
+  { id: "telefonkommunikation",  label: "Telefonkommunikation im Gesundheitswesen" },
+  { id: "berufseinstieg",        label: "Berufseinstieg & Anerkennung in Deutschland" },
+  { id: "dosb-vorbereitung",     label: "DOSB-Lizenz Vorbereitung" },
 ];
 
 export default function Apply() {
@@ -51,6 +54,11 @@ export default function Apply() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Basic client-side guard before hitting the DB
+    if (form.motivation.trim().length < 30) {
+      toast({ title: "Please write a bit more", description: "Motivation must be at least 30 characters.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +68,7 @@ export default function Apply() {
         email:           form.email,
         country:         form.country,
         degree:          form.degree,
-        graduation_year: form.graduationYear ? Number(form.graduationYear) : null,
+        graduation_year: form.graduationYear || null,
         german_level:    form.germanLevel,
         motivation:      form.motivation,
         course_id:       form.course || null,
@@ -198,7 +206,7 @@ export default function Apply() {
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">Select a course…</option>
-                  {COURSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {COURSES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
               </div>
 

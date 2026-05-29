@@ -26,6 +26,7 @@ const StudentDashboard  = lazy(() => import("./pages/dashboard/StudentDashboard"
 const MyCourses         = lazy(() => import("./pages/dashboard/MyCourses"));
 const MySessions        = lazy(() => import("./pages/dashboard/MySessions"));
 const MySubscription    = lazy(() => import("./pages/dashboard/MySubscription"));
+const MyProfile         = lazy(() => import("./pages/dashboard/MyProfile"));
 
 /* ── Admin dashboard ── */
 const AdminOverview       = lazy(() => import("./pages/ssra-admin/AdminOverview"));
@@ -95,6 +96,7 @@ const App = () => (
                 <Route path="/dashboard/courses"      element={<RequireAuth><MyCourses /></RequireAuth>} />
                 <Route path="/dashboard/sessions"     element={<RequireAuth><MySessions /></RequireAuth>} />
                 <Route path="/dashboard/subscription" element={<RequireAuth><MySubscription /></RequireAuth>} />
+                <Route path="/dashboard/profile"      element={<RequireAuth><MyProfile /></RequireAuth>} />
                 <Route path="/dashboard/*"            element={<RequireAuth><StudentDashboard /></RequireAuth>} />
 
                 {/* Admin — admin role required */}
