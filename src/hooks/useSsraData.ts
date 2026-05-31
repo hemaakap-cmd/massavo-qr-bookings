@@ -300,6 +300,135 @@ export function useDeleteSession() {
   });
 }
 
+/* ── Admin: session attendance ── */
+export function useSessionAttendance(sessionId: string | null) {
+  return useQuery({
+    queryKey: ["ssra-attendance", sessionId],
+    enabled: !!sessionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_session_attendance")
+        .select("*, ssra_profiles(full_name, email)")
+        .eq("session_id", sessionId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useAttendanceSummary() {
+  return useQuery({
+    queryKey: ["ssra-attendance-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_sessions")
+        .select("id, title, scheduled_at, is_cancelled, ssra_session_attendance(count)")
+        .order("scheduled_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useMarkAttendance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sessionId, userId, attended }: { sessionId: string; userId: string; attended: boolean }) => {
+      if (attended) {
+        const { error } = await supabase.from("ssra_session_attendance")
+          .upsert({ session_id: sessionId, user_id: userId }, { onConflict: "session_id,user_id" });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("ssra_session_attendance")
+          .delete().eq("session_id", sessionId).eq("user_id", userId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["ssra-attendance", vars.sessionId] });
+      qc.invalidateQueries({ queryKey: ["ssra-attendance-summary"] });
+    },
+  });
+}
+
+/* ── Admin: student growth (monthly, last 8 months) ── */
+export function useStudentGrowth() {
+  return useQuery({
+    queryKey: ["ssra-student-growth"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_profiles")
+        .select("created_at")
+        .eq("role", "student")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+
+      const now = new Date();
+      const months: { month: string; students: number }[] = [];
+      for (let i = 7; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        months.push({ month: d.toLocaleString("en", { month: "short", year: "2-digit" }), students: 0 });
+        for (const p of data ?? []) {
+          if (p.created_at?.startsWith(key)) months[months.length - 1].students++;
+        }
+      }
+      return months;
+    },
+  });
+}
+
+/* ── Super Admin: manage admin users ── */
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["ssra-admin-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_profiles")
+        .select("*")
+        .in("role", ["admin", "super_admin"])
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useSearchStudents(query: string) {
+  return useQuery({
+    queryKey: ["ssra-search-students", query],
+    enabled: query.length >= 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ssra_profiles")
+        .select("id, full_name, email, role, country")
+        .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useSetUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: "student" | "admin" | "super_admin" }) => {
+      const { error } = await supabase
+        .from("ssra_profiles")
+        .update({ role })
+        .eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ssra-admin-users"] });
+      qc.invalidateQueries({ queryKey: ["ssra-search-students"] });
+      qc.invalidateQueries({ queryKey: ["ssra-admin-students"] });
+    },
+  });
+}
+
 /* ── Admin: stats overview ── */
 export function useAdminStats() {
   return useQuery({

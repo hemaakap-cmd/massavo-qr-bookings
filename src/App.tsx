@@ -31,13 +31,18 @@ const MySubscription    = lazy(() => import("./pages/dashboard/MySubscription"))
 const MyProfile         = lazy(() => import("./pages/dashboard/MyProfile"));
 
 /* ── Admin dashboard ── */
+const AdminDashboard      = lazy(() => import("./pages/ssra-admin/AdminDashboard"));
 const AdminOverview       = lazy(() => import("./pages/ssra-admin/AdminOverview"));
 const AdminCourses        = lazy(() => import("./pages/ssra-admin/AdminCourses"));
 const AdminSessions       = lazy(() => import("./pages/ssra-admin/AdminSessions"));
 const AdminStudents       = lazy(() => import("./pages/ssra-admin/AdminStudents"));
+const AdminAttendance     = lazy(() => import("./pages/ssra-admin/AdminAttendance"));
 const AdminVerifications  = lazy(() => import("./pages/ssra-admin/AdminVerifications"));
 const AdminEnrollments    = lazy(() => import("./pages/ssra-admin/AdminEnrollments"));
 const AdminRevenue        = lazy(() => import("./pages/ssra-admin/AdminRevenue"));
+/* ── Super Admin ── */
+const SuperAdminFinance   = lazy(() => import("./pages/ssra-admin/SuperAdminFinance"));
+const SuperAdminAdmins    = lazy(() => import("./pages/ssra-admin/SuperAdminAdmins"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -68,6 +73,15 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   if (loading) return <Spinner />;
   if (!user)    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
+function RequireSuperAdmin({ children }: { children: React.ReactNode }) {
+  const { user, isSuperAdmin, loading } = useSsraAuth();
+  const location = useLocation();
+  if (loading) return <Spinner />;
+  if (!user)          return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+  if (!isSuperAdmin)  return <Navigate to="/ssra-admin" replace />;
   return <>{children}</>;
 }
 
@@ -104,14 +118,18 @@ const App = () => (
                 <Route path="/dashboard/*"            element={<RequireAuth><StudentDashboard /></RequireAuth>} />
 
                 {/* Admin — admin role required */}
-                <Route path="/ssra-admin"                   element={<RequireAdmin><AdminOverview /></RequireAdmin>} />
+                <Route path="/ssra-admin"                   element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                <Route path="/ssra-admin/overview"          element={<RequireAdmin><AdminOverview /></RequireAdmin>} />
                 <Route path="/ssra-admin/courses"           element={<RequireAdmin><AdminCourses /></RequireAdmin>} />
                 <Route path="/ssra-admin/sessions"          element={<RequireAdmin><AdminSessions /></RequireAdmin>} />
+                <Route path="/ssra-admin/attendance"        element={<RequireAdmin><AdminAttendance /></RequireAdmin>} />
                 <Route path="/ssra-admin/students"          element={<RequireAdmin><AdminStudents /></RequireAdmin>} />
                 <Route path="/ssra-admin/verifications"     element={<RequireAdmin><AdminVerifications /></RequireAdmin>} />
                 <Route path="/ssra-admin/enrollments"       element={<RequireAdmin><AdminEnrollments /></RequireAdmin>} />
-                <Route path="/ssra-admin/subscriptions"     element={<RequireAdmin><AdminRevenue /></RequireAdmin>} />
                 <Route path="/ssra-admin/revenue"           element={<RequireAdmin><AdminRevenue /></RequireAdmin>} />
+                {/* Super Admin only */}
+                <Route path="/ssra-admin/finance"           element={<RequireSuperAdmin><SuperAdminFinance /></RequireSuperAdmin>} />
+                <Route path="/ssra-admin/admins"            element={<RequireSuperAdmin><SuperAdminAdmins /></RequireSuperAdmin>} />
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
