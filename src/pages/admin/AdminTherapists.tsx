@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +41,10 @@ interface City {
   id: string;
   name: string;
 }
+
+type TherapistInsert = Database["public"]["Tables"]["therapists"]["Insert"];
+type TherapistUpdate = Database["public"]["Tables"]["therapists"]["Update"];
+type TherapistPrivateInfoInsert = Database["public"]["Tables"]["therapist_private_info"]["Insert"];
 
 const AdminTherapists = () => {
   const { countryId } = useAuth();
@@ -86,7 +91,7 @@ const AdminTherapists = () => {
     // Fetch therapists - filter by gym_ids belonging to selected country
     let therapistsQuery = supabase
       .from("therapists")
-      .select("*, gyms(name, address), cities(name), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
+      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
       .order("name");
 
     if (selectedCountry?.id && countryGymIds.length > 0) {
@@ -103,7 +108,13 @@ const AdminTherapists = () => {
     if (therapistsRes.error) {
       toast({ title: "Error", description: therapistsRes.error.message, variant: "destructive" });
     } else {
-      setTherapists((therapistsRes.data || []) as unknown as Therapist[]);
+      const mappedTherapists = (therapistsRes.data || []).map((therapist: any) => ({
+        ...therapist,
+        phone: therapist.therapist_private_info?.phone ?? null,
+        email: therapist.therapist_private_info?.email ?? null,
+        address: therapist.therapist_private_info?.address ?? null,
+      }));
+      setTherapists(mappedTherapists as unknown as Therapist[]);
     }
     
     setLoading(false);
@@ -281,17 +292,14 @@ const AdminTherapists = () => {
       return;
     }
 
-    const therapistData = {
+    const therapistData: TherapistInsert | TherapistUpdate = {
       gym_id: primaryGymId,
       name: formData.name,
       specialty: formData.specialty || null,
       rating: parseFloat(formData.rating) || 0,
       image_url: formData.image_url || null,
       is_available: formData.is_available,
-      phone: formData.phone || null,
-      email: formData.email || null,
       city_id: formData.city_id || null,
-      address: formData.address || null,
       latitude: formData.latitude ? parseFloat(formData.latitude) : null,
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       profession: formData.profession as ProfessionType,
@@ -299,6 +307,13 @@ const AdminTherapists = () => {
       notes: formData.notes || null,
       gender: formData.gender || null,
     };
+
+    const privateInfoData = (therapistId: string): TherapistPrivateInfoInsert => ({
+      therapist_id: therapistId,
+      phone: formData.phone || null,
+      email: formData.email || null,
+      address: formData.address || null,
+    });
 
     if (editingTherapist) {
       const { error } = await supabase
@@ -308,6 +323,15 @@ const AdminTherapists = () => {
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      const { error: privateInfoError } = await supabase
+        .from("therapist_private_info")
+        .upsert(privateInfoData(editingTherapist.id), { onConflict: "therapist_id" });
+
+      if (privateInfoError) {
+        toast({ title: "Error", description: privateInfoError.message, variant: "destructive" });
         return;
       }
 
@@ -351,6 +375,15 @@ const AdminTherapists = () => {
           await supabase.from("therapists").delete().eq("id", data.id);
           const errMsg = res.error?.message || res.data?.error || "Auth provisioning failed";
           toast({ title: "Error", description: `Therapist creation rolled back: ${errMsg}`, variant: "destructive" });
+          return;
+        }
+
+        const { error: privateInfoError } = await supabase
+          .from("therapist_private_info")
+          .upsert(privateInfoData(data.id), { onConflict: "therapist_id" });
+
+        if (privateInfoError) {
+          toast({ title: "Error", description: privateInfoError.message, variant: "destructive" });
           return;
         }
 

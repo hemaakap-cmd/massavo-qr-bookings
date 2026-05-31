@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { invalidateBookingAndAssignments } from "@/utils/cacheSync";
+
+type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
 
 export interface AdminBooking {
   id: string;
@@ -119,7 +122,7 @@ export function useAdminUpdateBooking() {
       auditAction,
     }: {
       bookingId: string;
-      updates: Record<string, any>;
+      updates: BookingUpdate;
       auditAction: string;
     }) => {
       // Update booking
