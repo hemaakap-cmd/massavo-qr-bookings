@@ -67,15 +67,25 @@ function PriceCard({ course, highlight = false }: { course: Course; highlight?: 
 
         {/* Price */}
         <div className="mb-5">
-          <span className={`text-4xl font-bold font-display ${highlight ? "text-white" : "text-slate-900"}`}>
-            €{course.price}
-          </span>
-          {course.type === "subscription" && (
-            <span className={`text-sm ml-1 ${highlight ? "text-white/50" : "text-slate-400"}`}>/month</span>
+          {course.price_hidden ? (
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${highlight ? "bg-white/10 border border-white/20" : "bg-slate-100 border border-slate-200"}`}>
+              <span className={`font-semibold text-sm ${highlight ? "text-white/70" : "text-slate-500"}`}>Coming Soon</span>
+            </div>
+          ) : (
+            <>
+              <span className={`text-4xl font-bold font-display ${highlight ? "text-white" : "text-slate-900"}`}>
+                €{course.price}
+              </span>
+              {course.type === "subscription" && (
+                <span className={`text-sm ml-1 ${highlight ? "text-white/50" : "text-slate-400"}`}>/month</span>
+              )}
+            </>
           )}
           <div className={`text-xs mt-1 ${highlight ? "text-white/40" : "text-slate-400"}`}>
-            {course.type === "subscription" ? "Cancel anytime" : "One-time payment"}
-            {course.requires_verification && " · Verification required"}
+            {course.price_hidden
+              ? "Price will be announced soon"
+              : course.type === "subscription" ? "Cancel anytime" : "One-time payment"}
+            {!course.price_hidden && course.requires_verification && " · Verification required"}
           </div>
         </div>
 
@@ -93,19 +103,27 @@ function PriceCard({ course, highlight = false }: { course: Course; highlight?: 
           ))}
         </ul>
 
-        <button
-          onClick={handleCheckout}
-          className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
-            highlight
-              ? "btn-gold"
-              : "btn-primary"
-          }`}
-        >
-          {course.requires_verification ? "Apply & Subscribe" : "Enrol Now"}
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        {course.price_hidden ? (
+          <Link to="/contact">
+            <button className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+              highlight ? "bg-white/10 text-white/70 border border-white/20 hover:bg-white/20" : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+            }`}>
+              Get Notified <ArrowRight className="w-4 h-4" />
+            </button>
+          </Link>
+        ) : (
+          <button
+            onClick={handleCheckout}
+            className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+              highlight ? "btn-gold" : "btn-primary"
+            }`}
+          >
+            {course.requires_verification ? "Apply & Subscribe" : "Enrol Now"}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        )}
 
-        {course.type === "subscription" && (
+        {!course.price_hidden && course.type === "subscription" && (
           <p className={`text-center text-xs mt-2 ${highlight ? "text-white/35" : "text-slate-400"}`}>
             Requires sports science diploma or student ID
           </p>

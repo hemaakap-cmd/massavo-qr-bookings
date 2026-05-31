@@ -23,6 +23,7 @@ export interface Course {
   requires_verification: boolean;
   modules: string[];
   color: string;
+  price_hidden?: boolean; // if true: hide price and show "Coming Soon" on public pages
 }
 
 export const COURSES: Course[] = [
@@ -48,6 +49,7 @@ export const COURSES: Course[] = [
   /* ── CLINICAL (one-time) ── */
   {
     id: "sport-rehab-basics",
+    price_hidden: true,
     title: "Grundlagen der Sportrehabilitation",
     titleAr: "أسس التأهيل الرياضي",
     subtitle: "Basics of Sports Rehabilitation",
@@ -77,6 +79,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Gait analysis", "FMS protocols", "Video analysis tools", "German report writing", "Client communication"],
     color: "from-indigo-600 to-indigo-800",
+    price_hidden: true,
   },
   {
     id: "sporttherapie-praxis",
@@ -93,6 +96,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Patient intake process", "Treatment planning", "GKV documentation", "Professional ethics", "Referral systems"],
     color: "from-violet-600 to-violet-800",
+    price_hidden: true,
   },
   {
     id: "anatomie-rehab",
@@ -109,6 +113,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Skeletal anatomy", "Muscle function", "Joint mechanics", "Common injuries in sport", "German anatomical terms"],
     color: "from-cyan-600 to-cyan-800",
+    price_hidden: true,
   },
   {
     id: "therapeutisches-training",
@@ -125,6 +130,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Exercise prescription principles", "Progressive overload in rehab", "Group vs. individual therapy", "Documentation & billing", "Real clinic protocols"],
     color: "from-sky-600 to-sky-800",
+    price_hidden: true,
   },
 
   /* ── LANGUAGE / COMMUNICATION ── */
@@ -143,6 +149,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Appointment booking phrases", "Insurance call scripts", "Referral follow-ups", "Complaint handling", "Role-play practice"],
     color: "from-amber-600 to-amber-800",
+    price_hidden: true,
   },
 
   /* ── CAREER ── */
@@ -161,6 +168,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["Credential recognition process", "Lebenslauf & Anschreiben", "Healthcare job platforms", "Visa & residence options", "Integration support"],
     color: "from-rose-600 to-rose-800",
+    price_hidden: true,
   },
   {
     id: "dosb-vorbereitung",
@@ -177,6 +185,7 @@ export const COURSES: Course[] = [
     requires_verification: false,
     modules: ["DOSB exam structure", "Sports science theory", "German sports law", "Practical assessment prep", "Mock exams"],
     color: "from-orange-600 to-orange-800",
+    price_hidden: true,
   },
 ];
 

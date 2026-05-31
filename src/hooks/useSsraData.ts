@@ -205,6 +205,17 @@ export function useToggleCourse() {
   });
 }
 
+export function useTogglePriceHidden() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, price_hidden }: { id: string; price_hidden: boolean }) => {
+      const { error } = await supabase.from("ssra_courses").update({ price_hidden, updated_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ssra-admin-courses"] }),
+  });
+}
+
 /* ── Sessions: upcoming for subscriber ── */
 export function useUpcomingSessions() {
   return useQuery({

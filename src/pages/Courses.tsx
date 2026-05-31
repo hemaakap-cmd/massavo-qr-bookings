@@ -60,7 +60,11 @@ function CourseRow({ course }: { course: Course }) {
         <div className="md:col-span-3 p-8 flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              {course.type === "subscription" ? (
+              {course.price_hidden ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                  <Clock className="w-3 h-3" /> Coming Soon
+                </span>
+              ) : course.type === "subscription" ? (
                 <span className="badge-gold flex items-center gap-1"><Crown className="w-3 h-3" /> Subscription · €{course.price}/mo</span>
               ) : (
                 <span className="badge-blue flex items-center gap-1"><CreditCard className="w-3 h-3" /> €{course.price} one-time</span>
@@ -88,16 +92,24 @@ function CourseRow({ course }: { course: Course }) {
           </div>
 
           <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-            <button
-              onClick={handleEnrol}
-              className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
-            >
-              {course.requires_verification ? "Apply & Subscribe" : "Enrol Now"}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <Link to="/pricing" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
-              View pricing
-            </Link>
+            {course.price_hidden ? (
+              <Link to="/contact" className="btn-outline px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 text-slate-500">
+                Get Notified <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={handleEnrol}
+                  className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                >
+                  {course.requires_verification ? "Apply & Subscribe" : "Enrol Now"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <Link to="/pricing" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+                  View pricing
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
