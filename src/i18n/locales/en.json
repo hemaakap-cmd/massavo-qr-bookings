@@ -121,11 +121,9 @@
     "hours": "Hours: Sat & Sun only"
   },
   "stats": {
-    "newLabel": "100%",
-    "since": "Secure payment",
-    "services": "Services",
-    "rated": "Rated",
-    "stars": "stars"
+    "newLabel": "2026",
+    "since": "Founded",
+    "services": "Services"
   },
   "cities": {
     "badge": "3 Cities in Germany",
@@ -465,8 +463,6 @@
     "phonePlaceholder": "+49 123 456789",
     "phoneError": "Please enter a valid phone number (min. 6 digits)",
     "address": "Address",
-    "optional": "optional",
-    "addressHelp": "Only needed for the invoice. You can add it later.",
     "street": "Street",
     "streetPlaceholder": "Main Street",
     "houseNumber": "No.",

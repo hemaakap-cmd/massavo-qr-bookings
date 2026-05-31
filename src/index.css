@@ -1,117 +1,151 @@
+/* Font stylesheet is loaded via <link> in index.html so the request fires
+ * in parallel with the JS bundle, not after CSS parsing. See PR notes. */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* SSRA v2 — Clean Modern Palette */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Warm Spa Palette - Cozy & Inviting */
+    --background: 30 20% 94%;
+    --foreground: 25 30% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 35 25% 97%;
+    --card-foreground: 25 30% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 35 25% 97%;
+    --popover-foreground: 25 30% 12%;
 
-    --primary: 220 91% 54%;       /* Blue-500 #3B82F6 */
-    --primary-foreground: 0 0% 100%;
+    /* Warm Terracotta Primary */
+    --primary: 25 45% 35%;
+    --primary-foreground: 35 30% 96%;
 
-    --secondary: 215 20% 95%;
-    --secondary-foreground: 222 47% 11%;
+    /* Soft Beige Secondary */
+    --secondary: 35 25% 88%;
+    --secondary-foreground: 25 30% 18%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 20% 45%;
+    --muted: 30 18% 90%;
+    --muted-foreground: 25 15% 40%;
 
-    --accent: 43 96% 50%;         /* Gold */
-    --accent-foreground: 222 47% 11%;
+    /* Rich Amber Accent */
+    --accent: 32 70% 45%;
+    --accent-foreground: 35 30% 96%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 90%;
-    --input: 214 32% 90%;
-    --ring: 220 91% 54%;
+    --border: 30 18% 85%;
+    --input: 30 18% 85%;
+    --ring: 25 45% 35%;
 
     --radius: 0.75rem;
 
-    /* Brand tokens */
-    --navy:      222 47% 11%;
-    --navy-deep: 224 71% 4%;      /* slate-950 */
-    --navy-mid:  217 91% 15%;     /* darkest blue */
-    --blue:      220 91% 54%;
-    --blue-light:210 100% 64%;
-    --gold:      43 96% 50%;
-    --gold-light:43 96% 68%;
-
-    /* Legacy aliases */
-    --charcoal:       222 47% 11%;
-    --charcoal-light: 215 20% 35%;
-    --cream:          0 0% 100%;
-    --cream-dark:     210 40% 96%;
-    --sage:           220 91% 54%;
-    --sage-light:     210 40% 96%;
-    --sage-dark:      222 47% 11%;
-    --gold-dark:      40 80% 38%;
+    /* Custom Warm Colors */
+    --sage: 25 45% 35%;
+    --sage-light: 30 30% 92%;
+    --sage-dark: 20 50% 25%;
+    --cream: 35 35% 94%;
+    --cream-dark: 30 25% 86%;
+    --gold: 32 70% 45%;
+    --gold-light: 35 55% 82%;
+    --charcoal: 20 25% 12%;
+    --charcoal-light: 20 18% 30%;
     --success: 142 71% 45%;
-    --warning: 43 96% 50%;
+    --warning: 38 92% 50%;
 
-    /* Gradients */
-    --gradient-hero:   linear-gradient(135deg, hsl(224 71% 4%), hsl(217 91% 15%) 50%, hsl(222 60% 20%));
-    --gradient-card:   linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --gradient-accent: linear-gradient(135deg, hsl(220 91% 54%), hsl(250 80% 60%));
-    --gradient-gold:   linear-gradient(135deg, hsl(43 96% 50%), hsl(40 80% 38%));
+    /* Warm Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(25 45% 30% / 0.88), hsl(20 50% 20% / 0.94));
+    --gradient-card: linear-gradient(180deg, hsl(35 25% 97%), hsl(30 22% 94%));
+    --gradient-accent: linear-gradient(135deg, hsl(32 70% 45%), hsl(28 65% 40%));
 
-    /* Shadows */
-    --shadow-sm: 0 1px 3px hsl(222 47% 11% / 0.08), 0 1px 2px hsl(222 47% 11% / 0.06);
-    --shadow-md: 0 4px 6px hsl(222 47% 11% / 0.07), 0 2px 4px hsl(222 47% 11% / 0.06);
-    --shadow-lg: 0 10px 15px hsl(222 47% 11% / 0.10), 0 4px 6px hsl(222 47% 11% / 0.05);
-    --shadow-xl: 0 20px 25px hsl(222 47% 11% / 0.10), 0 10px 10px hsl(222 47% 11% / 0.04);
-    --shadow-blue: 0 8px 24px hsl(220 91% 54% / 0.28);
-    --shadow-gold: 0 8px 24px hsl(43 96% 50% / 0.35);
+    /* Warm Shadows */
+    --shadow-sm: 0 2px 8px hsl(20 25% 12% / 0.06);
+    --shadow-md: 0 4px 16px hsl(20 25% 12% / 0.08);
+    --shadow-lg: 0 8px 32px hsl(20 25% 12% / 0.10);
+    --shadow-xl: 0 16px 48px hsl(20 25% 12% / 0.14);
 
+    /* Typography */
     --font-display: 'Playfair Display', serif;
     --font-body: 'Inter', sans-serif;
 
-    /* Sidebar (unchanged) */
-    --sidebar-background:        224 71% 4%;
-    --sidebar-foreground:        215 20% 75%;
-    --sidebar-primary:           220 91% 54%;
-    --sidebar-primary-foreground:0 0% 100%;
-    --sidebar-accent:            217 50% 12%;
-    --sidebar-accent-foreground: 215 20% 90%;
-    --sidebar-border:            217 40% 15%;
-    --sidebar-ring:              220 91% 54%;
+    --sidebar-background: 220 16% 12%;
+    --sidebar-foreground: 220 10% 75%;
+    --sidebar-primary: 32 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 18%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 32 70% 50%;
 
-    --admin-surface:       224 71% 7%;
-    --admin-surface-hover: 217 50% 12%;
-    --admin-text-secondary:215 20% 55%;
-    --admin-indicator:     220 91% 54%;
+    /* Admin-specific tokens */
+    --admin-surface: 220 16% 15%;
+    --admin-surface-hover: 220 14% 20%;
+    --admin-text-secondary: 220 10% 60%;
+    --admin-indicator: 32 70% 50%;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 210 40% 95%;
-    --card: 217 50% 8%;
-    --card-foreground: 210 40% 95%;
-    --popover: 217 50% 8%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 220 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 40% 14%;
-    --secondary-foreground: 210 40% 90%;
-    --muted: 217 40% 12%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 43 96% 50%;
-    --accent-foreground: 222 47% 11%;
-    --border: 217 40% 16%;
-    --input: 217 40% 16%;
-    --ring: 220 91% 54%;
+    /* Dark Warm Spa - Cozy Evening Ambiance */
+    --background: 20 25% 8%;
+    --foreground: 35 25% 92%;
+
+    --card: 22 22% 12%;
+    --card-foreground: 35 25% 92%;
+
+    --popover: 22 22% 12%;
+    --popover-foreground: 35 25% 92%;
+
+    --primary: 28 50% 50%;
+    --primary-foreground: 20 25% 8%;
+
+    --secondary: 22 20% 18%;
+    --secondary-foreground: 35 20% 85%;
+
+    --muted: 22 18% 15%;
+    --muted-foreground: 30 12% 55%;
+
+    --accent: 32 65% 48%;
+    --accent-foreground: 20 25% 8%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 22 18% 20%;
+    --input: 22 18% 20%;
+    --ring: 28 50% 50%;
+
+    --sage: 28 50% 50%;
+    --sage-light: 25 25% 18%;
+    --sage-dark: 28 45% 58%;
+    --cream: 30 18% 14%;
+    --cream-dark: 28 15% 20%;
+    --gold: 32 65% 48%;
+    --charcoal: 35 25% 88%;
+    --charcoal-light: 30 15% 65%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(28 50% 50% / 0.18), hsl(25 45% 40% / 0.22));
+    
+    --sidebar-background: 220 16% 10%;
+    --sidebar-foreground: 220 10% 75%;
+    --sidebar-primary: 32 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 16%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 32 70% 50%;
+
+    --admin-surface: 220 16% 13%;
+    --admin-surface-hover: 220 14% 18%;
+    --admin-text-secondary: 220 10% 55%;
+    --admin-indicator: 32 70% 50%;
   }
 }
 
 @layer base {
-  * { @apply border-border; }
+  * {
+    @apply border-border;
+  }
 
   body {
     @apply bg-background text-foreground antialiased;
@@ -122,22 +156,210 @@
     font-family: var(--font-display);
     @apply font-semibold tracking-tight;
   }
+
 }
 
 @layer utilities {
-  .font-display { font-family: var(--font-display); }
-  .font-body    { font-family: var(--font-body); }
+  .font-display {
+    font-family: var(--font-display);
+  }
 
-  /* ── Gradient helpers ── */
-  .bg-hero    { background: var(--gradient-hero); }
-  .bg-gradient-blue { background: var(--gradient-accent); }
+  .font-body {
+    font-family: var(--font-body);
+  }
 
-  /* ── Reveal on scroll ── */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-accent);
+  }
+
+  .bg-gradient-hero {
+    background-image: var(--gradient-hero);
+  }
+
+  .bg-gradient-card {
+    background-image: var(--gradient-card);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .glass {
+    @apply backdrop-blur-xl;
+    background: hsl(var(--background) / 0.85);
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  @keyframes flash-glow {
+    0% { opacity: 0; transform: scale(0.95); box-shadow: 0 0 0 hsl(var(--primary) / 0); }
+    30% { opacity: 1; transform: scale(1); box-shadow: 0 0 25px hsl(var(--primary) / 0.25); }
+    60% { box-shadow: 0 0 8px hsl(var(--primary) / 0.1); }
+    80% { box-shadow: 0 0 20px hsl(var(--primary) / 0.2); }
+    100% { box-shadow: 0 0 15px hsl(var(--primary) / 0.15); }
+  }
+
+  /* Premium cinematic motion */
+  @keyframes slow-drift {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.55; }
+    50% { transform: translate(-30px, 40px) scale(1.12); opacity: 0.85; }
+  }
+  .animate-slow-drift {
+    animation: slow-drift 18s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+
+  @keyframes aura-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.08); }
+  }
+  .animate-aura {
+    animation: aura-pulse 4.5s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .animate-float-soft {
+    animation: float-soft 7s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Premium card hover utility */
+  .card-premium {
+    transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 600ms cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 600ms ease;
+    will-change: transform, box-shadow;
+  }
+  .card-premium:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 30px 60px -20px hsl(var(--charcoal) / 0.25),
+      0 0 0 1px hsl(var(--gold) / 0.15),
+      0 0 40px -10px hsl(var(--gold) / 0.25);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-slow-drift,
+    .animate-aura,
+    .animate-float-soft {
+      animation: none !important;
+    }
+  }
+
+  /* Luxury gold shimmer text */
+  @keyframes gold-shimmer {
+    0% { background-position: -200% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .text-gold-shimmer {
+    background-image: linear-gradient(
+      100deg,
+      hsl(var(--gold)) 0%,
+      hsl(35 90% 70%) 25%,
+      hsl(45 95% 80%) 50%,
+      hsl(35 90% 70%) 75%,
+      hsl(var(--gold)) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gold-shimmer 6s linear infinite;
+    will-change: background-position;
+  }
+
+  /* Continuous shine sweep on premium buttons */
+  @keyframes shine-sweep {
+    0% { transform: translateX(-120%) skewX(-20deg); }
+    60%, 100% { transform: translateX(220%) skewX(-20deg); }
+  }
+  .shine-sweep::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(var(--cream) / 0.35), transparent);
+    transform: translateX(-120%) skewX(-20deg);
+    animation: shine-sweep 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Floating particle orbs */
+  @keyframes orb-rise {
+    0% { transform: translate3d(0, 20px, 0) scale(0.9); opacity: 0; }
+    20% { opacity: 0.55; }
+    100% { transform: translate3d(var(--orb-x, 40px), -120px, 0) scale(1.1); opacity: 0; }
+  }
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(8px);
+    animation: orb-rise var(--orb-dur, 10s) ease-in-out infinite;
+    animation-delay: var(--orb-delay, 0s);
+    will-change: transform, opacity;
+    pointer-events: none;
+  }
+
+  /* Scroll reveal (used with IntersectionObserver class toggle) */
   .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
-                transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(28px);
+    transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
   }
   .reveal.is-visible {
@@ -145,191 +367,354 @@
     transform: translateY(0);
   }
 
-  /* ── Keyframes ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes pulse-ring {
-    0%   { box-shadow: 0 0 0 0 hsl(var(--blue) / 0.4); }
-    70%  { box-shadow: 0 0 0 14px hsl(var(--blue) / 0); }
-    100% { box-shadow: 0 0 0 0   hsl(var(--blue) / 0); }
-  }
-  @keyframes shine {
-    0%       { transform: translateX(-120%) skewX(-20deg); }
-    60%, 100%{ transform: translateX(220%)  skewX(-20deg); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-8px); }
-  }
-  @keyframes gold-shimmer {
-    0%   { background-position: -200% 50%; }
-    100% { background-position:  200% 50%; }
-  }
-  @keyframes aura-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50%       { opacity: 0.7; transform: scale(1.06); }
-  }
-
-  .animate-fade-up    { animation: fadeUp   0.6s ease-out forwards; }
-  .animate-fade-in    { animation: fadeIn   0.5s ease-out forwards; }
-  .animate-float      { animation: float    5s ease-in-out infinite; }
-  .animate-aura       { animation: aura-pulse 4s ease-in-out infinite; }
-
-  /* ── Gold shimmer text ── */
-  .text-gold-shimmer {
-    background-image: linear-gradient(
-      100deg,
-      hsl(43 96% 50%) 0%,
-      hsl(43 96% 70%) 30%,
-      hsl(50 95% 82%) 50%,
-      hsl(43 96% 70%) 70%,
-      hsl(43 96% 50%) 100%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gold-shimmer 5s linear infinite;
-  }
-
-  /* ── Card hover ── */
-  .card-lift {
-    transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .card-lift:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 24px 48px -12px hsl(222 47% 11% / 0.18),
-                0 0 0 1px hsl(var(--primary) / 0.08);
-  }
-
-  /* ── Pill badge ── */
-  .badge-blue {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
-    background: hsl(var(--blue) / 0.1);
-    color: hsl(var(--blue));
-    border: 1px solid hsl(var(--blue) / 0.2);
-  }
-  .badge-gold {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
-    background: hsl(var(--gold) / 0.12);
-    color: hsl(40 80% 35%);
-    border: 1px solid hsl(var(--gold) / 0.25);
-  }
-  .badge-green {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
-    background: hsl(142 71% 45% / 0.1);
-    color: hsl(142 60% 30%);
-    border: 1px solid hsl(142 71% 45% / 0.2);
-  }
-
-  /* ── Primary CTA button ── */
-  .btn-primary {
-    position: relative;
-    overflow: hidden;
-    background: hsl(var(--primary));
-    color: white;
-    font-weight: 600;
-    box-shadow: var(--shadow-blue);
-    transition: box-shadow 300ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1), background 200ms ease;
-  }
-  .btn-primary:hover {
-    background: hsl(220 91% 48%);
-    box-shadow: 0 12px 32px hsl(var(--blue) / 0.4);
-    transform: translateY(-1px);
-  }
-  .btn-primary::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0;
-    width: 40%; height: 100%;
-    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.25), transparent);
-    transform: translateX(-120%) skewX(-20deg);
-    animation: shine 5s ease-in-out infinite;
-    pointer-events: none;
-  }
-  .btn-primary > * { position: relative; z-index: 1; }
-
-  /* ── Gold CTA button ── */
-  .btn-gold {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, hsl(43 96% 52%), hsl(40 80% 40%));
-    color: hsl(222 47% 11%);
-    font-weight: 700;
-    box-shadow: var(--shadow-gold);
-    transition: box-shadow 300ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .btn-gold:hover {
-    box-shadow: 0 12px 32px hsl(var(--gold) / 0.5);
-    transform: translateY(-1px);
-  }
-  .btn-gold::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0;
-    width: 40%; height: 100%;
-    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.3), transparent);
-    transform: translateX(-120%) skewX(-20deg);
-    animation: shine 5s ease-in-out infinite 1s;
-    pointer-events: none;
-  }
-  .btn-gold > * { position: relative; z-index: 1; }
-
-  /* ── Outline button ── */
-  .btn-outline {
-    background: transparent;
-    color: hsl(var(--primary));
-    border: 1.5px solid hsl(var(--primary) / 0.35);
-    font-weight: 600;
-    transition: background 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .btn-outline:hover {
-    background: hsl(var(--primary) / 0.06);
-    border-color: hsl(var(--primary) / 0.6);
-    transform: translateY(-1px);
-  }
-
-  /* ── Outline white (for dark sections) ── */
-  .btn-outline-white {
-    background: transparent;
-    color: white;
-    border: 1.5px solid hsl(0 0% 100% / 0.3);
-    font-weight: 600;
-    transition: background 300ms ease, border-color 300ms ease;
-  }
-  .btn-outline-white:hover {
-    background: hsl(0 0% 100% / 0.08);
-    border-color: hsl(0 0% 100% / 0.55);
-  }
-
-  /* ── Divider ── */
-  .divider {
+  /* Luxury gold divider */
+  .gold-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--gold) / 0.6), transparent);
+    position: relative;
   }
 
-  /* Legacy compatibility */
-  .btn-luxury-primary { @apply btn-gold; }
-  .btn-luxury-outline { @apply btn-outline; }
-  .card-premium { @apply card-lift; }
+  /* Reusable glare overlay — pair with useTilt() */
+  .glare-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 50%), hsl(var(--cream) / 0.45), transparent 40%);
+    opacity: var(--glare-opacity, 0);
+    mix-blend-mode: overlay;
+    transition: opacity 300ms ease;
+  }
+
+  /* Radial gold aura behind premium CTAs */
+  .cta-aura {
+    position: absolute;
+    inset: -30%;
+    pointer-events: none;
+    background: radial-gradient(circle, hsl(var(--gold) / 0.45) 0%, transparent 70%);
+    filter: blur(40px);
+    opacity: 0.65;
+    animation: aura-pulse 4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cta-aura { animation: none; }
+  }
+  .gold-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 6px; height: 6px;
+    border-radius: 9999px;
+    background: hsl(var(--gold));
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px hsl(var(--gold) / 0.7);
+  }
+
+  /* ============================================
+     UNIFIED LUXURY BUTTON SYSTEM
+     Cinematic gold primary + translucent outline
+     ============================================ */
+  .btn-luxury-primary {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    color: hsl(var(--charcoal));
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--gold-light)) 0%,
+      hsl(var(--gold)) 45%,
+      hsl(var(--gold) / 0.95) 55%,
+      hsl(var(--gold-light)) 100%
+    );
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    box-shadow:
+      0 1px 0 hsl(var(--cream) / 0.4) inset,
+      0 -1px 0 hsl(var(--charcoal) / 0.15) inset,
+      0 8px 20px -8px hsl(var(--gold) / 0.55),
+      0 2px 6px -2px hsl(var(--charcoal) / 0.25);
+    transition:
+      background-position 600ms ease,
+      box-shadow 300ms ease,
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-luxury-primary:hover {
+    background-position: 100% 50%;
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 hsl(var(--cream) / 0.5) inset,
+      0 -1px 0 hsl(var(--charcoal) / 0.15) inset,
+      0 14px 32px -10px hsl(var(--gold) / 0.7),
+      0 4px 10px -2px hsl(var(--charcoal) / 0.3);
+  }
+  .btn-luxury-primary:active {
+    transform: translateY(0);
+  }
+  /* Continuous shine sweep */
+  .btn-luxury-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--cream) / 0.55),
+      transparent
+    );
+    transform: translateX(-130%) skewX(-20deg);
+    animation: shine-sweep 5.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .btn-luxury-primary > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .btn-luxury-outline {
+    position: relative;
+    overflow: hidden;
+    color: hsl(var(--gold));
+    font-weight: 600;
+    background: hsl(var(--cream) / 0.04);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1.5px solid hsl(var(--gold) / 0.45);
+    box-shadow:
+      0 0 0 1px hsl(var(--gold) / 0.05) inset,
+      0 4px 14px -8px hsl(var(--gold) / 0.35);
+    transition:
+      color 300ms ease,
+      background 400ms ease,
+      border-color 300ms ease,
+      box-shadow 300ms ease,
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-luxury-outline:hover {
+    color: hsl(var(--charcoal));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--gold-light)) 0%,
+      hsl(var(--gold)) 100%
+    );
+    border-color: hsl(var(--gold));
+    transform: translateY(-1px);
+    box-shadow:
+      0 12px 28px -10px hsl(var(--gold) / 0.6),
+      0 2px 6px -2px hsl(var(--charcoal) / 0.25);
+  }
+  .btn-luxury-outline:active {
+    transform: translateY(0);
+  }
 
   @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; }
-    .text-gold-shimmer { animation: none; }
-    .btn-primary::after, .btn-gold::after { animation: none; }
-    .animate-float, .animate-aura { animation: none; }
-    .card-lift, .btn-primary, .btn-gold, .btn-outline { transition: none; }
+    .btn-luxury-primary::before { animation: none; }
+    .btn-luxury-primary,
+    .btn-luxury-outline {
+      transition: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .text-gold-shimmer,
+    .shine-sweep::after,
+    .orb {
+      animation: none !important;
+    }
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
+/* ============================================
+   GLOBAL PRINT STYLES
+   Professional mobile-compatible print system
+   ============================================ */
+
+/* 
+   Print system uses an iframe-based approach for maximum compatibility.
+   The #print-frame is hidden on screen but visible during print.
+   This avoids mobile blank page issues caused by DOM manipulation.
+*/
+
+/* Print frame - hidden on screen */
+#print-frame {
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Screen: When printing-active class is on body, overlay the preview */
+body.printing-active {
+  overflow: hidden;
+}
+
+body.printing-active #root {
+  visibility: hidden;
+}
+
+body.printing-active .print-overlay {
+  display: flex !important;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: white;
+  overflow: auto;
+  visibility: visible !important;
+}
+
+/* Print media query - CRITICAL for cross-device compatibility */
 @media print {
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  @page { size: A4; margin: 10mm 12mm; }
+  /* Force print background colors and images */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Reset body for clean print */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+  }
+
+  /* Hide the React app and all non-print content */
+  body > *:not(.print-overlay):not(#print-frame):not(script):not(style) {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -99999px !important;
+  }
+  
+  /* Hide admin layout specifically */
+  .admin-layout,
+  #root,
+  body > #root {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Show print overlay with maximum specificity */
+  .print-overlay,
+  body > .print-overlay,
+  html body .print-overlay {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+    background: white !important;
+    z-index: 999999 !important;
+  }
+  
+  /* Ensure all descendants are visible */
+  .print-overlay *,
+  .print-overlay .print-document *,
+  .print-document * {
+    visibility: visible !important;
+  }
+
+  /* Preserve layout structures */
+  .print-overlay .flex { display: flex !important; }
+  .print-overlay .grid { display: grid !important; }
+  .print-overlay table { display: table !important; }
+  .print-overlay thead { display: table-header-group !important; }
+  .print-overlay tbody { display: table-row-group !important; }
+  .print-overlay tfoot { display: table-footer-group !important; }
+  .print-overlay tr { display: table-row !important; }
+  .print-overlay th, .print-overlay td { display: table-cell !important; }
+  
+  /* Page setup - A4 with optimal margins */
+  @page {
+    size: A4;
+    margin: 10mm 12mm;
+  }
+  
+  /* First page margin adjustment for header */
+  @page :first {
+    margin-top: 8mm;
+  }
+  
+  /* Page break controls */
+  .page-break-inside-avoid,
+  .print-no-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+  
+  .page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  
+  /* Optimize table printing */
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9pt !important;
+  }
+  
+  .print-table th,
+  .print-table td {
+    padding: 6px 8px !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+  }
+  
+  .print-table thead {
+    display: table-header-group !important;
+  }
+  
+  .print-table tr {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Print-specific visibility classes */
+  .print-hide {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Watermark positioning for print */
+  .print-watermark {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+  }
+}
+
+/* Screen-only classes */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
 }

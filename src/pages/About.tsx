@@ -1,173 +1,173 @@
-import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { Heart, Globe2, GraduationCap, Target, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Helmet } from "react-helmet-async";
-import Header from "@/components/ssra/Header";
-import Footer from "@/components/ssra/Footer";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
+import { Award, Users, Zap, Heart, Star, ArrowRight, MapPin, Hotel } from "lucide-react";
 
-function useReveal() {
-  useEffect(() => {
-    const els = document.querySelectorAll(".reveal");
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("is-visible"); }),
-      { threshold: 0.12 }
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-}
+const About = () => {
+  const { t } = useTranslation();
 
-const VALUES = [
-  {
-    icon: Heart,
-    title: "Non-Profit First",
-    desc: "We exist to serve students, not shareholders. All revenue goes back into improving the academy and supporting students who cannot afford fees.",
-  },
-  {
-    icon: Globe2,
-    title: "Global Community",
-    desc: "Our students come from Egypt, Morocco, Syria, Tunisia, Jordan, and beyond — united by a common goal: a career in German healthcare.",
-  },
-  {
-    icon: Target,
-    title: "Practical Focus",
-    desc: "Every lesson is tied to a real scenario in the German healthcare system. We don't teach theory for theory's sake.",
-  },
-  {
-    icon: GraduationCap,
-    title: "Evidence-Based",
-    desc: "Our curriculum is built with practising German sports therapists and physiotherapists to ensure it reflects current clinical standards.",
-  },
-];
-
-const TEAM = [
-  { name: "Dr. Khaled R.", role: "Founder & Sports Scientist", note: "12 years in German rehabilitation clinics" },
-  { name: "Amira N.", role: "Language Programme Lead", note: "Certified DaF instructor, medical German specialist" },
-  { name: "Markus W.", role: "Clinical Advisor", note: "Head physiotherapist, partner clinic Berlin" },
-];
-
-export default function About() {
-  useReveal();
+  const values = [
+    {
+      icon: Award,
+      title: t("about.values.excellence.title"),
+      description: t("about.values.excellence.description"),
+    },
+    {
+      icon: Users,
+      title: t("about.values.accessibility.title"),
+      description: t("about.values.accessibility.description"),
+    },
+    {
+      icon: Zap,
+      title: t("about.values.innovation.title"),
+      description: t("about.values.innovation.description"),
+    },
+    {
+      icon: Heart,
+      title: t("about.values.community.title"),
+      description: t("about.values.community.description"),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>About — SSRA Academy</title>
-        <meta name="description" content="SSRA Academy helps Arabic-speaking sports science graduates build careers in Germany. Our mission: accessible, high-quality education in Arabic." />
-        <link rel="canonical" href="https://ssra-academy.de/about" />
-      </Helmet>
+    <div className="min-h-screen">
+      <SEO
+        title="Über uns – MASSAVO Massage im Fitnessstudio"
+        description="Erfahre mehr über MASSAVO: professionelle Massagetherapie direkt in deinem Fitnessstudio – schnell, einfach und in deiner Stadt."
+        path="/about"
+      />
       <Header />
+      <main>
+        {/* Hero Section */}
+        <section className="pt-32 pb-16 md:pt-40 md:pb-24 bg-gradient-hero">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-cream/20 text-cream text-sm font-medium mb-6 animate-fade-up">
+                {t("about.badge")}
+              </span>
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-cream leading-tight mb-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+                {t("about.title")}
+                <br />
+                <span className="text-gold">{t("about.titleHighlight")}</span>
+              </h1>
+              <p className="text-lg md:text-xl text-cream/90 max-w-2xl mx-auto animate-fade-up" style={{ animationDelay: "0.2s" }}>
+                {t("about.subtitle")}
+              </p>
+            </div>
+          </div>
+        </section>
 
-      {/* Page hero */}
-      <section className="bg-[hsl(222,47%,9%)] pt-32 pb-20">
-        <div className="container max-w-3xl text-center reveal">
-          <span className="inline-block text-xs font-semibold tracking-widest uppercase text-[hsl(43,96%,50%)] mb-4">About SSRA</span>
-          <h1 className="font-display text-5xl md:text-6xl font-bold text-white mb-6">
-            Our Mission
-          </h1>
-          <p className="text-white opacity-60 text-lg leading-relaxed">
-            SSRA was founded by sports scientists who immigrated to Germany and experienced first-hand how difficult the transition is. We built the resource we wished had existed.
-          </p>
-        </div>
-      </section>
-
-      {/* Story */}
-      <section className="py-24">
-        <div className="container">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div className="reveal">
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-6">
-                The Gap We're Closing
+        {/* Story Section */}
+        <section className="py-20 md:py-28 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-8 text-center">
+                {t("about.story.title")}
               </h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  Every year, hundreds of sports science graduates from Arabic-speaking countries arrive in Germany with solid academic qualifications — and find themselves lost. The German healthcare system has its own language, its own protocols, its own bureaucracy.
+              <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+                <p className="animate-fade-up">{t("about.story.p1")}</p>
+                <p className="animate-fade-up" style={{ animationDelay: "0.1s" }}>{t("about.story.p2")}</p>
+                <p className="animate-fade-up" style={{ animationDelay: "0.2s" }}>{t("about.story.p3")}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        {/* Mission & Vision */}
+        <section className="py-20 md:py-28 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+              <div className="bg-card rounded-2xl p-8 md:p-10 shadow-card animate-fade-up">
+                <div className="w-14 h-14 rounded-xl bg-sage-light flex items-center justify-center mb-6">
+                  <Zap className="w-7 h-7 text-sage" />
+                </div>
+                <h3 className="font-display text-2xl font-bold text-foreground mb-4">
+                  {t("about.mission.title")}
+                </h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  {t("about.mission.description")}
                 </p>
-                <p>
-                  A degree in sports science from Cairo or Tunis is valuable. But without knowing how to call a health insurance company in German, how to write a therapy report, or how to get your credentials officially recognised, that degree stays locked away.
-                </p>
-                <p>
-                  SSRA unlocks it. We're a non-profit online academy offering targeted, practical courses for this exact situation — in Arabic, in German, and in English.
+              </div>
+              <div className="bg-card rounded-2xl p-8 md:p-10 shadow-card animate-fade-up" style={{ animationDelay: "0.1s" }}>
+                <div className="w-14 h-14 rounded-xl bg-gold-light flex items-center justify-center mb-6">
+                  <Star className="w-7 h-7 text-gold" />
+                </div>
+                <h3 className="font-display text-2xl font-bold text-foreground mb-4">
+                  {t("about.vision.title")}
+                </h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  {t("about.vision.description")}
                 </p>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="reveal space-y-3">
-              {[
-                "Founded in Germany by sports scientists with migration experience",
-                "Entirely online — study from anywhere in the world",
-                "Courses in Arabic, German, and English",
-                "Sliding-scale fees with full scholarships for financial need",
-                "Active alumni network across Germany",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3 p-4 rounded-xl bg-muted border border-border">
-                  <CheckCircle2 className="w-5 h-5 text-[hsl(43,96%,50%)] mt-0.5 shrink-0" />
-                  <span className="text-sm text-foreground">{item}</span>
+        {/* Values Section */}
+        <section className="py-20 md:py-28 bg-sage-light">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+                {t("about.values.title")}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              {values.map((value, index) => (
+                <div
+                  key={value.title}
+                  className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 animate-fade-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-sage-light flex items-center justify-center mb-4">
+                    <value.icon className="w-6 h-6 text-sage" />
+                  </div>
+                  <h3 className="font-display text-lg font-semibold text-foreground mb-2">
+                    {value.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {value.description}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Values */}
-      <section className="py-24 bg-[hsl(222,47%,9%)]">
-        <div className="container">
-          <div className="text-center mb-14 reveal">
-            <h2 className="font-display text-4xl font-bold text-white mb-4">Our Values</h2>
-            <p className="text-white opacity-50 max-w-md mx-auto">Everything we do flows from these four commitments.</p>
+        {/* CTA Section */}
+        <section className="py-20 md:py-28 bg-gradient-hero">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-cream mb-4">
+              {t("about.cta.title")}
+            </h2>
+            <p className="text-cream/80 text-lg mb-8 max-w-xl mx-auto">
+              {t("about.cta.subtitle")}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Button asChild size="xl" variant="hero" className="group">
+                <Link to="/cities">
+                  <MapPin className="w-5 h-5" strokeWidth={2.4} />
+                  <span>{t("about.cta.buttonGym")}</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button asChild size="xl" variant="hero" className="group">
+                <Link to="/hotels">
+                  <Hotel className="w-5 h-5" strokeWidth={2.2} />
+                  <span>{t("about.cta.buttonHotel")}</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {VALUES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="card-premium reveal bg-white bg-opacity-5 border border-white border-opacity-10 rounded-2xl p-6">
-                <div className="w-10 h-10 rounded-lg bg-[hsl(43,96%,50%)] bg-opacity-15 flex items-center justify-center mb-4">
-                  <Icon className="w-5 h-5 text-[hsl(43,96%,50%)]" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">{title}</h3>
-                <p className="text-sm text-white opacity-55 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="py-24">
-        <div className="container">
-          <div className="text-center mb-14 reveal">
-            <span className="text-xs font-semibold tracking-widest uppercase text-[hsl(43,96%,50%)] mb-3 block">The People Behind SSRA</span>
-            <h2 className="font-display text-4xl font-bold text-foreground">Our Team</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {TEAM.map(({ name, role, note }) => (
-              <div key={name} className="card-premium reveal bg-card border border-border rounded-2xl p-6 text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(222,47%,20%)] to-[hsl(215,35%,30%)] flex items-center justify-center mx-auto mb-4">
-                  <GraduationCap className="w-7 h-7 text-[hsl(43,96%,50%)]" />
-                </div>
-                <h3 className="font-semibold text-foreground">{name}</h3>
-                <div className="text-sm text-[hsl(43,96%,50%)] mt-1">{role}</div>
-                <p className="text-xs text-muted-foreground mt-2">{note}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 bg-[hsl(222,47%,9%)]">
-        <div className="container text-center reveal">
-          <h2 className="font-display text-3xl font-bold text-white mb-4">Ready to join SSRA?</h2>
-          <p className="text-white opacity-55 mb-8">Applications take less than 5 minutes. No fees required.</p>
-          <Link to="/apply">
-            <Button className="btn-luxury-primary px-10 py-4 rounded-xl text-base gap-2">
-              Apply Now <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </div>
-      </section>
-
+        </section>
+      </main>
       <Footer />
     </div>
   );
-}
+};
+
+export default About;

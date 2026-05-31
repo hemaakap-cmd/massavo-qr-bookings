@@ -159,8 +159,8 @@ const labels = {
   de: {
     opposite: ["Find Your Gym", "Book Now", "Welcome Back", "Create Account", "Payment Canceled", "Manage Booking", "Send Verification Code"],
     pages: {
-      home: ["Explore Courses"],
-      about: ["Apply Now"],
+      home: ["Finde dein Studio"],
+      about: ["Finde ein Fitnessstudio in deiner Nähe"],
       services: ["Jetzt buchen", "Finde dein Fitnessstudio"],
       contact: ["Nachricht senden", "Mehr erfahren"],
       cities: ["Fitnessstudio finden"],
@@ -179,8 +179,8 @@ const labels = {
   en: {
     opposite: ["Finde dein Studio", "Jetzt buchen", "Willkommen zurück", "Konto erstellen", "Zahlung abgebrochen", "Buchung verwalten", "Bestätigungscode senden"],
     pages: {
-      home: ["Explore Courses"],
-      about: ["Apply Now"],
+      home: ["Find Your Gym"],
+      about: ["Find a Gym Near You"],
       services: ["Book Now", "Find Your Gym"],
       contact: ["Send Message", "Learn More"],
       cities: ["Find a Gym"],
