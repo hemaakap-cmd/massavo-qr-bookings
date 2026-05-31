@@ -189,7 +189,7 @@ export default function StudentDashboard() {
         <div>
           <h2 className="font-semibold text-slate-900 mb-4">Quick Actions</h2>
           <div className="grid sm:grid-cols-3 gap-4">
-            [
+            {[
               { icon: BookOpen,   label: "Browse Courses",     href: "/courses",                color: "bg-blue-50 text-[hsl(220,91%,54%)]" },
               ...(hasActiveSubscription
                 ? [{ icon: Video,       label: "Live Sessions",      href: "/dashboard/sessions",    color: "bg-emerald-50 text-emerald-600" }]
