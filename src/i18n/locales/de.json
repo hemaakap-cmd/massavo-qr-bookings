@@ -121,11 +121,9 @@
     "hours": "Öffnungszeiten: Nur Sa & So"
   },
   "stats": {
-    "newLabel": "100%",
-    "since": "Sicher bezahlen",
-    "services": "Leistungen",
-    "rated": "Bewertet",
-    "stars": "Sterne"
+    "newLabel": "2026",
+    "since": "Gegründet",
+    "services": "Leistungen"
   },
   "cities": {
     "badge": "3 Städte in Deutschland",
@@ -465,8 +463,6 @@
     "phonePlaceholder": "+49 123 456789",
     "phoneError": "Bitte gib eine gültige Telefonnummer ein (mind. 6 Ziffern)",
     "address": "Adresse",
-    "optional": "optional",
-    "addressHelp": "Nur für die Rechnung benötigt. Du kannst sie auch später angeben.",
     "street": "Straße",
     "streetPlaceholder": "Musterstraße",
     "houseNumber": "Hausnr.",

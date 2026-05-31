@@ -1,36 +1,44 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
-import Header from "@/components/ssra/Header";
-import Footer from "@/components/ssra/Footer";
 
-export default function PaymentCanceled() {
+const PaymentCanceled = () => {
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
-      <div className="flex-1 flex items-center justify-center py-32 px-4">
-        <div className="text-center max-w-md">
-          <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-            <XCircle className="w-10 h-10 text-slate-400" />
+      <main className="pt-20">
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <div className="max-w-lg mx-auto text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-destructive/10 flex items-center justify-center">
+                <XCircle className="w-10 h-10 text-destructive" />
+              </div>
+              <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
+                {t("paymentCanceled.title")}
+              </h1>
+              <p className="text-lg text-muted-foreground mb-8">
+                {t("paymentCanceled.description")}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="sage" asChild>
+                  <Link to="/cities">{t("paymentCanceled.tryAgain")}</Link>
+                </Button>
+                <Button variant="luxuryOutline" asChild>
+                  <Link to="/">{t("paymentCanceled.backHome")}</Link>
+                </Button>
+              </div>
+            </div>
           </div>
-          <h1 className="font-display text-3xl font-bold text-slate-900 mb-3">Payment Cancelled</h1>
-          <p className="text-slate-500 mb-8">
-            No charge was made. You can try again whenever you're ready.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <Link to="/pricing">
-              <button className="btn-primary px-6 py-3 rounded-xl text-sm font-semibold">
-                View Pricing
-              </button>
-            </Link>
-            <Link to="/">
-              <button className="btn-outline px-6 py-3 rounded-xl text-sm font-semibold">
-                Back to Home
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+        </section>
+      </main>
       <Footer />
     </div>
   );
-}
+};
+
+export default PaymentCanceled;
