@@ -1,0 +1,27 @@
+# MASSAVO
+
+> Buche professionelle Massagetherapie direkt in deinem Fitnessstudio oder Partnerhotel – Sport-, Klassische und Wellness-Massagen per QR-Code in Sekunden. Aktiv in Deutschland (HQ Leverkusen), mit Expansion in weitere Länder.
+
+MASSAVO ist eine On-Demand Massage-Plattform. Kunden scannen einen QR-Code im Fitnessstudio oder Hotel und buchen sofort einen Termin mit einem Therapeuten vor Ort. Mehrsprachig (Deutsch, Englisch, Arabisch) und multi-country.
+
+## Pages
+
+- [Home](/): Übersicht, Standorte und Buchungseinstieg.
+- [Cities](/cities): Alle Städte mit verfügbaren Fitnessstudios.
+- [Hotels](/hotels): Alle Partnerhotels nach Stadt.
+- [Services](/services): Sport-, Klassische und Wellness-Massagen mit Preisen.
+- [About](/about): Mission, Vision und Werte von MASSAVO.
+- [Contact](/contact): Kontaktformular und Adresse.
+
+## Booking & Policies
+
+- [Booking Policy](/booking-policy): 24-Stunden-Stornoregel, Handtuchpflicht und Widerrufsrecht.
+- [Manage Booking](/manage-booking): Bestehende Buchung verschieben oder stornieren.
+- [Privacy Policy](/privacy-policy): Datenschutzerklärung gemäß DSGVO.
+- [Terms of Service](/terms-of-service): AGB.
+- [Impressum](/impressum): Anbieterkennzeichnung.
+- [Cookie Policy](/cookie-policy): Cookie-Hinweise.
+
+## Optional
+
+- [Feedback](/feedback): Post-Session Feedback nach abgeschlossener Massage.

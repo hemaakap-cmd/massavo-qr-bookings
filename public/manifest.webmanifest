@@ -1,0 +1,19 @@
+{
+  "name": "MASSAVO – Premium Massage Buchung",
+  "short_name": "MASSAVO",
+  "description": "Buche Massagetherapie im Fitnessstudio oder Hotel per QR-Code.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f1e8",
+  "theme_color": "#1c1917",
+  "lang": "de",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "wellness"],
+  "icons": [
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

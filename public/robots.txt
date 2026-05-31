@@ -1,0 +1,79 @@
+# MASSAVO Robots.txt - Security Configuration
+# Block all bots from accessing admin, booking data, and user-specific pages
+
+User-agent: *
+
+# Allow public pages
+Allow: /
+Allow: /cities
+Allow: /services
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /impressum
+
+# Block admin and management pages
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /staff
+Disallow: /staff/*
+Disallow: /super-admin
+Disallow: /management
+Disallow: /management/*
+Disallow: /manage-booking
+Disallow: /reschedule
+Disallow: /feedback
+Disallow: /login
+Disallow: /signup
+
+# Block booking and payment pages (contain user data)
+Disallow: /payment-success
+Disallow: /payment-canceled
+Disallow: /cancel-booking
+
+# Block QR management pages
+Disallow: /print-qr
+Disallow: /share-qr
+Disallow: /scan-qr
+Disallow: /qr/*
+
+# Block API endpoints
+Disallow: /api/*
+Disallow: /functions/*
+
+# Allow search engine bots on public pages only
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /staff
+Disallow: /staff/*
+Disallow: /super-admin
+Disallow: /manage-booking
+Disallow: /reschedule
+Disallow: /feedback
+Disallow: /payment-success
+Disallow: /payment-canceled
+Disallow: /cancel-booking
+Disallow: /login
+Disallow: /signup
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /staff
+Disallow: /staff/*
+Disallow: /super-admin
+Disallow: /manage-booking
+Disallow: /reschedule
+Disallow: /feedback
+Disallow: /payment-success
+Disallow: /payment-canceled
+Disallow: /cancel-booking
+Disallow: /login
+Disallow: /signup
+
+# Sitemap location
+Sitemap: https://massavo.com/sitemap.xml

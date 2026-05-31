@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="44" viewBox="0 0 180 44" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(6, 8)">
+    <path d="M0 28 L0 0 L15 20 L30 0 L30 28" stroke="#F5ECD7" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M-2 33 Q7 28 15 33 Q23 38 32 33" stroke="#C9922A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  </g>
+  <line x1="46" y1="11" x2="46" y2="33" stroke="#C9922A" stroke-width="0.8" opacity="0.6"/>
+  <text x="54" y="25" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#F5ECD7" letter-spacing="2.5">MASSAVO</text>
+  <text x="55" y="35" font-family="Georgia, serif" font-size="5.5" fill="#C9922A" letter-spacing="3">PREMIUM MASSAGE</text>
+</svg>

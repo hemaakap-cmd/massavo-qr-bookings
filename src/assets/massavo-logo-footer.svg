@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="240" height="80" viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(10, 16)">
+    <path d="M0 48 L0 0 L26 34 L52 0 L52 48" stroke="#1C1917" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M-3 56 Q12 48 26 56 Q40 64 55 56" stroke="#C9922A" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+  <line x1="76" y1="18" x2="76" y2="62" stroke="#C9922A" stroke-width="1" opacity="0.4"/>
+  <text x="86" y="40" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#1C1917" letter-spacing="3.5">MASSAVO</text>
+  <text x="87" y="54" font-family="Georgia, serif" font-size="7" fill="#C9922A" letter-spacing="4">PREMIUM MASSAGE</text>
+  <text x="87" y="68" font-family="Georgia, serif" font-size="8" fill="#6B5A47" font-style="italic">Im Fitnessstudio &amp; Hotel</text>
+</svg>
