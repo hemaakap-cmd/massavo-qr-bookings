@@ -292,7 +292,7 @@ const AdminTherapists = () => {
       return;
     }
 
-    const therapistData: TherapistInsert | TherapistUpdate = {
+    const therapistBaseData = {
       gym_id: primaryGymId,
       name: formData.name,
       specialty: formData.specialty || null,
@@ -308,6 +308,9 @@ const AdminTherapists = () => {
       gender: formData.gender || null,
     };
 
+    const therapistInsertData: TherapistInsert = therapistBaseData;
+    const therapistUpdateData: TherapistUpdate = therapistBaseData;
+
     const privateInfoData = (therapistId: string): TherapistPrivateInfoInsert => ({
       therapist_id: therapistId,
       phone: formData.phone || null,
@@ -318,7 +321,7 @@ const AdminTherapists = () => {
     if (editingTherapist) {
       const { error } = await supabase
         .from("therapists")
-        .update(therapistData)
+        .update(therapistUpdateData)
         .eq("id", editingTherapist.id);
 
       if (error) {
@@ -357,7 +360,7 @@ const AdminTherapists = () => {
       fetchData();
     } else {
       // ── ATOMIC: Create therapist record first, then provision auth ──
-      const { data, error } = await supabase.from("therapists").insert(therapistData).select("id").single();
+      const { data, error } = await supabase.from("therapists").insert(therapistInsertData).select("id").single();
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
