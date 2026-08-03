@@ -70,6 +70,7 @@ const QRCodeDetail = lazy(() => import("./pages/QRCodeDetail"));
 const PrintBooking = lazy(() => import("./pages/PrintBooking"));
 const AdminScanBooking = lazy(() => import("./pages/admin/AdminScanBooking"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 import ScrollToTop from "./components/layout/ScrollToTop";
 import { VisitorTracker } from "./components/VisitorTracker";
@@ -230,6 +231,7 @@ const App = () => (
           <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={["therapist"]}><StaffDashboard /></ProtectedRoute>} />
 
           {/* Catch-all */}
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
