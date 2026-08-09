@@ -272,9 +272,12 @@ serve(async (req) => {
     // We don't yet know which country/Stripe account owns this session.
     // Try each configured Stripe secret key (default + per-country) until we
     // find the account that issued the checkout session.
-    const { data: countriesList } = await supabaseAdmin
-      .from("countries")
+    const { data: countriesList, error: countriesErr } = await supabaseAdmin
+      .from("country_financials")
       .select("stripe_secret_key_name");
+    if (countriesErr) {
+      console.error("[verify-payment] Failed to load country_financials Stripe key names:", countriesErr);
+    }
     const candidateKeyNames = Array.from(new Set([
       "STRIPE_SECRET_KEY",
       ...((countriesList || [])

@@ -321,33 +321,55 @@ serve(async (req) => {
       }
     }
 
-    // Determine the correct Stripe key based on the venue's country
-    let stripeKeyName = "STRIPE_SECRET_KEY"; // Default to Germany
+    // Determine the correct Stripe key + currency based on the venue's country.
+    // Canonical design: currency lives on countries.currency_code,
+    // the Stripe secret name lives on country_financials.stripe_secret_key_name
+    // (NOT NULL, default 'STRIPE_SECRET_KEY').
+    let stripeKeyName = "STRIPE_SECRET_KEY";
     let currency = "eur";
 
-    if (input.venueType === "hotel" && input.hotelId) {
-      const { data: hotelCountry } = await supabase
-        .from("hotels")
-        .select("country_id, countries(stripe_secret_key_name, currency_code)")
-        .eq("id", input.hotelId)
-        .single();
+    {
+      const venueTable = input.venueType === "hotel" ? "hotels" : "gyms";
+      const venueId = input.venueType === "hotel" ? input.hotelId : input.gymId;
 
-      if (hotelCountry?.countries) {
-        const countryData = hotelCountry.countries as any;
-        stripeKeyName = countryData.stripe_secret_key_name || "STRIPE_SECRET_KEY";
-        currency = (countryData.currency_code || "EUR").toLowerCase();
-      }
-    } else if (input.gymId) {
-      const { data: gymCountry } = await supabase
-        .from("gyms")
-        .select("country_id, countries(stripe_secret_key_name, currency_code)")
-        .eq("id", input.gymId)
-        .single();
+      if (venueId) {
+        const { data: venueRow, error: venueErr } = await supabase
+          .from(venueTable)
+          .select("country_id, countries(currency_code)")
+          .eq("id", venueId)
+          .single();
 
-      if (gymCountry?.countries) {
-        const countryData = gymCountry.countries as any;
-        stripeKeyName = countryData.stripe_secret_key_name || "STRIPE_SECRET_KEY";
-        currency = (countryData.currency_code || "EUR").toLowerCase();
+        if (venueErr) {
+          console.error(`[create-payment] Failed to resolve country for ${venueTable} ${venueId}:`, venueErr);
+          return new Response(JSON.stringify({ error: "Payment routing could not be resolved for this location. Please try again later." }), {
+            headers: { ...cors, "Content-Type": "application/json" }, status: 503,
+          });
+        }
+
+        const countryId = (venueRow as any)?.country_id as string | null;
+        const countryCurrency = ((venueRow as any)?.countries as any)?.currency_code as string | undefined;
+        if (countryCurrency) currency = countryCurrency.toLowerCase();
+
+        if (countryId) {
+          const { data: fin, error: finErr } = await supabase
+            .from("country_financials")
+            .select("stripe_secret_key_name")
+            .eq("country_id", countryId)
+            .maybeSingle();
+
+          if (finErr) {
+            console.error(`[create-payment] Failed to read country_financials for country ${countryId}:`, finErr);
+            return new Response(JSON.stringify({ error: "Payment routing could not be resolved for this region. Please try again later." }), {
+              headers: { ...cors, "Content-Type": "application/json" }, status: 503,
+            });
+          }
+
+          if (fin?.stripe_secret_key_name) {
+            stripeKeyName = fin.stripe_secret_key_name;
+          } else {
+            console.warn(`[create-payment] No country_financials row for country ${countryId}; using default Stripe key name.`);
+          }
+        }
       }
     }
 

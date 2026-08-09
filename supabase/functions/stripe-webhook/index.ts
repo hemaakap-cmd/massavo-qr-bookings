@@ -48,9 +48,12 @@ async function verifyAndConstructEvent(
   signature: string,
 ): Promise<{ event: Stripe.Event; stripe: Stripe } | null> {
   // Collect all candidate (apiKey, webhookSecret) pairs.
-  const { data: countries } = await supabaseAdmin
+  const { data: countries, error: countriesErr } = await supabaseAdmin
     .from("countries")
-    .select("code, stripe_secret_key_name");
+    .select("code, country_financials(stripe_secret_key_name)");
+  if (countriesErr) {
+    console.error("[stripe-webhook] Failed to load per-country Stripe config:", countriesErr);
+  }
 
   const candidates: Array<{ apiKey: string; webhookSecret: string }> = [];
 
@@ -64,7 +67,8 @@ async function verifyAndConstructEvent(
   // Per-country overrides (optional)
   for (const c of countries ?? []) {
     const code = (c as { code?: string }).code?.toUpperCase();
-    const apiKeyName = (c as { stripe_secret_key_name?: string }).stripe_secret_key_name;
+    const fin = (c as { country_financials?: { stripe_secret_key_name?: string } | Array<{ stripe_secret_key_name?: string }> }).country_financials;
+    const apiKeyName = Array.isArray(fin) ? fin[0]?.stripe_secret_key_name : fin?.stripe_secret_key_name;
     if (!code || !apiKeyName) continue;
     const apiKey = Deno.env.get(apiKeyName);
     const webhookSecret = Deno.env.get(`STRIPE_WEBHOOK_SECRET_${code}`);
