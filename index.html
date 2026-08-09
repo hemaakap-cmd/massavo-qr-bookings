@@ -3,35 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Security headers (Batch C). CSP is permissive enough to allow Supabase, Stripe, Lovable CDN, and inline styles used by Tailwind/Vite. -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <title>SSRA Academy – Sports Science &amp; Rehabilitation Academy</title>
-    <meta name="description" content="Online-Akademie für arabischsprachige Sportwissenschaftler, die in Deutschland arbeiten wollen. Medical German, Sportrehabilitation und Karriereberatung." />
-    <meta name="author" content="SSRA Academy" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(self 'https://js.stripe.com')" />
+    <!-- Batch D: production-safe CSP. Allows Supabase REST/Realtime/Storage, Stripe Checkout/JS, Google Fonts, Lovable CDN, inline styles (Tailwind/Vite runtime). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.gpteng.co https://*.lovable.app https://*.lovable.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.lovable.app https://*.lovable.dev https://cdn.gpteng.co; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;" />
+    <title>MASSAVO - Premium Massage im Fitnessstudio & Hotel</title>
+    <meta name="description" content="Buche Massagetherapie in deinem Fitnessstudio oder Partnerhotel per QR-Code – Sport-, Klassische und Wellness-Massagen in Sekunden in Deutschland." />
+    <meta name="keywords" content="massage buchen, fitnessstudio massage, hotel massage, hotelmassage, wellness hotel, sportmassage, klassische massage, wellness, QR buchung, deutschland" />
+    <meta name="author" content="MASSAVO" />
+
+    <!-- Google Search Console verification -->
+    <meta name="google-site-verification" content="hm7wjvKYHCnLZRDC4_OD-yu3YQPL5SagOrLZKkMuLvE" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://massavo.com/" />
+
+    <!-- hreflang for German + English -->
+    <link rel="alternate" hreflang="de" href="https://massavo.com/" />
+    <link rel="alternate" hreflang="en" href="https://massavo.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://massavo.com/" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="SSRA Academy – Sports Science &amp; Rehabilitation Academy" />
-    <meta property="og:description" content="Arabic-guided courses in Medical German, Sports Rehabilitation, and Career Entry in Germany." />
+    <meta property="og:title" content="MASSAVO – Premium Massage im Fitnessstudio & Hotel" />
+    <meta property="og:description" content="Buche professionelle Massagetherapie in deinem Fitnessstudio oder Partnerhotel. Sport-, Klassische und Wellness-Massagen per QR-Code in Sekunden." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://ssra-academy.de" />
+    <meta property="og:url" content="https://massavo.com" />
     <meta property="og:locale" content="de_DE" />
-    <meta property="og:site_name" content="SSRA Academy" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:site_name" content="MASSAVO" />
+    <meta property="og:image" content="https://massavo.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MASSAVO – Premium Massage Buchung" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MASSAVO – Premium Massage im Fitnessstudio & Hotel" />
+    <meta name="twitter:description" content="Buche Massagetherapie in deinem Fitnessstudio oder Hotel per QR-Code in Sekunden." />
+    <meta name="twitter:image" content="https://massavo.com/og-image.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1917" media="(prefers-color-scheme: dark)" />
 
-    <!-- Fonts -->
+    <!-- Preconnect to font providers + load font stylesheet here (not via
+         CSS @import) so the request runs in parallel with the JS bundle
+         instead of waiting for it. display=swap keeps text visible during
+         font swap; matches what the Tailwind config expects. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" />
+
+    <!-- Structured Data: LocalBusiness -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HealthAndBeautyBusiness",
+      "name": "MASSAVO",
+      "description": "Premium Massage Buchung im Fitnessstudio und Partnerhotel – Sport-, Klassische und Wellness-Massagen per QR-Code.",
+      "url": "https://massavo.com",
+      "logo": "https://massavo.com/favicon.png",
+      "image": "https://massavo.com/og-image.png",
+      "telephone": "+49 160 5652154",
+      "priceRange": "€€",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Leverkusen",
+        "addressCountry": "DE"
+      },
+      "areaServed": [{ "@type": "Country", "name": "Germany" }],
+      "sameAs": ["https://www.instagram.com/massavo.gym"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Massage Services",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Sportmassage" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Klassische Massage" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Entspannungsmassage" } }
+        ]
+      }
+    }
+    </script>
   </head>
   <body>
     <noscript>
       <div style="padding:40px;text-align:center;font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;">
-        <h1>SSRA Academy</h1>
-        <p>Diese Seite benötigt JavaScript. Bitte aktivieren Sie JavaScript in Ihrem Browser.</p>
-        <p>Contact: <a href="mailto:info@ssra-academy.de">info@ssra-academy.de</a></p>
+        <h1>MASSAVO – Premium Massage Buchung</h1>
+        <p>Diese Seite benötigt JavaScript. Bitte aktivieren Sie JavaScript in Ihrem Browser, um Massagen zu buchen.</p>
+        <hr style="margin:24px 0;border:none;border-top:1px solid #ddd" />
+        <h2 style="font-size:1rem">English</h2>
+        <p>This site requires JavaScript. Please enable JavaScript in your browser to book massages.</p>
+        <p>Kontakt: <a href="mailto:info@massavo.com">info@massavo.com</a> · Tel: <a href="tel:+4916056521540">+49 160 5652154</a></p>
       </div>
     </noscript>
     <div id="root"></div>
