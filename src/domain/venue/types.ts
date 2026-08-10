@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 export type VenueType =
   | "gym"
   | "hotel"
+  | "home"
   | "clinic"
   | "spa"
   | "recovery"

@@ -23,7 +23,9 @@ const LanguageSwitcher = forwardRef<HTMLDivElement, LanguageSwitcherProps>(
 
     const handleLanguageChange = (code: LanguageCode) => {
       i18n.changeLanguage(code);
-      try { localStorage.setItem("i18nextLng", code); } catch {}
+      // Storage can be unavailable (Safari private mode); the language still
+      // changes for this session, it just is not remembered.
+      try { localStorage.setItem("i18nextLng", code); } catch { /* ignore */ }
       setOpen(false);
     };
 

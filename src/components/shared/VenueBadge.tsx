@@ -1,4 +1,4 @@
-import { Building2, Hotel } from "lucide-react";
+import { Building2, Hotel, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getVenueDisplay, type VenueBooking } from "@/lib/venueUtils";
 
@@ -14,8 +14,8 @@ interface VenueBadgeProps {
  * Use everywhere a booking is displayed so the user always knows which venue type it is.
  */
 export function VenueBadge({ booking, showName = true, size = "sm", className }: VenueBadgeProps) {
-  const { type, name } = getVenueDisplay(booking);
-  const Icon = type === "hotel" ? Hotel : Building2;
+  const { type, name, label } = getVenueDisplay(booking);
+  const Icon = type === "hotel" ? Hotel : type === "home" ? Home : Building2;
   const iconSize = size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
 
@@ -26,7 +26,7 @@ export function VenueBadge({ booking, showName = true, size = "sm", className }:
         textSize,
         className,
       )}
-      title={`${type === "hotel" ? "Hotel" : "Gym"}: ${name}`}
+      title={`${label}: ${name}`}
     >
       <Icon className={cn(iconSize, "shrink-0")} />
       {showName && <span className="truncate">{name}</span>}

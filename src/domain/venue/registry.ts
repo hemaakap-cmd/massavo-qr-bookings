@@ -1,6 +1,7 @@
 import type { VenueType, VenueTypeConfig } from "./types";
 import { gymConfig } from "./configs/gym";
 import { hotelConfig } from "./configs/hotel";
+import { homeConfig } from "./configs/home";
 import { clinicConfig } from "./configs/clinic";
 
 /**
@@ -11,6 +12,7 @@ import { clinicConfig } from "./configs/clinic";
 export const VENUE_TYPE_REGISTRY: Record<VenueType, VenueTypeConfig> = {
   gym: gymConfig,
   hotel: hotelConfig,
+  home: homeConfig,
   clinic: clinicConfig,
   // Forward-declared placeholders — fill in as we onboard each segment.
   spa: { ...clinicConfig, type: "spa", label: "Spa", terminology: { ...clinicConfig.terminology, singular: "Spa", plural: "Spas", customer: "Guest", session: "Treatment", area: "Cabin" }, shippable: false },

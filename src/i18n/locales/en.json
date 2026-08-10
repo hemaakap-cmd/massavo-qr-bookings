@@ -1,4 +1,25 @@
 {
+  "book": {
+    "homeTitle": "As a Home Visit",
+    "homeDescription": "Book your massage comfortably at your own home."
+  },
+  "homeVisit": {
+    "seoTitle": "Book a Home Visit — Massavo",
+    "seoDescription": "Book a massage at your home. A therapist comes to your address.",
+    "title": "Massage as a Home Visit",
+    "subtitle": "Choose city, treatment and time — the therapist comes to you.",
+    "selectCity": "City",
+    "selectCityPlaceholder": "Select a city",
+    "selectService": "Treatment",
+    "noServices": "No treatments are currently available as a home visit.",
+    "selectDate": "Date",
+    "noDates": "No appointments are currently available for this city.",
+    "selectTime": "Time",
+    "yourDetails": "Your details & address",
+    "addressHint": "The address you enter is where the home visit takes place.",
+    "proceedToPayment": "Continue to payment",
+    "paymentError": "Payment could not be started."
+  },
   "nav": {
     "home": "Home",
     "findGym": "Find a Gym",

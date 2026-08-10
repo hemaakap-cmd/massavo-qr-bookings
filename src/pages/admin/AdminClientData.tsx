@@ -31,7 +31,7 @@ import { de } from "date-fns/locale";
 import PrintableContainer from "@/components/print/PrintableContainer";
 import { useAuth } from "@/hooks/useAuth";
 import { useCountryData } from "@/hooks/useCountry";
-import { fetchCountryVenueIds, buildVenueOrFilter, getVenueName, getVenueType } from "@/lib/venueUtils";
+import { fetchCountryVenueIds, buildVenueOrFilter, getVenueName, getVenueType, type VenueType } from "@/lib/venueUtils";
 import { VenueBadge } from "@/components/shared/VenueBadge";
 
 interface ClientRow {
@@ -47,7 +47,7 @@ interface ClientRow {
   total_spent: number;
   last_service: string | null;
   last_venue: string | null;
-  last_venue_type: "gym" | "hotel";
+  last_venue_type: VenueType;
   last_therapist: string | null;
   last_status: string | null;
   therapist_advice: string | null;
@@ -153,7 +153,7 @@ export default function AdminClientData() {
       if (error) throw error;
 
       const bookingIds = (bookings || []).map((b: any) => b.id);
-      let feedbackMap: Record<string, any> = {};
+      const feedbackMap: Record<string, any> = {};
       if (bookingIds.length > 0) {
         for (let i = 0; i < bookingIds.length; i += 100) {
           const chunk = bookingIds.slice(i, i + 100);
@@ -530,9 +530,11 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 // ── Client Detail Dialog ──
 function ClientDetailDialog({ client, onClose }: { client: ClientRow | null; onClose: () => void }) {
-  if (!client) return null;
-  const latestBookingId = client.bookings[0]?.id;
-  const age = calcAge(client.date_of_birth);
+  // The dialog is always mounted (client starts null), so the early return has
+  // to come *after* useQuery — returning first made the hook count go 0 -> 1 on
+  // the same instance, which React rejects. `enabled` already gates the fetch.
+  const latestBookingId = client?.bookings[0]?.id;
+  const age = client ? calcAge(client.date_of_birth) : null;
 
   const { data: bodyAreas = [] } = useQuery({
     queryKey: ["admin-client-body-areas", latestBookingId],
@@ -549,6 +551,8 @@ function ClientDetailDialog({ client, onClose }: { client: ClientRow | null; onC
       })) as SelectedArea[];
     },
   });
+
+  if (!client) return null;
 
   return (
     <Dialog open={!!client} onOpenChange={onClose}>

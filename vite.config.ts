@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -13,11 +13,26 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mcpPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  // mcpPlugin() rewrites supabase/functions/mcp/index.ts as a side effect. It has
+  // no role in unit tests, and running it under vitest left that tracked file
+  // modified after every `npm test`, so it is skipped in test mode.
+  plugins: [react(), mode !== "test" && mcpPlugin(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  test: {
+    // `globals: true` matches tsconfig.app.json's "types": ["vitest/globals"].
+    globals: true,
+    // Component tests (localization.test.tsx) render with Testing Library, and
+    // src/i18n reads localStorage at import time — both need a DOM.
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    // Each localization case renders a full page twice (de + en). The heavier
+    // routes exceed the 5s default on slower machines; the network-bound e2e
+    // suites already pass explicit 20-25s timeouts for the same reason.
+    testTimeout: 30_000,
   },
   // Batch D: strip console.log/info/debug from production bundles, keep warn/error
   esbuild: mode === "production"

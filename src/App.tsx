@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index"; // eager — landing page (LCP critical)
 const Cities = lazy(() => import("./pages/Cities"));
 const Book = lazy(() => import("./pages/Book"));
+const HomeVisit = lazy(() => import("./pages/HomeVisit"));
 const CityPage = lazy(() => import("./pages/CityPage"));
 const GymPage = lazy(() => import("./pages/GymPage"));
 const Hotels = lazy(() => import("./pages/Hotels"));
@@ -152,6 +153,7 @@ const App = () => (
           {/* Public routes */}
           <Route path="/" element={<Index />} />
           <Route path="/book" element={<QRGuard><Book /></QRGuard>} />
+          <Route path="/home-visit" element={<QRGuard><HomeVisit /></QRGuard>} />
           <Route path="/cities" element={<QRGuard type="gym"><Cities /></QRGuard>} />
           <Route path="/city/:cityId" element={<QRGuard type="gym"><CityPage /></QRGuard>} />
           <Route path="/gym/:gymId" element={<GymPage />} />

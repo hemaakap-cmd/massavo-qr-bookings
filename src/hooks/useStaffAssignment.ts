@@ -61,7 +61,7 @@ export function useStaffAssignment({
 
       // 2. Get schedule exceptions to exclude disabled dates
       const allGymIds = (weeklySchedules || []).map((s: any) => s.gym_id);
-      let exceptionDates = new Map<string, Set<string>>(); // gym_id -> Set<date>
+      const exceptionDates = new Map<string, Set<string>>(); // gym_id -> Set<date>
       if (allGymIds.length > 0) {
         const { data: exceptions } = await supabase
           .from("schedule_exceptions")

@@ -292,19 +292,22 @@ export const useReportGeneration = () => {
     switch (period) {
       case "today":
         return { from: format(startOfDay(now), "yyyy-MM-dd"), to: format(endOfDay(now), "yyyy-MM-dd") };
-      case "yesterday":
+      case "yesterday": {
         const yesterday = subDays(now, 1);
         return { from: format(startOfDay(yesterday), "yyyy-MM-dd"), to: format(endOfDay(yesterday), "yyyy-MM-dd") };
+      }
       case "this_week":
         return { from: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"), to: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd") };
-      case "last_week":
+      case "last_week": {
         const lastWeek = subWeeks(now, 1);
         return { from: format(startOfWeek(lastWeek, { weekStartsOn: 1 }), "yyyy-MM-dd"), to: format(endOfWeek(lastWeek, { weekStartsOn: 1 }), "yyyy-MM-dd") };
+      }
       case "this_month":
         return { from: format(startOfMonth(now), "yyyy-MM-dd"), to: format(endOfMonth(now), "yyyy-MM-dd") };
-      case "last_month":
+      case "last_month": {
         const lastMonth = subMonths(now, 1);
         return { from: format(startOfMonth(lastMonth), "yyyy-MM-dd"), to: format(endOfMonth(lastMonth), "yyyy-MM-dd") };
+      }
     }
   };
 

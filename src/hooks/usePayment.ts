@@ -12,7 +12,14 @@ interface PaymentDetails {
   gymId?: string;
   hotelId?: string;
   hotelName?: string;
-  venueType?: "gym" | "hotel";
+  venueType?: "gym" | "hotel" | "home";
+  // Home-visit destination (set only when venueType === "home").
+  homeCityId?: string;
+  homeCountryId?: string;
+  homeStreet?: string;
+  homeHouseNo?: string;
+  homePostalCode?: string;
+  homeAddressNotes?: string;
   customerEmail?: string;
   clientName?: string;
   clientAge?: number;

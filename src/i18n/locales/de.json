@@ -1,4 +1,25 @@
 {
+  "book": {
+    "homeTitle": "Als Hausbesuch",
+    "homeDescription": "Buche deine Massage bequem bei dir zu Hause."
+  },
+  "homeVisit": {
+    "seoTitle": "Hausbesuch buchen — Massavo",
+    "seoDescription": "Buche eine Massage bei dir zu Hause. Ein Therapeut kommt zu deiner Adresse.",
+    "title": "Massage als Hausbesuch",
+    "subtitle": "Wähle Stadt, Behandlung und Zeit — der Therapeut kommt zu dir.",
+    "selectCity": "Stadt",
+    "selectCityPlaceholder": "Stadt auswählen",
+    "selectService": "Behandlung",
+    "noServices": "Zurzeit sind keine Behandlungen als Hausbesuch verfügbar.",
+    "selectDate": "Datum",
+    "noDates": "Für diese Stadt sind aktuell keine Termine verfügbar.",
+    "selectTime": "Uhrzeit",
+    "yourDetails": "Deine Angaben & Adresse",
+    "addressHint": "Die angegebene Adresse ist der Ort des Hausbesuchs.",
+    "proceedToPayment": "Weiter zur Zahlung",
+    "paymentError": "Zahlung konnte nicht gestartet werden."
+  },
   "nav": {
     "home": "Startseite",
     "findGym": "Fitnessstudio finden",

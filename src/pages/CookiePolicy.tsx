@@ -191,7 +191,9 @@ const CookiePolicy = () => {
     try {
       localStorage.removeItem("massavo_cookie_consent_v1");
       window.location.reload();
-    } catch {}
+    } catch {
+      // Storage can be unavailable (Safari private mode); nothing to reset then.
+    }
   };
 
   const Row = ({ icon: Icon, category, item }: { icon: typeof Shield; category: string; item: { name: string; purpose: string; duration: string } }) => (

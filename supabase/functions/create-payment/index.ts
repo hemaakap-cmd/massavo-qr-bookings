@@ -67,7 +67,14 @@ interface ValidatedInput {
   gymId: string;
   hotelId: string;
   hotelName: string;
-  venueType: "gym" | "hotel";
+  venueType: "gym" | "hotel" | "home";
+  // Home-visit destination (set only when venueType === "home").
+  homeCityId: string;
+  homeCountryId: string;
+  homeStreet: string;
+  homeHouseNo: string;
+  homePostalCode: string;
+  homeAddressNotes: string;
   customerEmail: string;
   clientName: string;
   clientAge: number | null;
@@ -85,7 +92,7 @@ interface ValidatedInput {
 }
 
 function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
-  const { serviceId, therapistName, timeSlot, bookingDate, gymName, gymId, hotelId, hotelName, venueType, customerEmail, clientName, clientAge, clientPhone, clientAddress, healthConfirmed, dateOfBirth, salutation, gender, pregnancyStatus, notes, communicationPreference, selectedBodyAreas, deepTissueUpgradeActive } = body;
+  const { serviceId, therapistName, timeSlot, bookingDate, gymName, gymId, hotelId, hotelName, venueType, homeCityId, homeCountryId, homeStreet, homeHouseNo, homePostalCode, homeAddressNotes, customerEmail, clientName, clientAge, clientPhone, clientAddress, healthConfirmed, dateOfBirth, salutation, gender, pregnancyStatus, notes, communicationPreference, selectedBodyAreas, deepTissueUpgradeActive } = body;
 
   if (!serviceId) throw new Error("Service ID is required");
   if (!isValidUUID(serviceId)) throw new Error("Invalid service ID format");
@@ -123,8 +130,24 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
   if (sanitizedHotelId && !isValidUUID(sanitizedHotelId)) throw new Error("Invalid hotel ID format");
 
   const venueTypeStr = sanitizeString(venueType, 10);
-  const resolvedVenueType: "gym" | "hotel" = venueTypeStr === "hotel" || (sanitizedHotelId && !sanitizedGymId) ? "hotel" : "gym";
+  const sanitizedHomeCityId = sanitizeString(homeCityId, 50);
+  const sanitizedHomeCountryId = sanitizeString(homeCountryId, 50);
+  let resolvedVenueType: "gym" | "hotel" | "home";
+  if (venueTypeStr === "home" || (sanitizedHomeCityId && !sanitizedGymId && !sanitizedHotelId)) {
+    resolvedVenueType = "home";
+  } else if (venueTypeStr === "hotel" || (sanitizedHotelId && !sanitizedGymId)) {
+    resolvedVenueType = "hotel";
+  } else {
+    resolvedVenueType = "gym";
+  }
   if (resolvedVenueType === "hotel" && !sanitizedHotelId) throw new Error("Hotel ID is required for hotel bookings");
+  if (resolvedVenueType === "home") {
+    if (sanitizedHomeCityId && !isValidUUID(sanitizedHomeCityId)) throw new Error("Invalid city ID format");
+    if (!sanitizedHomeCityId) throw new Error("City is required for home-visit bookings");
+    if (sanitizedHomeCountryId && !isValidUUID(sanitizedHomeCountryId)) throw new Error("Invalid country ID format");
+    if (!sanitizeString(homeStreet, 200)) throw new Error("Home address is required for home-visit bookings");
+    if (!sanitizeString(homePostalCode, 20)) throw new Error("Postal code is required for home-visit bookings");
+  }
   if (resolvedVenueType === "gym" && !sanitizedGymId) {
     // gymId is optional in some flows; keep prior behavior
   }
@@ -152,6 +175,12 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
     hotelId: sanitizedHotelId,
     hotelName: sanitizeString(hotelName, 200),
     venueType: resolvedVenueType,
+    homeCityId: sanitizedHomeCityId,
+    homeCountryId: sanitizedHomeCountryId,
+    homeStreet: sanitizeString(homeStreet, 200),
+    homeHouseNo: sanitizeString(homeHouseNo, 30),
+    homePostalCode: sanitizeString(homePostalCode, 20),
+    homeAddressNotes: sanitizeString(homeAddressNotes, 300),
     customerEmail: (customerEmail as string).trim(),
     clientName: sanitizeString(clientName, 100),
     clientAge: parsedAge,
@@ -236,8 +265,25 @@ serve(async (req) => {
       throw new Error("Service not found or inactive");
     }
 
-    // Resolve per-venue effective price (custom or active promo) via DB RPC
-    const venueIdForPrice = input.venueType === "hotel" ? input.hotelId : input.gymId;
+    // Home visit: enforce per-service opt-in. A service that is not enabled for
+    // home visits must never produce a payable session.
+    if (input.venueType === "home") {
+      const { data: svcHome, error: svcHomeErr } = await supabase
+        .from("services")
+        .select("home_visit_enabled")
+        .eq("id", input.serviceId)
+        .single();
+      if (svcHomeErr || !svcHome || (svcHome as { home_visit_enabled?: boolean }).home_visit_enabled !== true) {
+        return new Response(JSON.stringify({ error: "Diese Behandlung ist nicht als Hausbesuch verfügbar." }), {
+          headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+        });
+      }
+    }
+
+    // Resolve per-venue effective price (custom or active promo) via DB RPC.
+    // Home has no venue instance, so it keeps the base service price here and
+    // adds a server-resolved travel fee below.
+    const venueIdForPrice = input.venueType === "hotel" ? input.hotelId : input.venueType === "gym" ? input.gymId : "";
     if (venueIdForPrice) {
       const { data: effective, error: effErr } = await supabase.rpc("get_effective_service_price", {
         _venue_type: input.venueType,
@@ -269,10 +315,22 @@ serve(async (req) => {
       throw new Error("Invalid surcharge");
     }
 
-    const finalPrice = basePrice + surcharge;
-    // Final guard after surcharge added.
+    // Home-visit travel fee — server-authoritative, resolved city -> country.
+    let travelFee = 0;
+    if (input.venueType === "home" && input.homeCityId) {
+      const { data: fee, error: feeErr } = await supabase.rpc("get_home_travel_fee", { _city_id: input.homeCityId });
+      if (feeErr) {
+        console.error("Home travel fee RPC failed", feeErr);
+      } else {
+        const feeNum = Number(fee);
+        if (Number.isFinite(feeNum) && feeNum >= 0 && feeNum <= MAX_SURCHARGE_UNITS) travelFee = feeNum;
+      }
+    }
+
+    const finalPrice = basePrice + surcharge + travelFee;
+    // Final guard after surcharge + travel fee added.
     if (!Number.isFinite(finalPrice) || finalPrice < MIN_PRICE_UNITS || finalPrice > MAX_PRICE_UNITS) {
-      console.error("Final price out of range", { basePrice, surcharge, finalPrice });
+      console.error("Final price out of range", { basePrice, surcharge, travelFee, finalPrice });
       throw new Error("Invalid total amount");
     }
 
@@ -319,6 +377,13 @@ serve(async (req) => {
         });
         return new Response(JSON.stringify({ error: "Dieser Termin wurde soeben gebucht. Bitte wählen Sie einen anderen Zeitslot." }), { headers: { ...cors, "Content-Type": "application/json" }, status: 409 });
       }
+    } else if (input.venueType === "home" && input.homeCityId && input.bookingDate && input.timeSlot && input.timeSlot.includes(":")) {
+      const { data: isAvailable, error: availError } = await supabase.rpc("check_home_slot_availability", {
+        p_city_id: input.homeCityId, p_date: input.bookingDate, p_time: input.timeSlot, p_duration_minutes: duration,
+      });
+      if (availError || !isAvailable) {
+        return new Response(JSON.stringify({ error: "Der gewählte Zeitraum ist leider nicht mehr verfügbar. Bitte wählen Sie einen anderen Termin." }), { headers: { ...cors, "Content-Type": "application/json" }, status: 409 });
+      }
     }
 
     // Determine the correct Stripe key + currency based on the venue's country.
@@ -328,7 +393,20 @@ serve(async (req) => {
     let stripeKeyName = "STRIPE_SECRET_KEY";
     let currency = "eur";
 
-    {
+    if (input.venueType === "home") {
+      // Home visits route on the destination country directly (no venue row).
+      const countryId = input.homeCountryId || null;
+      if (countryId) {
+        const { data: countryRow } = await supabase
+          .from("countries").select("currency_code").eq("id", countryId).maybeSingle();
+        const cc = (countryRow as { currency_code?: string } | null)?.currency_code;
+        if (cc) currency = cc.toLowerCase();
+
+        const { data: fin } = await supabase
+          .from("country_financials").select("stripe_secret_key_name").eq("country_id", countryId).maybeSingle();
+        if (fin?.stripe_secret_key_name) stripeKeyName = fin.stripe_secret_key_name;
+      }
+    } else {
       const venueTable = input.venueType === "hotel" ? "hotels" : "gyms";
       const venueId = input.venueType === "hotel" ? input.hotelId : input.gymId;
 
@@ -400,6 +478,13 @@ serve(async (req) => {
       hotelName: input.hotelName || "",
       hotelId: input.hotelId || "",
       venueType: input.venueType,
+      homeCityId: input.homeCityId || "",
+      homeCountryId: input.homeCountryId || "",
+      homeStreet: input.homeStreet || "",
+      homeHouseNo: input.homeHouseNo || "",
+      homePostalCode: input.homePostalCode || "",
+      homeAddressNotes: input.homeAddressNotes || "",
+      travelFee: String(travelFee),
       therapistName: input.therapistName || "Any Available",
       timeSlot: input.timeSlot || "Not specified",
       clientIP: clientIP.slice(0, 50),

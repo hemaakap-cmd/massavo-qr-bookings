@@ -67,7 +67,10 @@ export const CookieConsent = () => {
         STORAGE_KEY,
         JSON.stringify({ choice, at: new Date().toISOString() })
       );
-    } catch {}
+    } catch {
+      // Storage can be unavailable (Safari private mode, blocked cookies).
+      // The choice is then not persisted, but the banner still dismisses.
+    }
     setVisible(false);
   };
 

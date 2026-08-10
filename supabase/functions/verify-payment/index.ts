@@ -331,7 +331,8 @@ serve(async (req) => {
     const gymIdFromMeta = metadata.gymId || "";
     const hotelIdFromMeta = metadata.hotelId || "";
     const hotelNameFromMeta = metadata.hotelName || "";
-    const venueType: "gym" | "hotel" = (metadata.venueType === "hotel" ? "hotel" : "gym");
+    const venueType: "gym" | "hotel" | "home" =
+      metadata.venueType === "hotel" ? "hotel" : metadata.venueType === "home" ? "home" : "gym";
     const timeSlot = metadata.timeSlot || "Not specified";
     const bookingDateFromMeta = metadata.bookingDate || "";
 
@@ -472,8 +473,27 @@ serve(async (req) => {
     // Generate unique cancellation token for secure booking management
     const cancellationToken = crypto.randomUUID();
     
-    // Use atomic booking function (gym or hotel variant)
-    const { data: bookingId, error: bookingError } = venueType === "hotel"
+    // Use atomic booking function (gym, hotel, or home variant)
+    const { data: bookingId, error: bookingError } = venueType === "home"
+      ? await supabaseAdmin.rpc("create_home_booking_atomic", {
+          p_service_id: serviceId,
+          p_booking_date: bookingDate,
+          p_booking_time: bookingTime,
+          p_customer_email: customerEmail,
+          p_home_city_id: metadata.homeCityId || null,
+          p_home_country_id: metadata.homeCountryId || null,
+          p_home_street: metadata.homeStreet || null,
+          p_home_house_no: metadata.homeHouseNo || null,
+          p_home_postal_code: metadata.homePostalCode || null,
+          p_home_address_notes: metadata.homeAddressNotes || null,
+          p_customer_name: metadata.clientName || session.customer_details?.name || null,
+          p_total_amount: totalAmount,
+          p_payment_status: "paid",
+          p_stripe_session_id: sessionId,
+          p_user_id: userId,
+          p_cancellation_token: cancellationToken,
+        })
+      : venueType === "hotel"
       ? await supabaseAdmin.rpc("create_hotel_booking_atomic", {
           p_hotel_id: hotelId,
           p_service_id: serviceId,

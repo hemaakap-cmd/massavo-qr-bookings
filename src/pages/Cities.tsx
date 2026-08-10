@@ -82,7 +82,7 @@ const CitiesPage = () => {
     const fetchData = async () => {
       if (!selectedCountry) return;
 
-      let citiesQuery = supabase
+      const citiesQuery = supabase
         .from("cities")
         .select("*")
         .eq("is_active", true)

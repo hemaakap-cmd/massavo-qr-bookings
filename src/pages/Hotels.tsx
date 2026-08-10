@@ -108,8 +108,8 @@ const Hotels = () => {
 
   const orphans = filteredCities.filter((c) => !c.federal_state_id);
 
-  const toggleState = (id: string) => setExpandedStates((p) => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  const toggleCounty = (id: string) => setExpandedCounties((p) => { const s = new Set(p); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleState = (id: string) => setExpandedStates((p) => { const s = new Set(p); if (s.has(id)) s.delete(id); else s.add(id); return s; });
+  const toggleCounty = (id: string) => setExpandedCounties((p) => { const s = new Set(p); if (s.has(id)) s.delete(id); else s.add(id); return s; });
   const getCityImage = (i: number) => massageImages[i % massageImages.length];
   const totalInState = (g: GroupedData) => g.counties.reduce((a, c) => a + c.cities.length, 0) + g.unassignedCities.length;
 
