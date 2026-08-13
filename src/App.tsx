@@ -153,7 +153,7 @@ const App = () => (
           {/* Public routes */}
           <Route path="/" element={<Index />} />
           <Route path="/book" element={<QRGuard><Book /></QRGuard>} />
-          <Route path="/home-visit" element={<QRGuard><HomeVisit /></QRGuard>} />
+          <Route path="/home-visit" element={<HomeVisit />} />
           <Route path="/cities" element={<QRGuard type="gym"><Cities /></QRGuard>} />
           <Route path="/city/:cityId" element={<QRGuard type="gym"><CityPage /></QRGuard>} />
           <Route path="/gym/:gymId" element={<GymPage />} />
