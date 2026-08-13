@@ -16,6 +16,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.0";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, unauthorized } from "../_shared/internal-auth.ts";
 
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -152,6 +153,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
+
+  // Internal-only: invoked by the incident DB trigger with the service-role key
+  if (!isServiceRoleCall(req)) {
+    return unauthorized(corsHeaders);
   }
 
   let payload: AlertPayload;
