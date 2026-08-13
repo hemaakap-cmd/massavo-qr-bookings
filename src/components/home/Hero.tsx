@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { MapPin, QrCode, Clock, Hotel, ArrowRight } from "lucide-react";
+import { MapPin, QrCode, Clock, Hotel, Home, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-massage.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicCountry } from "@/contexts/CountryContext";
