@@ -152,6 +152,13 @@ const Hero = forwardRef<HTMLElement>((_, ref) => {
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
               </Link>
             </Button>
+            <Button asChild size="xl" variant="hero" className="group">
+              <Link to="/home-visit">
+                <Home className="w-5 h-5" strokeWidth={2.2} />
+                <span>{t("venues.home.cta", "Hausbesuch buchen")}</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
+              </Link>
+            </Button>
           </div>
 
           {/* Stats - Real data */}
