@@ -142,11 +142,19 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
   }
   if (resolvedVenueType === "hotel" && !sanitizedHotelId) throw new Error("Hotel ID is required for hotel bookings");
   if (resolvedVenueType === "home") {
-    if (sanitizedHomeCityId && !isValidUUID(sanitizedHomeCityId)) throw new Error("Invalid city ID format");
     if (!sanitizedHomeCityId) throw new Error("City is required for home-visit bookings");
+    if (!isValidUUID(sanitizedHomeCityId)) throw new Error("Invalid city ID format");
     if (sanitizedHomeCountryId && !isValidUUID(sanitizedHomeCountryId)) throw new Error("Invalid country ID format");
     if (!sanitizeString(homeStreet, 200)) throw new Error("Home address is required for home-visit bookings");
     if (!sanitizeString(homePostalCode, 20)) throw new Error("Postal code is required for home-visit bookings");
+    // Availability is enforced server-side and CANNOT be skipped: a home visit
+    // always needs a concrete date + time so the slot check below actually runs.
+    // (Previously these were optional, letting a crafted request bypass the
+    // availability gate and reach Stripe session creation.)
+    if (!sanitizedBookingDate) throw new Error("Booking date is required for home-visit bookings");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sanitizedBookingDate)) throw new Error("Invalid booking date format");
+    const homeTime = sanitizeString(timeSlot, 50);
+    if (!homeTime || !homeTime.includes(":")) throw new Error("Time slot is required for home-visit bookings");
   }
   if (resolvedVenueType === "gym" && !sanitizedGymId) {
     // gymId is optional in some flows; keep prior behavior
@@ -377,7 +385,24 @@ serve(async (req) => {
         });
         return new Response(JSON.stringify({ error: "Dieser Termin wurde soeben gebucht. Bitte wählen Sie einen anderen Zeitslot." }), { headers: { ...cors, "Content-Type": "application/json" }, status: 409 });
       }
-    } else if (input.venueType === "home" && input.homeCityId && input.bookingDate && input.timeSlot && input.timeSlot.includes(":")) {
+    } else if (input.venueType === "home") {
+      // Home availability is validated UNCONDITIONALLY (date/time are mandatory
+      // for home, enforced in validatePaymentInput). No partial request can skip
+      // this gate and reach Stripe session creation.
+
+      // 1) The city must actually exist and be active. Never trust a client id.
+      const { data: cityRow, error: cityErr } = await supabase
+        .from("cities")
+        .select("id, is_active")
+        .eq("id", input.homeCityId)
+        .maybeSingle();
+      if (cityErr || !cityRow || (cityRow as { is_active?: boolean }).is_active === false) {
+        return new Response(JSON.stringify({ error: "Diese Stadt ist für Hausbesuche nicht verfügbar." }), {
+          headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+        });
+      }
+
+      // 2) A therapist in the city pool must actually be free for this slot.
       const { data: isAvailable, error: availError } = await supabase.rpc("check_home_slot_availability", {
         p_city_id: input.homeCityId, p_date: input.bookingDate, p_time: input.timeSlot, p_duration_minutes: duration,
       });

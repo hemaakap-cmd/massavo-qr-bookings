@@ -97,21 +97,22 @@ async function withLang(lang: "de" | "en") {
 describe("Home Visit — entry point (/book)", () => {
   afterEach(cleanup);
 
-  it("shows a Home Visit card linking to /home-visit (DE)", async () => {
+  it("shows a Home Visit entry linking to /home-visit (DE)", async () => {
     await withLang("de");
     const Book = (await import("@/pages/Book")).default;
     renderRoute("/book", <Book />);
-    const link = await screen.findByRole("link", { name: /Hausbesuch/i });
-    expect(link).toBeInTheDocument();
-    expect(link.getAttribute("href")).toBe("/home-visit");
+    // There can be more than one match (a header nav link + the booking card),
+    // both valid; assert at least one Home Visit link points to /home-visit.
+    const links = await screen.findAllByRole("link", { name: /Hausbesuch/i });
+    expect(links.some((l) => l.getAttribute("href") === "/home-visit")).toBe(true);
   });
 
-  it("shows a Home Visit card linking to /home-visit (EN)", async () => {
+  it("shows a Home Visit entry linking to /home-visit (EN)", async () => {
     await withLang("en");
     const Book = (await import("@/pages/Book")).default;
     renderRoute("/book", <Book />);
-    const link = await screen.findByRole("link", { name: /Home Visit/i });
-    expect(link.getAttribute("href")).toBe("/home-visit");
+    const links = await screen.findAllByRole("link", { name: /Home Visit/i });
+    expect(links.some((l) => l.getAttribute("href") === "/home-visit")).toBe(true);
   });
 });
 

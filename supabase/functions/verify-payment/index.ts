@@ -525,7 +525,76 @@ serve(async (req) => {
       console.error("Booking creation error:", bookingError);
       // Handle specific error types
       if (bookingError.message?.includes("DUPLICATE_BOOKING") || bookingError.message?.includes("SLOT_UNAVAILABLE")) {
-        // Check if it's the same stripe session (idempotent retry) or a different customer
+        // Idempotency guard for ALL venue types: if THIS Stripe session already
+        // produced a booking, the error is just a duplicate-creation retry —
+        // return that booking instead of failing/refunding.
+        const { data: existingBySession } = await supabaseAdmin
+          .from("bookings")
+          .select("id, cancellation_token")
+          .eq("stripe_session_id", sessionId)
+          .maybeSingle();
+        if (existingBySession) {
+          console.log(`Idempotent retry (by session) - returning existing booking: ${existingBySession.id}`);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              bookingId: existingBySession.id,
+              cancellationToken: existingBySession.cancellation_token,
+              message: "Booking already confirmed for this slot",
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+          );
+        }
+
+        // HOME has no venue row to re-query a competing booking by, so a genuine
+        // SLOT_UNAVAILABLE here (e.g. the last therapist in the city pool was
+        // taken between create-payment and verify-payment) MUST trigger an
+        // automatic refund — never leave a paid-but-unbooked customer.
+        if (venueType === "home") {
+          console.warn(`[CONFLICT] Home slot unavailable post-payment. Refunding session ${sessionId}`);
+          try {
+            await supabaseAdmin.from("booking_events").insert({
+              event_type: "conflict_blocked",
+              gym_id: null,
+              booking_date: bookingDate,
+              booking_time: bookingTime,
+              customer_email: customerEmail,
+              customer_name: session.customer_details?.name || null,
+              details: {
+                reason: "home_slot_unavailable_post_payment",
+                blocked_session_id: sessionId,
+                refund_initiated: true,
+              },
+              severity: "warning",
+            });
+          } catch (logErr) {
+            console.error("[CONFLICT] Failed to log home conflict event:", logErr);
+          }
+          try {
+            const paymentIntentId = session.payment_intent;
+            if (paymentIntentId && typeof paymentIntentId === "string") {
+              const refund = await stripe.refunds.create({
+                payment_intent: paymentIntentId,
+                reason: "requested_by_customer",
+              });
+              console.log(`[CONFLICT] ✅ Home refund created: ${refund.id} for payment_intent ${paymentIntentId}`);
+            } else {
+              console.error("[CONFLICT] No payment_intent found on home session for refund");
+            }
+          } catch (refundErr) {
+            console.error("[CONFLICT] ❌ Home refund failed:", refundErr);
+          }
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Der gewählte Termin ist leider nicht mehr verfügbar. Ihre Zahlung wird automatisch erstattet. Bitte buchen Sie einen anderen Termin.",
+              slotTaken: true,
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+          );
+        }
+
+        // GYM / HOTEL (unchanged): re-query the competing booking by venue id.
         let existingBySlotQuery = supabaseAdmin
           .from("bookings")
           .select("id, cancellation_token, stripe_session_id")
