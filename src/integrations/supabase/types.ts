@@ -489,6 +489,12 @@ export type Database = {
           gender: string | null
           gym_id: string | null
           health_confirmed: boolean | null
+          home_address_notes: string | null
+          home_city_id: string | null
+          home_country_id: string | null
+          home_house_no: string | null
+          home_postal_code: string | null
+          home_street: string | null
           hotel_id: string | null
           id: string
           invoice_number: string | null
@@ -529,6 +535,12 @@ export type Database = {
           gender?: string | null
           gym_id?: string | null
           health_confirmed?: boolean | null
+          home_address_notes?: string | null
+          home_city_id?: string | null
+          home_country_id?: string | null
+          home_house_no?: string | null
+          home_postal_code?: string | null
+          home_street?: string | null
           hotel_id?: string | null
           id?: string
           invoice_number?: string | null
@@ -569,6 +581,12 @@ export type Database = {
           gender?: string | null
           gym_id?: string | null
           health_confirmed?: boolean | null
+          home_address_notes?: string | null
+          home_city_id?: string | null
+          home_country_id?: string | null
+          home_house_no?: string | null
+          home_postal_code?: string | null
+          home_street?: string | null
           hotel_id?: string | null
           id?: string
           invoice_number?: string | null
@@ -606,6 +624,20 @@ export type Database = {
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_home_city_id_fkey"
+            columns: ["home_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_home_country_id_fkey"
+            columns: ["home_country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
           {
@@ -688,6 +720,7 @@ export type Database = {
           created_at: string
           federal_state_id: string | null
           gym_count: number | null
+          home_visit_travel_fee: number | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -701,6 +734,7 @@ export type Database = {
           created_at?: string
           federal_state_id?: string | null
           gym_count?: number | null
+          home_visit_travel_fee?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -714,6 +748,7 @@ export type Database = {
           created_at?: string
           federal_state_id?: string | null
           gym_count?: number | null
+          home_visit_travel_fee?: number | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -882,6 +917,7 @@ export type Database = {
           bank_name: string | null
           country_id: string
           created_at: string
+          home_visit_travel_fee: number
           invoice_footer_note: string | null
           stripe_publishable_key: string | null
           stripe_secret_key_name: string
@@ -895,6 +931,7 @@ export type Database = {
           bank_name?: string | null
           country_id: string
           created_at?: string
+          home_visit_travel_fee?: number
           invoice_footer_note?: string | null
           stripe_publishable_key?: string | null
           stripe_secret_key_name?: string
@@ -908,6 +945,7 @@ export type Database = {
           bank_name?: string | null
           country_id?: string
           created_at?: string
+          home_visit_travel_fee?: number
           invoice_footer_note?: string | null
           stripe_publishable_key?: string | null
           stripe_secret_key_name?: string
@@ -1898,6 +1936,7 @@ export type Database = {
           description: string | null
           description_ar: string | null
           duration_minutes: number
+          home_visit_enabled: boolean
           icon: string | null
           id: string
           is_active: boolean | null
@@ -1913,6 +1952,7 @@ export type Database = {
           description?: string | null
           description_ar?: string | null
           duration_minutes: number
+          home_visit_enabled?: boolean
           icon?: string | null
           id?: string
           is_active?: boolean | null
@@ -1928,6 +1968,7 @@ export type Database = {
           description?: string | null
           description_ar?: string | null
           duration_minutes?: number
+          home_visit_enabled?: boolean
           icon?: string | null
           id?: string
           is_active?: boolean | null
@@ -2928,6 +2969,15 @@ export type Database = {
           total_score: number
         }[]
       }
+      check_home_slot_availability: {
+        Args: {
+          p_city_id: string
+          p_date: string
+          p_duration_minutes?: number
+          p_time: string
+        }
+        Returns: boolean
+      }
       check_hotel_slot_availability: {
         Args: {
           p_date: string
@@ -2983,6 +3033,33 @@ export type Database = {
         }
         Returns: string
       }
+      create_home_booking_atomic: {
+        Args: {
+          p_booking_date: string
+          p_booking_time: string
+          p_cancellation_token?: string
+          p_client_age?: number
+          p_client_phone?: string
+          p_customer_email: string
+          p_customer_name?: string
+          p_date_of_birth?: string
+          p_gender?: string
+          p_health_confirmed?: boolean
+          p_home_address_notes?: string
+          p_home_city_id: string
+          p_home_country_id: string
+          p_home_house_no?: string
+          p_home_postal_code?: string
+          p_home_street?: string
+          p_payment_status?: string
+          p_salutation?: string
+          p_service_id: string
+          p_stripe_session_id?: string
+          p_total_amount?: number
+          p_user_id?: string
+        }
+        Returns: string
+      }
       create_hotel_booking_atomic: {
         Args: {
           p_booking_date: string
@@ -3005,6 +3082,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      dow_enum: {
+        Args: { _d: string }
+        Returns: Database["public"]["Enums"]["day_of_week"]
       }
       get_booked_slots: {
         Args: { p_date: string; p_gym_id: string }
@@ -3037,6 +3118,23 @@ export type Database = {
         }[]
       }
       get_gym_country_id: { Args: { _gym_id: string }; Returns: string }
+      get_home_available_dates: {
+        Args: {
+          p_city_id: string
+          p_months_ahead?: number
+          p_start_date?: string
+        }
+        Returns: {
+          available_date: string
+        }[]
+      }
+      get_home_booked_slots: {
+        Args: { p_city_id: string; p_date: string }
+        Returns: {
+          slot_time: string
+        }[]
+      }
+      get_home_travel_fee: { Args: { _city_id: string }; Returns: number }
       get_hotel_available_dates: {
         Args: {
           p_hotel_id: string
@@ -3216,6 +3314,7 @@ export type Database = {
         | "recovery"
         | "wellness"
         | "corporate"
+        | "home"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3394,6 +3493,7 @@ export const Constants = {
         "recovery",
         "wellness",
         "corporate",
+        "home",
       ],
     },
   },
