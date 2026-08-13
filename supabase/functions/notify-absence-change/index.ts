@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, isAdminCall, unauthorized } from "../_shared/internal-auth.ts";
 import {
   emailLayout,
   emailHeading,
@@ -98,6 +99,11 @@ serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Only admins (or internal service-role calls) may trigger customer notifications
+  if (!isServiceRoleCall(req) && !(await isAdminCall(req))) {
+    return unauthorized(corsHeaders, 403);
   }
 
   try {
