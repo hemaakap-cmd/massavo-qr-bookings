@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.create_home_booking_atomic(uuid,date,text,text,uuid,uuid,text,text,text,text,text,text,integer,text,text,text,boolean,text,text,numeric,text,uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_home_booking_atomic(uuid,date,text,text,uuid,uuid,text,text,text,text,text,text,integer,text,text,text,boolean,text,text,numeric,text,uuid) TO service_role;
