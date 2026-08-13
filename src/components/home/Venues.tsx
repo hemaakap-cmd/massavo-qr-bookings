@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, Hotel, ArrowRight } from "lucide-react";
+import { Building2, Hotel, Home, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTilt } from "@/hooks/useTilt";
 
@@ -54,6 +54,14 @@ const Venues = () => {
       description: t("venues.hotel.description"),
       cta: t("venues.hotel.cta"),
     },
+    {
+      key: "home",
+      icon: Home,
+      to: "/home-visit",
+      title: t("venues.home.title"),
+      description: t("venues.home.description"),
+      cta: t("venues.home.cta"),
+    },
   ];
 
   return (
@@ -72,7 +80,7 @@ const Venues = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {venues.map((v) => {
             const Icon = v.icon;
             return (

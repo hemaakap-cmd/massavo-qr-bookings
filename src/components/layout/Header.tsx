@@ -53,6 +53,7 @@ const Header = forwardRef<HTMLElement>((_, ref) => {
     { href: "/", label: t("nav.home") },
     { href: "/cities", label: t("nav.findGym") },
     { href: "/hotels", label: t("nav.findHotel") },
+    { href: "/home-visit", label: t("nav.homeVisit", "Hausbesuch") },
     { href: "/services", label: t("nav.services") },
     { href: "/manage-booking", label: t("nav.manageBooking", "Buchung verwalten") },
     { href: "/about", label: t("nav.about") },
