@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 import { buildCorsHeaders } from '../_shared/cors.ts';
+import { isServiceRoleCall, isAdminCall, unauthorized } from '../_shared/internal-auth.ts';
 
 const GW = 'https://connector-gateway.lovable.dev/google_sheets/v4';
 const HEADERS_DE = ['Buchungs-ID','Kundenname','E-Mail','Telefon','Datum','Uhrzeit','Service','Preis','Währung','Status','Zahlung','Erstellt am'];
@@ -487,6 +488,12 @@ async function syncVenue(supabase: any, sheet: any) {
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // Internal/admin-only: prevents anonymous callers from triggering costly syncs
+  // or reading per-venue booking volume from the response.
+  if (!isServiceRoleCall(req) && !(await isAdminCall(req))) {
+    return unauthorized(corsHeaders, 403);
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
