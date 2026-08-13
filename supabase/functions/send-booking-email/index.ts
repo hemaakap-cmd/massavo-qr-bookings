@@ -9,6 +9,7 @@ import {
 import { t, formatDateLocalized, formatTimeLocalized, formatCurrency } from "../_shared/email-i18n.ts";
 import type { EmailLang } from "../_shared/email-i18n.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, unauthorized } from "../_shared/internal-auth.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -135,6 +136,11 @@ serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Internal-only: invoked server-to-server by verify-payment / stripe-webhook
+  if (!isServiceRoleCall(req)) {
+    return unauthorized(corsHeaders);
   }
 
   try {
