@@ -24,6 +24,7 @@
     "home": "Startseite",
     "findGym": "Fitnessstudio finden",
     "findHotel": "Hotel finden",
+    "homeVisit": "Hausbesuch",
     "services": "Leistungen",
     "about": "Über uns",
     "contact": "Kontakt",
@@ -873,6 +874,11 @@
       "title": "Im Hotel",
       "description": "Entspannung nach einem langen Reisetag – wir kommen direkt in dein Hotel. Buche bequem über den QR-Code an der Rezeption oder online.",
       "cta": "Hotel finden"
+    },
+    "home": {
+      "title": "Als Hausbesuch",
+      "description": "Massage bequem bei dir zu Hause – unser Therapeut kommt zu dir. Wähle deine Stadt, Adresse und Wunschzeit.",
+      "cta": "Hausbesuch buchen"
     }
   },
   "hotels": {

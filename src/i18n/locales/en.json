@@ -24,6 +24,7 @@
     "home": "Home",
     "findGym": "Find a Gym",
     "findHotel": "Find a Hotel",
+    "homeVisit": "Home Visit",
     "services": "Services",
     "about": "About",
     "contact": "Contact",
@@ -873,6 +874,11 @@
       "title": "In the Hotel",
       "description": "Unwind after a long travel day — we come right to your hotel. Book easily via the QR code at reception or online.",
       "cta": "Find a Hotel"
+    },
+    "home": {
+      "title": "At Home",
+      "description": "Massage in the comfort of your home — our therapist comes to you. Choose your city, address and preferred time.",
+      "cta": "Book a Home Visit"
     }
   },
   "hotels": {
