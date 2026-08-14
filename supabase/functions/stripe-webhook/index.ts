@@ -280,6 +280,41 @@ serve(async (req) => {
       .eq("id", eventRowId);
   }
 
+  // 3b. A paid checkout that produced no booking must NEVER disappear silently.
+  // We return 2xx (so Stripe stops retrying a deterministic failure), therefore
+  // the durable alert has to live in OUR system: booking_events is what the
+  // admin monitoring/payment screens read. verify-payment already refunds and
+  // records these, but if it never got that far (network/500) this is the
+  // backstop so ops still sees PAID + NO BOOKING.
+  if (!processedOk && event.type === "checkout.session.completed") {
+    const s = event.data.object as Stripe.Checkout.Session;
+    if (s.payment_status === "paid") {
+      const md = (s.metadata ?? {}) as Record<string, string>;
+      try {
+        await supabaseAdmin.from("booking_events").insert({
+          event_type: "booking_failed_after_payment",
+          gym_id: md.venueType === "gym" ? (md.gymId || null) : null,
+          hotel_id: md.venueType === "hotel" ? (md.hotelId || null) : null,
+          booking_date: md.bookingDate || null,
+          booking_time: md.timeSlot || null,
+          customer_email: s.customer_details?.email ?? null,
+          customer_name: s.customer_details?.name ?? null,
+          details: {
+            reason: "webhook_verify_payment_failed",
+            venue_type: md.venueType || "gym",
+            stripe_session_id: s.id,
+            payment_intent_id: typeof s.payment_intent === "string" ? s.payment_intent : null,
+            error: (errorMessage || "").slice(0, 300),
+            recovery_outcome: "needs_manual_review",
+          },
+          severity: "critical",
+        });
+      } catch (logErr) {
+        console.error("[stripe-webhook] Failed to record paid-but-unbooked alert:", logErr);
+      }
+    }
+  }
+
   // Always 2xx so Stripe stops retrying once we've recorded the event;
   // failures are visible in stripe_webhook_events for ops to replay.
   return new Response(

@@ -37,6 +37,7 @@ const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const ADMIN_EMAIL = "info@massavo.com";
 
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { recoverFailedBooking } from "../_shared/payment-recovery.ts";
 
 function sanitizeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -672,7 +673,35 @@ serve(async (req) => {
           );
         }
       }
-      throw new Error(`Failed to create booking: ${bookingError.message}`);
+      // NON-CONFLICT booking failure after a CONFIRMED payment (DB constraint,
+      // transient RPC error, unexpected state, ...). Previously this threw with
+      // no refund and no alert, leaving the customer charged and unbooked.
+      // Now: idempotent auto-refund + durable operational record, all venue types.
+      const recovery = await recoverFailedBooking(stripe, supabaseAdmin, {
+        sessionId,
+        paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        paymentStatus: session.payment_status,
+        venueType,
+        gymId,
+        hotelId,
+        bookingDate,
+        bookingTime,
+        customerEmail,
+        customerName: metadata.clientName || session.customer_details?.name || null,
+        reason: `booking_rpc_failed: ${bookingError.message}`.slice(0, 300),
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error:
+            recovery.outcome === "refunded" || recovery.outcome === "already_refunded"
+              ? "Die Buchung konnte leider nicht abgeschlossen werden. Ihre Zahlung wird automatisch erstattet. Bitte kontaktieren Sie uns bei Rückfragen."
+              : "Die Buchung konnte leider nicht abgeschlossen werden. Unser Team wurde informiert und meldet sich zu Ihrer Zahlung.",
+          bookingFailed: true,
+          recovery: recovery.outcome,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+      );
     }
 
     // Fetch the created booking for email data
@@ -683,7 +712,30 @@ serve(async (req) => {
       .single();
 
     if (!booking) {
-      throw new Error("Booking created but could not be retrieved");
+      // Payment confirmed, RPC reported success, but the row is unreadable.
+      // Treat as a post-payment failure: recover rather than throw silently.
+      const recovery = await recoverFailedBooking(stripe, supabaseAdmin, {
+        sessionId,
+        paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        paymentStatus: session.payment_status,
+        venueType,
+        gymId,
+        hotelId,
+        bookingDate,
+        bookingTime,
+        customerEmail,
+        customerName: metadata.clientName || session.customer_details?.name || null,
+        reason: "booking_created_but_not_retrievable",
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Die Buchung konnte leider nicht bestätigt werden. Unser Team wurde informiert.",
+          bookingFailed: true,
+          recovery: recovery.outcome,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+      );
     }
 
     // Update all captured client details from checkout metadata

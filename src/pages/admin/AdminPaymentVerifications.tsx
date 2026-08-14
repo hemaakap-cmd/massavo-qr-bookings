@@ -138,7 +138,10 @@ const AdminPaymentVerifications = () => {
       const { data: eventsData, error: eventsErr } = await supabase
         .from("booking_events")
         .select("id, created_at, event_type, severity, customer_email, customer_name, booking_id, details")
-        .in("event_type", ["created", "payment_updated"])
+        // booking_failed_after_payment / conflict_blocked = customer PAID but no
+        // booking was created. These are the highest-value rows on this screen,
+        // so they must be listed alongside the normal payment events.
+        .in("event_type", ["created", "payment_updated", "booking_failed_after_payment", "conflict_blocked"])
         .gte("created_at", sinceIso)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -385,13 +388,13 @@ const AdminPaymentVerifications = () => {
                               {format(new Date(ev.created_at), "dd.MM HH:mm:ss")}
                             </TableCell>
                             <TableCell className="text-xs font-medium capitalize">
-                              {ev.event_type.replace("_", " ")}
+                              {ev.event_type.replace(/_/g, " ")}
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
                                 className={
-                                  ev.severity === "error"
+                                  ev.severity === "critical" || ev.severity === "error"
                                     ? "border-red-500/30 text-red-400"
                                     : ev.severity === "warning"
                                     ? "border-amber-500/30 text-amber-400"
