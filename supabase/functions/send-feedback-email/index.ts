@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { emailLayout, emailHeading, emailGreeting, emailParagraph, emailButton, emailDetailTable, emailDetailRow, emailSignature, emailDivider, emailNotice, emailSubheading, BRAND_COLOR, TEXT_COLOR, TEXT_MUTED, BG_WARM, BORDER_LIGHT } from "../_shared/email-template.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, isAdminCall, unauthorized } from "../_shared/internal-auth.ts";
 
 
 function getIntensityColor(intensity: number): string {
@@ -82,6 +83,11 @@ function buildCurrentSessionAreasHtml(areas: Array<{ area_label: string; pain_in
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Internal/cron-only: require the service-role key or an admin JWT
+  if (!isServiceRoleCall(req) && !(await isAdminCall(req))) {
+    return unauthorized(corsHeaders);
+  }
 
   try {
     const supabaseAdmin = createClient(
