@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, isAdminCall, unauthorized } from "../_shared/internal-auth.ts";
 import {
   emailLayout, emailHeading, emailGreeting, emailParagraph,
   emailDetailRow, emailDetailTable, emailButton, emailNotice,
@@ -61,6 +62,11 @@ serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Internal/cron-only: require the service-role key or an admin JWT
+  if (!isServiceRoleCall(req) && !(await isAdminCall(req))) {
+    return unauthorized(corsHeaders);
   }
 
   try {
