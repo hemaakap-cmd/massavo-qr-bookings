@@ -7,6 +7,7 @@ import {
 } from "../_shared/email-template.ts";
 import { resolveVenue } from "../_shared/venue.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { isServiceRoleCall, isAdminCall, unauthorized } from "../_shared/internal-auth.ts";
 
 
 interface NotificationRequest {
@@ -18,6 +19,11 @@ serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Internal-only: invoked server-to-server by the reschedule workflow
+  if (!isServiceRoleCall(req) && !(await isAdminCall(req))) {
+    return unauthorized(corsHeaders);
   }
 
   try {
