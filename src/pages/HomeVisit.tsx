@@ -15,7 +15,7 @@ import { BodyDiagram, SelectedArea, BodyArea } from "@/components/body-diagram/B
 import { useDisallowedAreaCodes } from "@/hooks/useBodyAreaRestrictions";
 import { IntensityPricingBox } from "@/components/booking/IntensityPricingBox";
 import { DeepTissueUpgradeModal } from "@/components/booking/DeepTissueUpgradeModal";
-import { getFinalSurcharge, shouldOfferDeepTissue } from "@/utils/intensityPricing";
+import { getFinalSurcharge, shouldOfferDeepTissue, calculateIntensitySurcharge } from "@/utils/intensityPricing";
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicCountry } from "@/contexts/CountryContext";
 import { usePayment } from "@/hooks/usePayment";
@@ -117,6 +117,10 @@ const HomeVisit = () => {
   const serviceLabel = (s: HomeService) => (isAr && s.name_ar ? s.name_ar : s.name);
 
   const basePrice = selectedService?.price ?? 0;
+  const intensityPricing = useMemo(
+    () => calculateIntensitySurcharge(selectedBodyAreas),
+    [selectedBodyAreas],
+  );
   const finalSurcharge = useMemo(
     () => getFinalSurcharge(selectedBodyAreas, deepTissueUpgradeActive),
     [selectedBodyAreas, deepTissueUpgradeActive],
