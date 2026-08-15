@@ -454,9 +454,14 @@ const HomeVisit = () => {
       <Footer />
       <DeepTissueUpgradeModal
         open={showUpgradeModal}
-        onClose={() => { setShowUpgradeModal(false); setUpgradeModalDismissed(true); }}
-        onAccept={() => {
+        onClose={() => setShowUpgradeModal(false)}
+        individualTotal={intensityPricing.totalExtra}
+        onActivateUpgrade={() => {
           setDeepTissueUpgradeActive(true);
+          setShowUpgradeModal(false);
+          setUpgradeModalDismissed(true);
+        }}
+        onKeepIndividual={() => {
           setShowUpgradeModal(false);
           setUpgradeModalDismissed(true);
         }}
