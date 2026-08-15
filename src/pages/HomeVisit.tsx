@@ -98,6 +98,7 @@ const HomeVisit = () => {
           .select("id, name, name_ar, description, price, duration_minutes")
           .eq("is_active", true)
           .eq("home_visit_enabled", true)
+          .in("duration_minutes", [50, 90])
           .order("price");
         if (!error && data) setServices(data as HomeService[]);
         else setServices([]);
