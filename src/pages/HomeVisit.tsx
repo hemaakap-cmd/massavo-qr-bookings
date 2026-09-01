@@ -157,7 +157,7 @@ const HomeVisit = () => {
   const canBook =
     !!cityId && !!serviceId && !!selectedDate && !!selectedTime &&
     !!clientInfo.firstName && !!clientInfo.email && !!clientInfo.street &&
-    !!clientInfo.postalCode && clientInfo.healthConfirmed && !!communicationPreference;
+    !!clientInfo.postalCode && clientInfo.healthConfirmed && policyAccepted && !!communicationPreference;
 
   const handleBook = useCallback(async () => {
     if (!canBook || !selectedService) return;
