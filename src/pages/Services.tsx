@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { Activity, Heart, Leaf, ArrowRight, Check, Clock, Loader2, Building, Hotel as HotelIcon } from "lucide-react";
+import { Activity, Heart, Leaf, ArrowRight, Check, Clock, Loader2, Building, Hotel as HotelIcon, Home as HomeIcon } from "lucide-react";
 import { useCountryServices } from "@/hooks/useCountryServices";
 import { usePublicCountry } from "@/contexts/CountryContext";
 import i18n from "@/i18n";
@@ -140,6 +140,13 @@ const Services = () => {
                               <ArrowRight className="w-4 h-4" />
                             </Link>
                           </Button>
+                          <Button variant="luxuryOutline" asChild>
+                            <Link to="/home-visit">
+                              <HomeIcon className="w-4 h-4" />
+                              {t("servicesPage.bookAtHome", "Als Hausbesuch buchen")}
+                              <ArrowRight className="w-4 h-4" />
+                            </Link>
+                          </Button>
                         </div>
                       </div>
 
@@ -183,6 +190,13 @@ const Services = () => {
                 <Link to="/hotels">
                   <HotelIcon className="w-5 h-5" />
                   {t("servicesPage.cta.hotelButton")}
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Button>
+              <Button variant="luxuryOutline" size="lg" asChild>
+                <Link to="/home-visit">
+                  <HomeIcon className="w-5 h-5" />
+                  {t("servicesPage.cta.homeButton", "Hausbesuch buchen")}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>

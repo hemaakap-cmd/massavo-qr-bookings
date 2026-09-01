@@ -233,6 +233,7 @@
     "bookNow": "Jetzt buchen",
     "bookAtGym": "Im Fitnessstudio buchen",
     "bookAtHotel": "Im Hotel buchen",
+    "bookAtHome": "Als Hausbesuch buchen",
     "duration": "Dauer",
     "price": "Preis",
     "benefits": "Hauptvorteile",
@@ -243,7 +244,8 @@
       "title": "Bereit zu buchen?",
       "subtitle": "Wähle, ob du in einem Fitnessstudio oder Partnerhotel buchen möchtest.",
       "gymButton": "Finde dein Fitnessstudio",
-      "hotelButton": "Finde dein Hotel"
+      "hotelButton": "Finde dein Hotel",
+      "homeButton": "Hausbesuch buchen"
     }
   },
   "nav_extra": {
