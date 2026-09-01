@@ -481,15 +481,16 @@ function LiveTotalPrice({ selectedAreas, basePrice, isUpgradeActive }: { selecte
 
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-3 space-y-2 animate-in fade-in-0 duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15">
+      <div className="flex items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <span className="text-sm font-semibold text-foreground">{t("bodyDiagram.totalPrice")}</span>
+          <span className="text-sm font-semibold text-foreground leading-snug break-words">{t("bodyDiagram.totalPrice")}</span>
         </div>
-        <span className="text-2xl font-bold text-primary">{total.toFixed(2)}</span>
+        <span className="text-2xl font-bold text-primary whitespace-nowrap shrink-0">{total.toFixed(2)}</span>
       </div>
+
 
       <div className="space-y-1 text-[11px]">
         <div className="flex justify-between text-muted-foreground">
