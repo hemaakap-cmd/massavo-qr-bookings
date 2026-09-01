@@ -494,27 +494,28 @@ function LiveTotalPrice({ selectedAreas, basePrice, isUpgradeActive }: { selecte
 
 
       <div className="space-y-1 text-[11px]">
-        <div className="flex justify-between text-muted-foreground">
-          <span>{t("bodyDiagram.basePrice")}</span>
-          <span>{basePrice.toFixed(2)}</span>
+        <div className="flex justify-between gap-2 text-muted-foreground min-w-0">
+          <span className="min-w-0 break-words">{t("bodyDiagram.basePrice")}</span>
+          <span className="whitespace-nowrap shrink-0">{basePrice.toFixed(2)} €</span>
         </div>
         {totalExtra > 0 && (
-          <div className="flex justify-between text-primary font-medium">
-            <span>{isUpgradeActive ? t("bodyDiagram.deepTissueUpgrade") : t("bodyDiagram.intensitySurcharge")}</span>
-            <span>+{totalExtra.toFixed(2)}</span>
+          <div className="flex justify-between gap-2 text-primary font-medium min-w-0">
+            <span className="min-w-0 break-words">{isUpgradeActive ? t("bodyDiagram.deepTissueUpgrade") : t("bodyDiagram.intensitySurcharge")}</span>
+            <span className="whitespace-nowrap shrink-0">+{totalExtra.toFixed(2)} €</span>
           </div>
         )}
         {!isUpgradeActive && selectedAreas.filter(z => getZoneExtra(z.painIntensity) > 0).length > 0 && (
           <div className="pl-2 border-l-2 border-primary/20 space-y-0.5 mt-1">
             {selectedAreas.filter(z => getZoneExtra(z.painIntensity) > 0).map(z => (
-              <div key={z.code} className="flex justify-between text-muted-foreground">
-                <span>{getLabel(z.code, z.label)} ({t("bodyDiagram.level")} {z.painIntensity})</span>
-                <span>+{getZoneExtra(z.painIntensity).toFixed(2)}</span>
+              <div key={z.code} className="flex justify-between gap-2 text-muted-foreground min-w-0">
+                <span className="min-w-0 break-words">{getLabel(z.code, z.label)} ({t("bodyDiagram.level")} {z.painIntensity})</span>
+                <span className="whitespace-nowrap shrink-0">+{getZoneExtra(z.painIntensity).toFixed(2)} €</span>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
