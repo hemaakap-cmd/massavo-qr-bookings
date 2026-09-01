@@ -481,39 +481,41 @@ function LiveTotalPrice({ selectedAreas, basePrice, isUpgradeActive }: { selecte
 
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-3 space-y-2 animate-in fade-in-0 duration-300">
-      <div className="flex items-center justify-between gap-3 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 w-full min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <span className="text-sm font-semibold text-foreground leading-snug break-words">{t("bodyDiagram.totalPrice")}</span>
+          <span className="text-sm font-semibold text-foreground leading-snug break-words min-w-0">{t("bodyDiagram.totalPrice")}</span>
         </div>
-        <span className="text-2xl font-bold text-primary whitespace-nowrap shrink-0">{total.toFixed(2)}</span>
+        <span className="text-xl font-bold text-primary whitespace-nowrap shrink-0 ms-auto">{total.toFixed(2)} €</span>
       </div>
 
 
+
       <div className="space-y-1 text-[11px]">
-        <div className="flex justify-between text-muted-foreground">
-          <span>{t("bodyDiagram.basePrice")}</span>
-          <span>{basePrice.toFixed(2)}</span>
+        <div className="flex justify-between gap-2 text-muted-foreground min-w-0">
+          <span className="min-w-0 break-words">{t("bodyDiagram.basePrice")}</span>
+          <span className="whitespace-nowrap shrink-0">{basePrice.toFixed(2)} €</span>
         </div>
         {totalExtra > 0 && (
-          <div className="flex justify-between text-primary font-medium">
-            <span>{isUpgradeActive ? t("bodyDiagram.deepTissueUpgrade") : t("bodyDiagram.intensitySurcharge")}</span>
-            <span>+{totalExtra.toFixed(2)}</span>
+          <div className="flex justify-between gap-2 text-primary font-medium min-w-0">
+            <span className="min-w-0 break-words">{isUpgradeActive ? t("bodyDiagram.deepTissueUpgrade") : t("bodyDiagram.intensitySurcharge")}</span>
+            <span className="whitespace-nowrap shrink-0">+{totalExtra.toFixed(2)} €</span>
           </div>
         )}
         {!isUpgradeActive && selectedAreas.filter(z => getZoneExtra(z.painIntensity) > 0).length > 0 && (
           <div className="pl-2 border-l-2 border-primary/20 space-y-0.5 mt-1">
             {selectedAreas.filter(z => getZoneExtra(z.painIntensity) > 0).map(z => (
-              <div key={z.code} className="flex justify-between text-muted-foreground">
-                <span>{getLabel(z.code, z.label)} ({t("bodyDiagram.level")} {z.painIntensity})</span>
-                <span>+{getZoneExtra(z.painIntensity).toFixed(2)}</span>
+              <div key={z.code} className="flex justify-between gap-2 text-muted-foreground min-w-0">
+                <span className="min-w-0 break-words">{getLabel(z.code, z.label)} ({t("bodyDiagram.level")} {z.painIntensity})</span>
+                <span className="whitespace-nowrap shrink-0">+{getZoneExtra(z.painIntensity).toFixed(2)} €</span>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
