@@ -396,7 +396,7 @@ function AreaToggleRow({ area, state, painIntensity, readOnly, isDisallowed, onT
 
       {/* Intensity slider with live price */}
       {isActive && (
-        <div className="flex items-center gap-2 mt-1.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 min-w-0">
           <span className="text-[10px] text-muted-foreground whitespace-nowrap">{t("bodyDiagram.pressure")}</span>
           {!readOnly && onIntensityChange ? (
             <>
@@ -404,17 +404,18 @@ function AreaToggleRow({ area, state, painIntensity, readOnly, isDisallowed, onT
                 type="range" min={1} max={10}
                 value={painIntensity}
                 onChange={e => onIntensityChange(area.code, parseInt(e.target.value))}
-                className="flex-1 h-1.5 accent-primary max-w-[100px]"
+                className="flex-1 min-w-[70px] h-1.5 accent-primary max-w-[100px]"
               />
-              <span className="text-xs font-bold w-5 text-center" style={{ color: getIntensityColor(painIntensity) }}>
+              <span className="text-xs font-bold w-5 text-center shrink-0" style={{ color: getIntensityColor(painIntensity) }}>
                 {painIntensity}
               </span>
               {zoneExtra > 0 && (
-                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">
                   +{zoneExtra.toFixed(2)} €
                 </span>
               )}
             </>
+
           ) : (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded"
               style={{ color: getIntensityColor(painIntensity), backgroundColor: getIntensityColor(painIntensity) + "20" }}>
