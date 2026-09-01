@@ -434,8 +434,130 @@ const HomeVisit = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Final confirmations — same as gym/hotel */}
+              <div className="mt-8 pt-6 border-t border-border space-y-3">
+                <label
+                  htmlFor="home-health-confirm"
+                  className={cn(
+                    "group flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-300 border bg-gradient-to-br from-accent/15 to-accent/5",
+                    clientInfo.healthConfirmed
+                      ? "border-primary/60 ring-2 ring-primary/30 shadow-sm"
+                      : "border-accent/30 hover:border-primary/40 hover:shadow-sm",
+                  )}
+                >
+                  <span className={cn(
+                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+                    clientInfo.healthConfirmed ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+                  )}>
+                    <HeartPulse className="h-4 w-4" strokeWidth={2.2} />
+                  </span>
+                  <div className="flex-1 min-w-0 flex items-start gap-3">
+                    <Checkbox
+                      id="home-health-confirm"
+                      checked={clientInfo.healthConfirmed}
+                      onCheckedChange={(checked) => setClientInfo({ ...clientInfo, healthConfirmed: checked === true })}
+                      className="mt-1 shrink-0 border-primary data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-sm text-foreground leading-relaxed break-words min-w-0">
+                      {t("gymPage.healthConfirm")}
+                    </span>
+                  </div>
+                </label>
+
+                <label
+                  htmlFor="home-policy-accept"
+                  className={cn(
+                    "group flex items-start gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-300 border bg-gradient-to-br from-accent/15 to-accent/5",
+                    policyAccepted
+                      ? "border-primary/60 ring-2 ring-primary/30 shadow-sm"
+                      : "border-accent/30 hover:border-primary/40 hover:shadow-sm",
+                  )}
+                >
+                  <span className={cn(
+                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+                    policyAccepted ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+                  )}>
+                    <ScrollText className="h-4 w-4" strokeWidth={2.2} />
+                  </span>
+                  <div className="flex-1 min-w-0 flex items-start gap-3">
+                    <Checkbox
+                      id="home-policy-accept"
+                      checked={policyAccepted}
+                      onCheckedChange={(checked) => setPolicyAccepted(checked === true)}
+                      className="mt-1 shrink-0 border-primary data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                    <span className="text-sm text-foreground leading-relaxed break-words min-w-0">
+                      {t("gymPage.policyAccept")}{" "}
+                      <a
+                        href="/booking-policy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-primary underline underline-offset-2 hover:text-primary/80"
+                      >
+                        {t("gymPage.policyLink")}
+                      </a>{" "}
+                      {t("gymPage.policyAcceptEnd")}
+                    </span>
+                  </div>
+                </label>
+              </div>
             </section>
           )}
+
+          {/* Booking summary */}
+          {selectedTime && selectedService && (
+            <section className="rounded-2xl border border-border bg-card p-6">
+              <h3 className="font-display text-lg font-semibold text-foreground mb-4">
+                {t("gymPage.summary")}
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">{t("gymPage.location")}</span>
+                  <span className="font-medium text-foreground text-right min-w-0 break-words">
+                    {cities.find((c) => c.id === cityId)?.name || ""}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">{t("gymPage.service")}</span>
+                  <span className="font-medium text-foreground text-right min-w-0 break-words">
+                    {serviceLabel(selectedService)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">{t("gymPage.date")}</span>
+                  <span className="font-medium text-foreground whitespace-nowrap">{selectedDate}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">{t("gymPage.time")}</span>
+                  <span className="font-medium text-foreground whitespace-nowrap">
+                    {selectedTime} {t("gymPage.timeUnit", "Uhr")}
+                  </span>
+                </div>
+              </div>
+              <div className="border-t border-border mt-5 pt-5 space-y-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground shrink-0">{t("gymPage.basePrice")}</span>
+                  <span className="font-medium text-foreground whitespace-nowrap">{formatPrice(basePrice)}</span>
+                </div>
+                {finalSurcharge > 0 && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground shrink-0">{t("intensityPricing.surcharge")}</span>
+                    <span className="font-medium text-primary whitespace-nowrap">+{formatPrice(finalSurcharge)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center gap-3 border-t border-border pt-3">
+                  <span className="font-semibold text-foreground shrink-0">{t("gymPage.total")}</span>
+                  <span className="font-display text-xl font-bold text-primary whitespace-nowrap">
+                    {formatPrice(basePrice + finalSurcharge)}
+                  </span>
+                </div>
+              </div>
+            </section>
+          )}
+
+
 
           {/* Confirm */}
           {selectedTime && (
