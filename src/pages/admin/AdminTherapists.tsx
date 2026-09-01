@@ -213,9 +213,24 @@ const AdminTherapists = () => {
     }
   };
 
-  const saveGymAssignments = async (therapistId: string, assignments: GymAssignment[]) => {
+  /**
+   * Replaces the therapist's gym assignments (delete-then-insert).
+   * Returns the first error, or null.
+   *
+   * The delete runs before the insert, so a silently swallowed insert error
+   * would leave the therapist assigned to NO gyms while the admin is shown a
+   * success message. Callers must surface the returned error.
+   */
+  const saveGymAssignments = async (
+    therapistId: string,
+    assignments: GymAssignment[],
+  ): Promise<string | null> => {
     // Delete existing gym assignments
-    await supabase.from("therapist_gyms" as any).delete().eq("therapist_id", therapistId);
+    const { error: delError } = await supabase
+      .from("therapist_gyms" as any)
+      .delete()
+      .eq("therapist_id", therapistId);
+    if (delError) return delError.message;
 
     if (assignments.length > 0) {
       const entries = assignments.map((a) => ({
@@ -223,8 +238,13 @@ const AdminTherapists = () => {
         gym_id: a.gym_id,
         is_primary: a.is_primary,
       }));
-      await (supabase as any).from("therapist_gyms").insert(entries);
+      const { error: insError } = await (supabase as any).from("therapist_gyms").insert(entries);
+      if (insError) {
+        // Prior assignments are already gone — make this loud, not silent.
+        return `${insError.message} (previous gym assignments were cleared — please re-assign)`;
+      }
     }
+    return null;
   };
 
   const saveCityAssignments = async (therapistId: string, cityIds: string[]) => {
@@ -348,7 +368,11 @@ const AdminTherapists = () => {
         }
       }
 
-      await saveGymAssignments(editingTherapist.id, formData.gym_assignments);
+      const gymAssignError = await saveGymAssignments(editingTherapist.id, formData.gym_assignments);
+      if (gymAssignError) {
+        toast({ title: "Gym assignments not saved", description: gymAssignError, variant: "destructive" });
+        return;
+      }
       await saveCityAssignments(editingTherapist.id, formData.serviceable_city_ids);
       const scheduleSaved = await saveWeeklySchedules(editingTherapist.id, formData.gym_assignments);
       if (!scheduleSaved) {
@@ -390,7 +414,13 @@ const AdminTherapists = () => {
           return;
         }
 
-        await saveGymAssignments(data.id, formData.gym_assignments);
+        const gymAssignError = await saveGymAssignments(data.id, formData.gym_assignments);
+        if (gymAssignError) {
+          toast({ title: "Therapist created, gym assignments failed", description: gymAssignError, variant: "destructive" });
+          setIsDialogOpen(false);
+          fetchData();
+          return;
+        }
         await saveCityAssignments(data.id, formData.serviceable_city_ids);
         const scheduleSaved = await saveWeeklySchedules(data.id, formData.gym_assignments);
 

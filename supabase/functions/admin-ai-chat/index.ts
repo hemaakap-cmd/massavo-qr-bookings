@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { statusForError, messageForError } from "../_shared/auth-errors.ts";
 
 
 serve(async (req) => {
@@ -200,8 +201,9 @@ RULES:
     });
   } catch (e) {
     console.error("admin-ai-chat error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
+    // Auth failures are 401/403, not 500 — see _shared/auth-errors.ts.
+    return new Response(JSON.stringify({ error: messageForError(e) }), {
+      status: statusForError(e),
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

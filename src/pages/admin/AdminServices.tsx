@@ -202,7 +202,17 @@ const AdminServices = () => {
 
   const updateCustomPrice = async (gymId: string, price: number | null) => {
     if (!selectedServiceForGyms) return;
-    await supabase.from("gym_services").update({ custom_price: price }).eq("gym_id", gymId).eq("service_id", selectedServiceForGyms.id);
+    // The write must succeed before the UI reflects it — otherwise an admin sees
+    // a price the database never stored, and customers are quoted the old one.
+    const { error } = await supabase
+      .from("gym_services")
+      .update({ custom_price: price })
+      .eq("gym_id", gymId)
+      .eq("service_id", selectedServiceForGyms.id);
+    if (error) {
+      toast.error(`Failed to update price: ${error.message}`);
+      return;
+    }
     setGymAssignments(prev =>
       prev.map(g => g.gym_id === gymId ? { ...g, custom_price: price } : g)
     );
@@ -249,7 +259,16 @@ const AdminServices = () => {
 
   const updateHotelCustomPrice = async (hotelId: string, price: number | null) => {
     if (!selectedServiceForHotels) return;
-    await supabase.from("hotel_services").update({ custom_price: price }).eq("hotel_id", hotelId).eq("service_id", selectedServiceForHotels.id);
+    // Same rule as the gym path: never show a price the backend rejected.
+    const { error } = await supabase
+      .from("hotel_services")
+      .update({ custom_price: price })
+      .eq("hotel_id", hotelId)
+      .eq("service_id", selectedServiceForHotels.id);
+    if (error) {
+      toast.error(`Failed to update price: ${error.message}`);
+      return;
+    }
     setHotelAssignments(prev => prev.map(h => h.hotel_id === hotelId ? { ...h, custom_price: price } : h));
   };
 

@@ -140,7 +140,11 @@ const AdminGyms = () => {
       }
 
       // Sync gym_services for edit
-      await syncGymServices(editingGym.id, selectedServiceIds);
+      const syncError = await syncGymServices(editingGym.id, selectedServiceIds);
+      if (syncError) {
+        toast({ title: "Services not saved", description: syncError, variant: "destructive" });
+        return;
+      }
 
       toast({ title: "Success", description: "Gym updated successfully" });
       setIsDialogOpen(false);
@@ -159,7 +163,19 @@ const AdminGyms = () => {
           service_id: sid,
           is_active: true,
         }));
-        await supabase.from("gym_services").insert(inserts);
+        const { error: svcError } = await supabase.from("gym_services").insert(inserts);
+        if (svcError) {
+          // The gym row exists but has no services — say so instead of
+          // reporting a clean success the admin would never re-check.
+          toast({
+            title: "Gym created, services not assigned",
+            description: svcError.message,
+            variant: "destructive",
+          });
+          setIsDialogOpen(false);
+          fetchData();
+          return;
+        }
       }
 
       toast({
@@ -175,12 +191,19 @@ const AdminGyms = () => {
     }
   };
 
-  const syncGymServices = async (gymId: string, newServiceIds: string[]) => {
+  /**
+   * Syncs the gym's service assignments.
+   * Returns the first error encountered (or null). Callers must surface it:
+   * a silent failure here leaves a gym with no bookable services while the
+   * admin is told the save succeeded.
+   */
+  const syncGymServices = async (gymId: string, newServiceIds: string[]): Promise<string | null> => {
     // Get existing assignments
-    const { data: existing } = await supabase
+    const { data: existing, error: readErr } = await supabase
       .from("gym_services")
       .select("id, service_id, is_active")
       .eq("gym_id", gymId);
+    if (readErr) return readErr.message;
 
     const existingMap = new Map((existing || []).map((e) => [e.service_id, e]));
 
@@ -188,19 +211,23 @@ const AdminGyms = () => {
     for (const sid of newServiceIds) {
       if (existingMap.has(sid)) {
         if (!existingMap.get(sid)!.is_active) {
-          await supabase.from("gym_services").update({ is_active: true }).eq("id", existingMap.get(sid)!.id);
+          const { error } = await supabase.from("gym_services").update({ is_active: true }).eq("id", existingMap.get(sid)!.id);
+          if (error) return error.message;
         }
       } else {
-        await supabase.from("gym_services").insert({ gym_id: gymId, service_id: sid, is_active: true });
+        const { error } = await supabase.from("gym_services").insert({ gym_id: gymId, service_id: sid, is_active: true });
+        if (error) return error.message;
       }
     }
 
     // Deactivate unselected
     for (const [sid, entry] of existingMap.entries()) {
       if (!newServiceIds.includes(sid) && entry.is_active) {
-        await supabase.from("gym_services").update({ is_active: false }).eq("id", entry.id);
+        const { error } = await supabase.from("gym_services").update({ is_active: false }).eq("id", entry.id);
+        if (error) return error.message;
       }
     }
+    return null;
   };
 
   const handleEdit = async (gym: Gym) => {
