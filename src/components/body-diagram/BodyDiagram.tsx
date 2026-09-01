@@ -396,7 +396,7 @@ function AreaToggleRow({ area, state, painIntensity, readOnly, isDisallowed, onT
 
       {/* Intensity slider with live price */}
       {isActive && (
-        <div className="flex items-center gap-2 mt-1.5">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 min-w-0">
           <span className="text-[10px] text-muted-foreground whitespace-nowrap">{t("bodyDiagram.pressure")}</span>
           {!readOnly && onIntensityChange ? (
             <>
@@ -404,17 +404,18 @@ function AreaToggleRow({ area, state, painIntensity, readOnly, isDisallowed, onT
                 type="range" min={1} max={10}
                 value={painIntensity}
                 onChange={e => onIntensityChange(area.code, parseInt(e.target.value))}
-                className="flex-1 h-1.5 accent-primary max-w-[100px]"
+                className="flex-1 min-w-[70px] h-1.5 accent-primary max-w-[100px]"
               />
-              <span className="text-xs font-bold w-5 text-center" style={{ color: getIntensityColor(painIntensity) }}>
+              <span className="text-xs font-bold w-5 text-center shrink-0" style={{ color: getIntensityColor(painIntensity) }}>
                 {painIntensity}
               </span>
               {zoneExtra > 0 && (
-                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">
                   +{zoneExtra.toFixed(2)} €
                 </span>
               )}
             </>
+
           ) : (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded"
               style={{ color: getIntensityColor(painIntensity), backgroundColor: getIntensityColor(painIntensity) + "20" }}>
@@ -480,15 +481,16 @@ function LiveTotalPrice({ selectedAreas, basePrice, isUpgradeActive }: { selecte
 
   return (
     <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-3 space-y-2 animate-in fade-in-0 duration-300">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15">
+      <div className="flex items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <span className="text-sm font-semibold text-foreground">{t("bodyDiagram.totalPrice")}</span>
+          <span className="text-sm font-semibold text-foreground leading-snug break-words">{t("bodyDiagram.totalPrice")}</span>
         </div>
-        <span className="text-2xl font-bold text-primary">{total.toFixed(2)}</span>
+        <span className="text-2xl font-bold text-primary whitespace-nowrap shrink-0">{total.toFixed(2)}</span>
       </div>
+
 
       <div className="space-y-1 text-[11px]">
         <div className="flex justify-between text-muted-foreground">

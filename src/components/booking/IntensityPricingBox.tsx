@@ -96,12 +96,13 @@ export function IntensityPricingBox({
       )}
 
       {/* Divider + total */}
-      <div className="border-t border-primary/20 pt-2 flex justify-between items-center">
-        <span className="font-semibold text-foreground">{t("intensityPricing.total")}</span>
-        <span className="font-display text-xl font-bold text-primary">
+      <div className="border-t border-primary/20 pt-2 flex justify-between items-center gap-3 min-w-0">
+        <span className="font-semibold text-foreground min-w-0 break-words">{t("intensityPricing.total")}</span>
+        <span className="font-display text-xl font-bold text-primary whitespace-nowrap shrink-0">
           {total.toFixed(2)} €
         </span>
       </div>
+
     </div>
   );
 }
