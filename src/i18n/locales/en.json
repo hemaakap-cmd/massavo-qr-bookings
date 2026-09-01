@@ -233,6 +233,7 @@
     "bookNow": "Book Now",
     "bookAtGym": "Book at Gym",
     "bookAtHotel": "Book at Hotel",
+    "bookAtHome": "Book as Home Visit",
     "duration": "Duration",
     "price": "Price",
     "benefits": "Key Benefits",
@@ -243,7 +244,8 @@
       "title": "Ready to Book?",
       "subtitle": "Choose whether you want to book at a gym or a partner hotel.",
       "gymButton": "Find Your Gym",
-      "hotelButton": "Find Your Hotel"
+      "hotelButton": "Find Your Hotel",
+      "homeButton": "Book a Home Visit"
     }
   },
   "nav_extra": {
