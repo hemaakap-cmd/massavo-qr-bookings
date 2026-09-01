@@ -76,17 +76,15 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
               {displayServices.length === 0 ? (
                 <li><span className="text-cream/60 text-sm">—</span></li>
               ) : (
-                displayServices.map((s) => {
-                  const name = isAr && s.name_ar ? s.name_ar : s.name;
-                  return (
-                    <li key={s.id}>
-                      <Link to="/services" className="text-cream/80 hover:text-cream transition-colors text-sm">
-                        {name} – {s.duration_minutes} min
-                      </Link>
-                    </li>
-                  );
-                })
+                displayServices.map((s) => (
+                  <li key={s.label}>
+                    <Link to="/services" className="text-cream/80 hover:text-cream transition-colors text-sm">
+                      {s.label}
+                    </Link>
+                  </li>
+                ))
               )}
+
             </ul>
           </div>
 
