@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, ArrowRight, Loader2, MapPin, Check } from "lucide-react";
+import { Home, ArrowRight, Loader2, MapPin, Check, HeartPulse, ScrollText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Header from "@/components/layout/Header";
