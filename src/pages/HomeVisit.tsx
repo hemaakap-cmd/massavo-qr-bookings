@@ -61,7 +61,9 @@ const HomeVisit = () => {
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [selectedBodyAreas, setSelectedBodyAreas] = useState<SelectedArea[]>([]);
   const [communicationPreference, setCommunicationPreference] = useState<string>("");
+  const [policyAccepted, setPolicyAccepted] = useState(false);
   const [deepTissueUpgradeActive, setDeepTissueUpgradeActive] = useState(false);
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeModalDismissed, setUpgradeModalDismissed] = useState(false);
   const [clientInfo, setClientInfo] = useState<ClientInfo>({
