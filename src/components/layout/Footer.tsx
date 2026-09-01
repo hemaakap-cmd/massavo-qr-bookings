@@ -12,7 +12,24 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
   const { services } = useCountryServices();
   const isAr = i18n.language === "ar";
   // Unified with dashboard: real DB services, exclude test items (< €5)
-  const displayServices = services.filter((s) => Number(s.price) >= 5).slice(0, 6);
+  // Show only the service type (no durations) and remove duplicates
+  const displayServices = Array.from(
+    new Set(
+      services
+        .filter((s) => Number(s.price) >= 5)
+        .map((s) => {
+          const raw = isAr && s.name_ar ? s.name_ar : s.name;
+          return raw
+            .replace(/[–-]?\s*\d+\s*(min|Min|minutes|Minuten|دقيقة)\.?/gi, "")
+            .replace(/\s*[–-]\s*$/, "")
+            .trim();
+        })
+        .filter(Boolean),
+    ),
+  )
+    .slice(0, 6)
+    .map((label) => ({ label }));
+
 
   return (
     <footer ref={ref} className="bg-sage text-primary-foreground">
