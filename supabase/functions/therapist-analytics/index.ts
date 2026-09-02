@@ -55,7 +55,10 @@ serve(async (req) => {
       .select("id, name, address, commission_percentage, is_active")
       .eq("country_id", country_id);
 
-    if (gymsError) throw gymsError;
+    // Supabase errors are plain objects, not Error instances — throwing them raw
+    // made the handler report a useless "Unknown error". Wrap so the cause is
+    // preserved in logs (the client still gets a generic 500 message).
+    if (gymsError) throw new Error(`gyms query failed: ${gymsError.message}`);
 
     const { data: hotelsData } = await serviceClient
       .from("hotels")
@@ -79,7 +82,11 @@ serve(async (req) => {
         gymIds.length > 0
           ? serviceClient
               .from("therapists")
-              .select("id, name, phone, email, is_available, profession, gym_id, city_id, rating, education, created_at")
+              // NOTE: phone/email live on therapist_private_info, not therapists.
+              // Selecting them here made every request fail with 42703 and took
+              // the whole Therapist Analytics page down. Neither field is used
+              // by this function or its frontend, so they are simply not read.
+              .select("id, name, is_available, profession, gym_id, city_id, rating, education, created_at")
               .in("gym_id", gymIds)
           : Promise.resolve({ data: [] as any[], error: null }),
         serviceClient
@@ -90,8 +97,10 @@ serve(async (req) => {
           .order("booking_date", { ascending: false }),
       ]);
 
-      if ((therapistsRes as any).error) throw (therapistsRes as any).error;
-      if (bookingsRes.error) throw bookingsRes.error;
+      if ((therapistsRes as any).error) {
+        throw new Error(`therapists query failed: ${(therapistsRes as any).error.message}`);
+      }
+      if (bookingsRes.error) throw new Error(`bookings query failed: ${bookingsRes.error.message}`);
 
       therapists = therapistsRes.data || [];
       bookings = (bookingsRes.data || []).map((b: any) => ({
@@ -177,8 +186,8 @@ THERAPIST ANALYTICS (Last 30 Days):
 - Avg Bookings/Therapist: ${analyticsData.summary.avg_bookings_per_therapist}
 
 WORKLOAD DISTRIBUTION:
-- Overloaded (>${overloadedThreshold.toFixed(0)} bookings): ${overloaded.map(t => `${t.name} (${t.bookings})`).join(", ") || "None"}
-- Underloaded (<${underloadedThreshold.toFixed(0)} bookings): ${underloaded.map(t => `${t.name} (${t.bookings})`).join(", ") || "None"}
+- Overloaded (>${overloadedThreshold.toFixed(0)} bookings): ${overloaded.map(t => `${t.name} (${t.confirmed_bookings})`).join(", ") || "None"}
+- Underloaded (<${underloadedThreshold.toFixed(0)} bookings): ${underloaded.map(t => `${t.name} (${t.confirmed_bookings})`).join(", ") || "None"}
 - Balanced: ${balanced.length} therapists
 
 TOP PERFORMERS (by revenue):

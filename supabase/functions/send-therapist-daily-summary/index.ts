@@ -54,8 +54,25 @@ serve(async (req: Request): Promise<Response> => {
 
     const { therapist_id, date, delivery_method }: RequestBody = await req.json();
 
-    const { data: therapist, error: therapistError } = await supabase.from("therapists").select("id, name, phone, email").eq("id", therapist_id).single();
-    if (therapistError || !therapist) throw new Error("Therapist not found");
+    // phone/email moved to therapist_private_info. Selecting them straight off
+    // `therapists` threw 42703, so the daily summary never sent. This function
+    // genuinely needs both (email + WhatsApp delivery), so they are joined.
+    const { data: therapistRow, error: therapistError } = await supabase
+      .from("therapists")
+      .select("id, name, therapist_private_info(phone, email)")
+      .eq("id", therapist_id)
+      .single();
+    if (therapistError || !therapistRow) throw new Error("Therapist not found");
+
+    // The embedded row comes back as an object or a single-element array.
+    const privateInfoRaw = (therapistRow as any).therapist_private_info;
+    const privateInfo = Array.isArray(privateInfoRaw) ? privateInfoRaw[0] : privateInfoRaw;
+    const therapist = {
+      id: (therapistRow as any).id,
+      name: (therapistRow as any).name,
+      phone: privateInfo?.phone ?? null,
+      email: privateInfo?.email ?? null,
+    };
 
     const { data: bookings, error: bookingsError } = await supabase
       .from("bookings")

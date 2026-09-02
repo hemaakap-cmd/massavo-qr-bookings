@@ -70,7 +70,10 @@ serve(async (req) => {
       const [therapistsRes, bookingsRes, hotelBookingsRes] = await Promise.all([
         serviceClient
           .from("therapists")
-          .select("id, name, phone, email, is_available, profession, gym_id")
+          // phone/email are on therapist_private_info, not therapists — selecting
+          // them here threw 42703 and broke admin AI chat entirely. They are also
+          // PII that should not be placed in a model prompt, so they are dropped.
+          .select("id, name, is_available, profession, gym_id")
           .or(gymIds.length ? `gym_id.in.(${gymIds.join(",")})` : "id.is.null"),
         gymIds.length
           ? serviceClient
@@ -133,7 +136,7 @@ HOTEL DETAILS:
 ${hotels.map((h) => `- ${h.name}${h.star_rating ? ` (${h.star_rating}★)` : ""}: Commission ${h.commission_percentage}%, Active: ${h.is_active}`).join("\n") || "No hotels yet."}
 
 THERAPIST DETAILS:
-${therapists.map((t) => `- ${t.name}: ${t.profession}, Available: ${t.is_available}, Phone: ${t.phone || "N/A"}`).join("\n")}
+${therapists.map((t) => `- ${t.name}: ${t.profession}, Available: ${t.is_available}`).join("\n")}
 
 TODAY'S SCHEDULE:
 ${

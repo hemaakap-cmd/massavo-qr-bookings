@@ -81,7 +81,11 @@ export function useAdminAllTherapists() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapists")
-        .select("id, name, email, phone, is_available, gym_id, gyms:gym_id(name), therapist_gyms(gym_id, is_primary, gyms(id, name))")
+        // phone/email live on therapist_private_info, not therapists. Selecting
+        // them here threw 42703 and broke every page using this hook
+        // (StaffAdvanced, TherapistAbsence, TherapistLeaves). No consumer reads
+        // them, so they are not selected.
+        .select("id, name, is_available, gym_id, gyms:gym_id(name), therapist_gyms(gym_id, is_primary, gyms(id, name))")
         .order("name");
       if (error) throw error;
       return (data || []).map((t: any) => ({
