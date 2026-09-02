@@ -8,7 +8,16 @@ export default tseslint.config(
   {
     // dist/ is build output. supabase/functions run on Deno with `npm:` imports
     // and Deno globals, so the browser/node configs below do not apply to them.
-    ignores: ["dist", "node_modules", "supabase/functions", "src/components/ui"],
+    // previewAuthStorage.ts is machine-generated and re-emitted on every sync
+    // ("Do not edit it directly"), so hand-fixing its lint findings does not
+    // survive. It is excluded rather than repeatedly re-patched.
+    ignores: [
+      "dist",
+      "node_modules",
+      "supabase/functions",
+      "src/components/ui",
+      "src/integrations/supabase/previewAuthStorage.ts",
+    ],
   },
   {
     files: ["**/*.{ts,tsx}"],
