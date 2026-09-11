@@ -15,6 +15,7 @@
     "selectDate": "Date",
     "noDates": "No appointments are currently available for this city.",
     "selectTime": "Time",
+    "travelFee": "Travel fee",
     "yourDetails": "Your details & address",
     "addressHint": "The address you enter is where the home visit takes place.",
     "proceedToPayment": "Continue to payment",

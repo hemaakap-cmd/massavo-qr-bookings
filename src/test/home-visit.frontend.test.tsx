@@ -47,6 +47,8 @@ vi.mock("@/hooks/usePayment", () => ({
 vi.mock("@/hooks/useHomeAvailability", () => ({
   useHomeAvailableDates: () => ({ data: ["2099-01-05", "2099-01-06"] }),
   useHomeBookedSlots: () => ({ data: ["12:00"] }),
+  // Non-zero so the summary assertions below exercise the travel-fee line.
+  useHomeTravelFee: () => ({ data: 15 }),
 }));
 
 // Chainable supabase stub: cities + services queries used by HomeVisit.
@@ -113,6 +115,39 @@ describe("Home Visit — entry point (/book)", () => {
     renderRoute("/book", <Book />);
     const links = await screen.findAllByRole("link", { name: /Home Visit/i });
     expect(links.some((l) => l.getAttribute("href") === "/home-visit")).toBe(true);
+  });
+});
+
+describe("Home Visit — past slots are not bookable", () => {
+  // get_home_available_dates includes today and the slot grid is static, so
+  // without this filter the 09:00 button stayed clickable at 18:00 and the
+  // customer only discovered the problem when create-payment returned 409.
+  const at = (iso: string) => new Date(iso);
+
+  it("blocks slots earlier today", async () => {
+    const { isPastSlot } = await import("@/utils/timeSlotCalculator");
+    const now = at("2026-09-12T18:00:00");
+    expect(isPastSlot("2026-09-12", "09:00", now)).toBe(true);
+    expect(isPastSlot("2026-09-12", "17:00", now)).toBe(true);
+  });
+
+  it("allows later slots today and everything on future dates", async () => {
+    const { isPastSlot } = await import("@/utils/timeSlotCalculator");
+    const now = at("2026-09-12T18:00:00");
+    expect(isPastSlot("2026-09-12", "19:00", now)).toBe(false);
+    expect(isPastSlot("2026-09-13", "09:00", now)).toBe(false);
+  });
+
+  it("blocks every slot on a past date and ignores an empty date", async () => {
+    const { isPastSlot } = await import("@/utils/timeSlotCalculator");
+    const now = at("2026-09-12T18:00:00");
+    expect(isPastSlot("2026-09-11", "19:00", now)).toBe(true);
+    expect(isPastSlot("", "09:00", now)).toBe(false);
+  });
+
+  it("treats the slot exactly now as past, not bookable", async () => {
+    const { isPastSlot } = await import("@/utils/timeSlotCalculator");
+    expect(isPastSlot("2026-09-12", "18:00", at("2026-09-12T18:00:00"))).toBe(true);
   });
 });
 

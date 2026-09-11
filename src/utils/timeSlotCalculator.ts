@@ -56,6 +56,25 @@ export function minutesToTimeString(minutes: number): string {
 }
 
 /**
+ * True when `slot` (HH:MM) on `date` (YYYY-MM-DD) is already in the past.
+ *
+ * `generateAvailableTimeSlots` applies this rule inline for venues with a
+ * schedule. The home-visit picker renders a fixed grid instead, so it needs the
+ * same rule as a standalone check — otherwise the morning slots stay clickable
+ * all afternoon and the customer only finds out at checkout.
+ *
+ * Local browser time is the right clock: the session happens at the customer's
+ * own address, so their device timezone is the venue timezone.
+ */
+export function isPastSlot(date: string, slot: string, now: Date = new Date()): boolean {
+  if (!date) return false;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  if (date > today) return false;
+  if (date < today) return true;
+  return parseTimeToMinutes(slot) <= now.getHours() * 60 + now.getMinutes();
+}
+
+/**
  * Convert existing bookings to reserved time windows using per-booking buffers
  */
 export function calculateReservedWindows(bookings: ExistingBooking[]): ReservedWindow[] {

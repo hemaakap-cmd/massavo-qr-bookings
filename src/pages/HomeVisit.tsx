@@ -21,7 +21,8 @@ import { getFinalSurcharge, shouldOfferDeepTissue, calculateIntensitySurcharge }
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicCountry } from "@/contexts/CountryContext";
 import { usePayment } from "@/hooks/usePayment";
-import { useHomeAvailableDates, useHomeBookedSlots } from "@/hooks/useHomeAvailability";
+import { useHomeAvailableDates, useHomeBookedSlots, useHomeTravelFee } from "@/hooks/useHomeAvailability";
+import { isPastSlot } from "@/utils/timeSlotCalculator";
 
 interface HomeCity {
   id: string;
@@ -74,8 +75,22 @@ const HomeVisit = () => {
   const disallowedAreas = useDisallowedAreaCodes();
   const notesRef = useRef<HTMLDivElement>(null);
 
+  const selectedService = useMemo(
+    () => services.find((s) => s.id === serviceId) || null,
+    [services, serviceId],
+  );
+
   const { data: availableDates = [] } = useHomeAvailableDates(cityId);
-  const { data: bookedSlots = [] } = useHomeBookedSlots(cityId, selectedDate);
+  // Duration is part of the availability question: a 90-minute visit rules out
+  // slots a 50-minute one still fits into.
+  const { data: bookedSlots = [] } = useHomeBookedSlots(
+    cityId,
+    selectedDate,
+    selectedService?.duration_minutes,
+  );
+  // create-payment adds this to the Stripe amount, so it has to appear in the
+  // summary too — otherwise the customer is quoted less than they are charged.
+  const { data: travelFee = 0 } = useHomeTravelFee(cityId);
 
   // Load cities for the active country.
   useEffect(() => {
@@ -112,11 +127,6 @@ const HomeVisit = () => {
     };
     run();
   }, []);
-
-  const selectedService = useMemo(
-    () => services.find((s) => s.id === serviceId) || null,
-    [services, serviceId],
-  );
 
   const isAr = i18n.language === "ar";
   const serviceLabel = (s: HomeService) => (isAr && s.name_ar ? s.name_ar : s.name);
@@ -312,7 +322,11 @@ const HomeVisit = () => {
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {SLOTS.map((slot) => {
-                      const booked = bookedSlots.includes(slot);
+                      // A slot that has already passed today is not bookable.
+                      // The gym/hotel picker applies the same rule in
+                      // generateAvailableTimeSlots; the home grid is static, so
+                      // it has to be applied here.
+                      const booked = bookedSlots.includes(slot) || isPastSlot(selectedDate, slot);
                       return (
                         <button
                           key={slot}
@@ -547,10 +561,18 @@ const HomeVisit = () => {
                     <span className="font-medium text-primary whitespace-nowrap">+{formatPrice(finalSurcharge)}</span>
                   </div>
                 )}
+                {travelFee > 0 && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground shrink-0">
+                      {t("homeVisit.travelFee", "Anfahrtspauschale")}
+                    </span>
+                    <span className="font-medium text-primary whitespace-nowrap">+{formatPrice(travelFee)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center gap-3 border-t border-border pt-3">
                   <span className="font-semibold text-foreground shrink-0">{t("gymPage.total")}</span>
                   <span className="font-display text-xl font-bold text-primary whitespace-nowrap">
-                    {formatPrice(basePrice + finalSurcharge)}
+                    {formatPrice(basePrice + finalSurcharge + travelFee)}
                   </span>
                 </div>
               </div>
