@@ -42,15 +42,24 @@ export function useHomeTravelFee(cityId?: string) {
   });
 }
 
-export function useHomeAvailableDates(cityId?: string) {
+/**
+ * Dates the city pool can actually serve.
+ *
+ * `durationMinutes` is passed through for the same reason as below: a day
+ * whose only working window is too short for a 90-minute visit is not an
+ * available date for that service. Omitting it falls back to the server's
+ * 60-minute default.
+ */
+export function useHomeAvailableDates(cityId?: string, durationMinutes?: number) {
   return useQuery({
-    queryKey: ["home-available-dates", cityId],
+    queryKey: ["home-available-dates", cityId, durationMinutes],
     queryFn: async () => {
       if (!cityId) return [] as string[];
       const { data, error } = await sb.rpc("get_home_available_dates", {
         p_city_id: cityId,
         p_start_date: new Date().toISOString().split("T")[0],
         p_months_ahead: 3,
+        ...(durationMinutes ? { p_duration_minutes: durationMinutes } : {}),
       });
       if (error) return [] as string[];
       return ((data as HomeAvailableDate[]) || []).map((r) => r.available_date);

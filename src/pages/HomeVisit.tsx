@@ -80,7 +80,10 @@ const HomeVisit = () => {
     [services, serviceId],
   );
 
-  const { data: availableDates = [] } = useHomeAvailableDates(cityId);
+  const { data: availableDates = [] } = useHomeAvailableDates(
+    cityId,
+    selectedService?.duration_minutes,
+  );
   // Duration is part of the availability question: a 90-minute visit rules out
   // slots a 50-minute one still fits into.
   const { data: bookedSlots = [] } = useHomeBookedSlots(
