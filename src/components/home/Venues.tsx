@@ -68,7 +68,7 @@ const Venues = () => {
     <section className="py-16 lg:py-24 bg-gradient-to-b from-background to-secondary/30">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center mb-12">
-          <span className="inline-block px-4 py-1 mb-4 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase">
+          <span className="inline-block px-5 sm:px-6 py-1.5 mb-4 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-widest uppercase">
             {t("venues.sectionBadge")}
           </span>
           <h2 className="font-display text-3xl lg:text-5xl font-bold mb-4">
