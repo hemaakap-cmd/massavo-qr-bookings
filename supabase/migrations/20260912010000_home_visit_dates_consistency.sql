@@ -19,13 +19,19 @@
 -- exist for this weekday?". It never looks at start_time/end_time.
 -- check_home_slot_availability additionally requires
 --     p_time >= ws.start_time AND p_time < ws.end_time
--- A row whose window is degenerate — NULL times, zero-length, or inverted —
--- satisfies the first test and can never satisfy the second. That is exactly
--- the observed signature: dates offered, not one slot bookable all day.
+-- A row whose window is degenerate satisfies the first test and can never
+-- satisfy the second. That is exactly the observed signature: dates offered,
+-- not one slot bookable all day.
+--
+-- therapist_weekly_schedules.start_time and .end_time are NOT NULL, so the
+-- degenerate case here is start_time >= end_time — a zero-length window
+-- (both ends equal, e.g. rows created with a 00:00 default) or an inverted
+-- one. Either makes the BETWEEN-style test unsatisfiable for every instant
+-- of the day.
 --
 -- Note this is NOT "the hardcoded 09:00–19:00 grid misses their shift". A
--- full 00:00–23:30 sweep found no bookable time at all, so no grid could
--- have matched.
+-- sweep of all 1440 minutes of the day found no bookable time at all, so no
+-- grid could have matched.
 --
 -- WHAT THIS CHANGES
 -- -----------------
@@ -47,6 +53,14 @@
 --
 -- Return shape is unchanged, so useHomeAvailableDates keeps working.
 -- =====================================================================
+
+-- Drop the superseded three-argument version FIRST. The new signature adds a
+-- defaulted parameter, so Postgres treats it as a separate function: while
+-- both exist, every unqualified reference to the name — including the
+-- COMMENT below and the frontend's three-argument calls — fails with
+-- "function name is not unique". The three-argument callers keep working
+-- against the new definition via the default.
+DROP FUNCTION IF EXISTS public.get_home_available_dates(uuid, date, integer);
 
 CREATE OR REPLACE FUNCTION public.get_home_available_dates(
   p_city_id uuid,
@@ -78,9 +92,11 @@ AS $$
     WHERE tc.city_id = p_city_id
       AND ws.is_active
       AND ws.day_of_week = public.dow_enum(d)
-      -- The window must actually be able to hold a session. Without this a
-      -- NULL / zero-length / inverted window still advertises the date while
-      -- every slot on it fails the per-slot check.
+      -- The window must be able to hold a session. Without this, a
+      -- zero-length or inverted window still advertises the date while every
+      -- slot on it fails the per-slot check. The IS NOT NULL pair is
+      -- defensive only: both columns are NOT NULL today, but a NULL would
+      -- make the arithmetic below NULL and silently re-advertise the date.
       AND ws.start_time IS NOT NULL
       AND ws.end_time   IS NOT NULL
       AND (EXTRACT(EPOCH FROM ws.start_time) / 60)::int
@@ -96,11 +112,9 @@ AS $$
   ORDER BY 1;
 $$;
 
-COMMENT ON FUNCTION public.get_home_available_dates IS
+-- Fully qualified: an unqualified COMMENT ON FUNCTION would break the moment
+-- a second overload of this name ever exists again.
+COMMENT ON FUNCTION public.get_home_available_dates(uuid, date, integer, integer) IS
   'Dates on which the city pool can actually serve a home visit. Requires a usable working window, matching the per-slot rule in check_home_slot_availability, so the date picker cannot offer a day on which nothing is bookable.';
-
--- The three-argument calls the frontend already makes stay valid via the
--- new parameter default; drop the old arity so those calls are unambiguous.
-DROP FUNCTION IF EXISTS public.get_home_available_dates(uuid, date, integer);
 
 GRANT EXECUTE ON FUNCTION public.get_home_available_dates(uuid, date, integer, integer) TO anon, authenticated;

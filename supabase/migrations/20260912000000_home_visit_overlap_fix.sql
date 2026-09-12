@@ -112,7 +112,7 @@ AS $$
   GROUP BY tc.therapist_id;
 $$;
 
-COMMENT ON FUNCTION public.home_free_therapists IS
+COMMENT ON FUNCTION public.home_free_therapists(uuid, date, time, integer, integer) IS
   'Single source of truth for home-visit slot availability. Duration- and buffer-aware; mirrors src/utils/timeSlotCalculator.ts. Used by check_home_slot_availability, get_home_booked_slots and create_home_booking_atomic so they cannot drift.';
 
 -- 2) Availability check -------------------------------------------------
