@@ -410,7 +410,7 @@
   "cancelBooking": {
     "title": "Buchung stornieren",
     "subtitleToken": "Überprüfe deine Buchungsdetails und storniere bei Bedarf.",
-    "subtitleEmail": "Gib deine E-Mail-Adresse ein, um deine Buchungen anzuzeigen und zu stornieren.",
+    "subtitleEmail": "Gib deine E-Mail-Adresse ein – wir senden dir einen persönlichen Verwaltungslink zu.",
     "policyTitle": "Stornierungsbedingungen",
     "policyDesc": "Stornierungen sind bis 24 Stunden vor dem Termin möglich. Bei erfolgreicher Stornierung wird der gezahlte Betrag vollständig erstattet.",
     "loadingBooking": "Buchung wird geladen...",
@@ -420,8 +420,8 @@
     "appointmentIn": "Termin in {{hours}} h (mind. 24 h erforderlich)",
     "notFound": "Buchung nicht gefunden",
     "notFoundDesc": "Der Stornierungslink ist ungültig oder die Buchung wurde bereits storniert.",
-    "searchTitle": "Buchungen suchen",
-    "searchDesc": "Gib die E-Mail-Adresse ein, mit der du gebucht hast.",
+    "searchTitle": "Verwaltungslink anfordern",
+    "searchDesc": "Gib die E-Mail-Adresse ein, mit der du gebucht hast. Aus Datenschutzgründen zeigen wir Termine nur über den Link aus deinem Postfach.",
     "emailPlaceholder": "deine@email.de",
     "search": "Suchen",
     "noBookings": "Keine Buchungen gefunden",
@@ -448,7 +448,12 @@
     "notFoundError": "Buchung nicht gefunden",
     "fetchError": "Fehler beim Abrufen der Buchungen",
     "cancelError": "Fehler beim Stornieren",
-    "invalidLink": "Ungültiger oder abgelaufener Stornierungslink"
+    "invalidLink": "Ungültiger oder abgelaufener Stornierungslink",
+    "sendLink": "Link senden",
+    "requestSentTitle": "E-Mail unterwegs",
+    "requestSentDesc": "Wenn zu dieser E-Mail-Adresse ein bevorstehender Termin existiert, haben wir einen Verwaltungslink an das Postfach gesendet. Bitte prüfe auch den Spam-Ordner.",
+    "requestFailed": "Anfrage konnte nicht gesendet werden. Bitte versuche es später erneut.",
+    "tokenRequired": "Stornierungen sind nur über den persönlichen Link aus deiner Bestätigungs-E-Mail möglich."
   },
   "paymentSuccess": {
     "confirming": "Buchung wird bestätigt...",

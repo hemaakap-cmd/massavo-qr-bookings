@@ -1,5 +1,49 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { enforceRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
+
+/**
+ * SECURITY (remediation item 13): this endpoint is unauthenticated and every call
+ * used to trigger up to three BILLED Google Places requests, so an anonymous
+ * caller could drain the Places quota (and the card behind it) with a loop.
+ *
+ * The reviews are a single fixed public business listing that changes at most a
+ * few times a week, so the fix is a durable server-side cache plus a strict
+ * per-IP limit on cache MISSES only:
+ *   - a fresh cache entry is served without touching Google at all,
+ *   - a miss costs one Google fetch and is limited per trusted IP,
+ *   - a limited caller with a stale entry is served the stale entry rather than
+ *     an error, so abuse degrades freshness, never availability.
+ */
+const CACHE_KEY = "google_reviews_cache";
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+
+function serviceClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } },
+  );
+}
+
+async function readCache(db: ReturnType<typeof serviceClient>) {
+  const { data, error } = await db
+    .from("system_settings")
+    .select("value, updated_at")
+    .eq("key", CACHE_KEY)
+    .maybeSingle();
+  if (error || !data?.value) return null;
+  const ageMs = Date.now() - new Date(data.updated_at as string).getTime();
+  return { payload: data.value as Record<string, unknown>, fresh: ageMs < CACHE_TTL_MS };
+}
+
+async function writeCache(db: ReturnType<typeof serviceClient>, payload: unknown) {
+  const { error } = await db
+    .from("system_settings")
+    .upsert({ key: CACHE_KEY, value: payload, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  if (error) console.error("[get-google-reviews] cache write failed:", error.message);
+}
 
 
 serve(async (req) => {
@@ -8,9 +52,36 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const jsonResponse = (payload: unknown, status = 200) =>
+    new Response(JSON.stringify(payload), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
   try {
+    const db = serviceClient();
+    const cached = await readCache(db);
+
+    // Fresh cache: zero paid Google calls.
+    if (cached?.fresh) {
+      return jsonResponse({ ...cached.payload, source: 'cache' });
+    }
+
+    // Cache miss/stale: this is the only path that can spend Google quota.
+    const rate = await enforceRateLimit(req, {
+      action: "google_reviews_refresh",
+      ipMax: 5,
+      ipWindowMinutes: 60,
+      blockMinutes: 60,
+    });
+    if (!rate.allowed) {
+      if (cached) return jsonResponse({ ...cached.payload, source: 'cache_stale' });
+      return tooManyRequests(corsHeaders, rate, "Reviews are temporarily unavailable. Please try again later.");
+    }
+
     const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
     if (!apiKey) {
+      if (cached) return jsonResponse({ ...cached.payload, source: 'cache_stale' });
       throw new Error('Google Places API key not configured');
     }
 
@@ -105,19 +176,19 @@ serve(async (req) => {
     }
 
     if (reviews && reviews.length > 0) {
-      return new Response(JSON.stringify({
+      const payload = {
         reviews,
         rating: rating || 5.0,
         total_ratings: totalRatings || reviews.length,
         source: 'google_places_api',
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      };
+      await writeCache(db, payload);
+      return jsonResponse(payload);
     }
 
     // Fallback reviews
     console.log('Massavo not found via any API, using fallback reviews');
-    return new Response(JSON.stringify({
+    const fallbackPayload = {
       reviews: [
         {
           author_name: 'Jannik S.',
@@ -144,14 +215,14 @@ serve(async (req) => {
       rating: 5.0,
       total_ratings: 3,
       source: 'fallback',
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    };
+    // Cache the fallback too, so a persistently unmatched listing does not mean a
+    // paid lookup on every single page view.
+    await writeCache(db, fallbackPayload);
+    return jsonResponse(fallbackPayload);
   } catch (error) {
-    console.error('Error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // SECURITY (remediation item 14): never echo the upstream/internal message.
+    console.error('[get-google-reviews] failed:', error instanceof Error ? error.message : error);
+    return jsonResponse({ error: 'Reviews are temporarily unavailable.' }, 503);
   }
 });

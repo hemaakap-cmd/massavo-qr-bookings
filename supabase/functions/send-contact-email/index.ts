@@ -4,6 +4,7 @@ import {
   emailDetailRow, emailDetailTable, emailNotice, emailSignature,
 } from "../_shared/email-template.ts";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { enforceRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -61,6 +62,21 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ error: validation.error }), {
         status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
       });
+    }
+
+    // SECURITY (remediation item 6): this endpoint is unauthenticated and relays
+    // arbitrary attacker text into Massavo's inbox via Resend — without a limit
+    // it is an unlimited mail relay and a way to burn the Resend quota. The limit
+    // is durable (Postgres-backed) and keyed on both the platform-trusted client
+    // IP and the submitted address, so neither a header nor a fresh isolate
+    // resets it. The limiter fails CLOSED.
+    const rate = await enforceRateLimit(
+      req,
+      { action: "contact_form", subjectMax: 3, subjectWindowMinutes: 60, ipMax: 8, ipWindowMinutes: 60, blockMinutes: 60 },
+      data.email.trim().toLowerCase(),
+    );
+    if (!rate.allowed) {
+      return tooManyRequests(corsHeaders, rate, "Too many messages sent. Please try again later.");
     }
 
     const safeName = sanitizeHtml(data.name.trim());

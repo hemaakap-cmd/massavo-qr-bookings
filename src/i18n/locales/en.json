@@ -410,7 +410,7 @@
   "cancelBooking": {
     "title": "Cancel Booking",
     "subtitleToken": "Review your booking details and cancel if needed.",
-    "subtitleEmail": "Enter your email address to view and cancel your bookings.",
+    "subtitleEmail": "Enter your email address – we will send you a personal management link.",
     "policyTitle": "Cancellation Policy",
     "policyDesc": "Cancellations are possible up to 24 hours before the appointment. Upon successful cancellation, the paid amount will be fully refunded.",
     "loadingBooking": "Loading booking...",
@@ -420,8 +420,8 @@
     "appointmentIn": "Appointment in {{hours}}h (min. 24h required)",
     "notFound": "Booking not found",
     "notFoundDesc": "The cancellation link is invalid or the booking has already been cancelled.",
-    "searchTitle": "Search Bookings",
-    "searchDesc": "Enter the email address you used to book.",
+    "searchTitle": "Request a management link",
+    "searchDesc": "Enter the email address you used to book. For privacy reasons, appointments are only shown via the link sent to your mailbox.",
     "emailPlaceholder": "your@email.com",
     "search": "Search",
     "noBookings": "No bookings found",
@@ -448,7 +448,12 @@
     "notFoundError": "Booking not found",
     "fetchError": "Error fetching bookings",
     "cancelError": "Error cancelling",
-    "invalidLink": "Invalid or expired cancellation link"
+    "invalidLink": "Invalid or expired cancellation link",
+    "sendLink": "Send link",
+    "requestSentTitle": "Email on its way",
+    "requestSentDesc": "If an upcoming appointment exists for this email address, we have sent a management link to that mailbox. Please also check your spam folder.",
+    "requestFailed": "The request could not be sent. Please try again later.",
+    "tokenRequired": "Cancellations are only possible via the personal link in your confirmation email."
   },
   "paymentSuccess": {
     "confirming": "Confirming Your Booking...",
