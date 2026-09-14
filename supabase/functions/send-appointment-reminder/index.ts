@@ -133,7 +133,7 @@ serve(async (req) => {
           : (gymMap.get(booking.gym_id) || "Massavo Standort");
         const serviceName = serviceMap.get(booking.service_id) || "Massage";
         const managementLink = booking.cancellation_token
-          ? `https://massavo-qr-bookings.lovable.app/manage-booking?token=${encodeURIComponent(booking.cancellation_token)}`
+          ? `https://massavo.com/manage-booking?token=${encodeURIComponent(booking.cancellation_token)}`
           : null;
 
         const html = generateReminderEmail({

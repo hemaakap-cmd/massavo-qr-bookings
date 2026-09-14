@@ -74,7 +74,7 @@ async function resolveLanguage(gymId: string | undefined, hotelId?: string): Pro
 }
 
 function generateManagementLink(cancellationToken: string): string {
-  return `https://massavo-qr-bookings.lovable.app/manage-booking?token=${encodeURIComponent(cancellationToken)}`;
+  return `https://massavo.com/manage-booking?token=${encodeURIComponent(cancellationToken)}`;
 }
 
 function generateCustomerEmail(data: BookingEmailRequest, managementLink: string | null, bookingCode: string | null, lang: EmailLang): string {
