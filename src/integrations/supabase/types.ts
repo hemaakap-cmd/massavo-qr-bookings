@@ -3118,16 +3118,28 @@ export type Database = {
         }[]
       }
       get_gym_country_id: { Args: { _gym_id: string }; Returns: string }
-      get_home_available_dates: {
-        Args: {
-          p_city_id: string
-          p_months_ahead?: number
-          p_start_date?: string
-        }
-        Returns: {
-          available_date: string
-        }[]
-      }
+      get_home_available_dates:
+        | {
+            Args: {
+              p_city_id: string
+              p_months_ahead?: number
+              p_start_date?: string
+            }
+            Returns: {
+              available_date: string
+            }[]
+          }
+        | {
+            Args: {
+              p_city_id: string
+              p_duration_minutes: number
+              p_months_ahead: number
+              p_start_date: string
+            }
+            Returns: {
+              available_date: string
+            }[]
+          }
       get_home_booked_slots: {
         Args: { p_city_id: string; p_date: string; p_duration_minutes?: number }
         Returns: {
