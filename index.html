@@ -9,6 +9,22 @@
     <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(self 'https://js.stripe.com')" />
     <!-- Batch D: production-safe CSP. Allows Supabase REST/Realtime/Storage, Stripe Checkout/JS, Google Fonts, Lovable CDN, inline styles (Tailwind/Vite runtime). -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.gpteng.co https://*.lovable.app https://*.lovable.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://*.lovable.app https://*.lovable.dev https://cdn.gpteng.co; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com;" />
+    <!--
+      Clickjacking defence-in-depth. `frame-ancestors` and X-Frame-Options are only
+      honoured as real HTTP response headers; the hosting layer sets those. Until the
+      host emits them, break out of any frame on the production domains. Scoped by
+      hostname on purpose so the Lovable editor preview (*.lovable.app / *.lovable.dev)
+      keeps working inside its own iframe.
+    -->
+    <script>
+      (function () {
+        var productionHosts = ["massavo.com", "www.massavo.com"];
+        if (productionHosts.indexOf(location.hostname) !== -1 && window.top !== window.self) {
+          try { window.top.location = window.self.location.href; }
+          catch (e) { document.documentElement.innerHTML = ""; }
+        }
+      })();
+    </script>
     <title>MASSAVO - Premium Massage im Fitnessstudio & Hotel</title>
     <meta name="description" content="Buche Massagetherapie in deinem Fitnessstudio oder Partnerhotel per QR-Code – Sport-, Klassische und Wellness-Massagen in Sekunden in Deutschland." />
     <meta name="keywords" content="massage buchen, fitnessstudio massage, hotel massage, hotelmassage, wellness hotel, sportmassage, klassische massage, wellness, QR buchung, deutschland" />
