@@ -44,7 +44,7 @@ function sanitizeHtml(str: string): string {
 }
 
 function generateManagementLink(cancellationToken: string): string {
-  return `https://massavo-qr-bookings.lovable.app/manage-booking?token=${encodeURIComponent(cancellationToken)}`;
+  return `https://massavo.com/manage-booking?token=${encodeURIComponent(cancellationToken)}`;
 }
 
 interface EmailData {
@@ -213,7 +213,7 @@ async function sendTherapistNotification(data: TherapistNotificationData): Promi
         (data.notes ? emailDetailRow("Hinweise", sanitizeHtml(data.notes)) : "")
       )}
       ${emailNotice("Details und Körperzonen findest du im Staff-Portal.", "info")}
-      <div style="text-align:center;">${emailButton("Zum Staff-Portal", "https://massavo-qr-bookings.lovable.app/staff")}</div>
+      <div style="text-align:center;">${emailButton("Zum Staff-Portal", "https://massavo.com/staff")}</div>
     `);
 
     const result = await resend.emails.send({

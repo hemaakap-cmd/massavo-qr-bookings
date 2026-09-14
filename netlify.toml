@@ -3,16 +3,17 @@
   to     = "/index.html"
   status = 200
 
-# Remediation item 11 — security headers a <meta http-equiv> tag cannot deliver.
-# frame-ancestors is IGNORED inside meta CSP, so without a real HTTP header the
-# admin, staff and booking-management pages can be framed and clickjacked.
+# SECURITY (remediation item 10): clickjacking and framing protection must arrive
+# as real HTTP response headers. A <meta http-equiv> tag CANNOT deliver
+# frame-ancestors or X-Frame-Options — browsers ignore both in meta form — so the
+# earlier meta-only CSP left the app framable. These are set at the host.
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "frame-ancestors 'self' https://lovable.dev https://*.lovable.dev"
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=(self \"https://js.stripe.com\")"
-    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), usb=(), payment=(self \"https://js.stripe.com\")"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://cdn.gpteng.co; frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self';"

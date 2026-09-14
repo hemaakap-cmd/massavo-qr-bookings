@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { safeRedirectPath } from "@/lib/safeRedirect";
 
 const Login = () => {
   const { t } = useTranslation();
@@ -19,22 +20,9 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const rawNext = searchParams.get("next");
-  // Remediation item 10 — open redirect. The old guard /^\/(?!\/)/ accepts
-  // "/\evil.com": the URL parser treats the backslash as a slash, so it resolves
-  // to https://evil.com — an off-origin redirect straight out of a real login
-  // page (phishing). Resolve the candidate against this origin and keep it only
-  // if it stays on-origin; this rejects every off-origin spelling.
-  const next = (() => {
-    if (!rawNext) return null;
-    try {
-      const resolved = new URL(rawNext, window.location.origin);
-      if (resolved.origin !== window.location.origin) return null;
-      return resolved.pathname + resolved.search + resolved.hash;
-    } catch {
-      return null;
-    }
-  })();
+  // SECURITY (remediation item 9): open-redirect guard. The previous regex let
+  // "/\\evil.com" and "/%2f%2fevil.com" through to window.location.href.
+  const next = safeRedirectPath(searchParams.get("next"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,11 +41,9 @@ const Login = () => {
         title: t("auth.welcomeBackToast"),
         description: t("auth.loginSuccess"),
       });
-      if (next) {
-        window.location.href = next;
-      } else {
-        navigate("/");
-      }
+      // `next` is already proven same-origin, so route in-app instead of
+      // handing the string to the browser's navigator.
+      navigate(next ?? "/", { replace: true });
     }
     setIsLoading(false);
   };

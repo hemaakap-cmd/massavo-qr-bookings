@@ -82,7 +82,7 @@ function buildEmail(booking: BookingInfo, action: string, newDate?: string, newT
     ),
     emailNotice(noticeText, noticeVariant),
     emailParagraph("Bei Fragen stehen wir Ihnen gerne zur Verfügung."),
-    emailButton("Termin verwalten", `https://massavo-qr-bookings.lovable.app/manage-booking?id=${booking.id}`, "primary"),
+    emailButton("Termin verwalten", `https://massavo.com/manage-booking?id=${booking.id}`, "primary"),
     emailSignature(),
   ].join("");
 

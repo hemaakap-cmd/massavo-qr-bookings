@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const feedbackUrl = `https://massavo-qr-bookings.lovable.app/feedback?token=${feedbackToken}`;
+      const feedbackUrl = `https://massavo.com/feedback?token=${feedbackToken}`;
       const firstName = booking.customer_name?.split(" ")[0] || "geschätzter Kunde";
 
       const emailParts: string[] = [

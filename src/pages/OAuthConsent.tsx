@@ -12,6 +12,24 @@ type OAuthNamespace = {
 
 const oauth = () => (supabase.auth as unknown as { oauth: OAuthNamespace }).oauth;
 
+/**
+ * SECURITY (remediation item 9): OAuth redirect targets legitimately point at the
+ * third-party client, so they cannot be same-origin restricted — but they were
+ * assigned to window.location.href completely unchecked, which would execute a
+ * "javascript:" or "data:" target returned (or injected) into that field. Allow
+ * only real http(s) navigations.
+ */
+const safeExternalRedirect = (raw: unknown): string | null => {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+};
+
 const OAuthConsent = () => {
   const [params] = useSearchParams();
   const authorizationId = params.get("authorization_id") ?? "";
@@ -38,7 +56,7 @@ const OAuthConsent = () => {
         setError(err.message);
         return;
       }
-      const immediate = data?.redirect_url ?? data?.redirect_to;
+      const immediate = safeExternalRedirect(data?.redirect_url ?? data?.redirect_to);
       if (immediate && !data?.client) {
         window.location.href = immediate;
         return;
@@ -60,10 +78,10 @@ const OAuthConsent = () => {
       setError(err.message);
       return;
     }
-    const target = data?.redirect_url ?? data?.redirect_to;
+    const target = safeExternalRedirect(data?.redirect_url ?? data?.redirect_to);
     if (!target) {
       setBusy(false);
-      setError("No redirect returned by the authorization server.");
+      setError("No valid redirect returned by the authorization server.");
       return;
     }
     window.location.href = target;

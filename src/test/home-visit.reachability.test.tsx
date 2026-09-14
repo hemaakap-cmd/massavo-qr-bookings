@@ -29,7 +29,17 @@ import { HelmetProvider } from "react-helmet-async";
 import i18n from "@/i18n";
 
 const CITY = "city-koeln";
-const DATES = ["2026-09-14", "2026-09-21"];
+/**
+ * Dates must be in the FUTURE relative to the run: the page disables past slots
+ * via isPastSlot(), so hard-coded fixture dates silently rotted into the past and
+ * made every slot appear "booked". Derived, not literal.
+ */
+const iso = (daysAhead: number) => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + daysAhead);
+  return d.toISOString().slice(0, 10);
+};
+const DATES = [iso(14), iso(21)];
 
 /** Slots the server reports as unusable. Overridden per test. */
 let bookedSlots: string[] = [];
