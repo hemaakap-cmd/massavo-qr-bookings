@@ -818,6 +818,11 @@ export function BodyDiagram({
         </div>
       </div>
 
+      {/* Full-width live total so the label never wraps on narrow mobile columns */}
+      {!readOnly && basePrice != null && selectedAreas.length > 0 && (
+        <LiveTotalPrice selectedAreas={selectedAreas} basePrice={basePrice} isUpgradeActive={isUpgradeActive} />
+      )}
+
       {/* Scroll-to-notes nudge when areas selected but currently scrolled away from notes */}
       {!readOnly && selectedAreas.length > 0 && onNotesChange && (
         <GuidanceNudge
