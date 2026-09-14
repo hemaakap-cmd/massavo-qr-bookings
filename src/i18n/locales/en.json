@@ -178,12 +178,12 @@
     "badge": "About MASSAVO",
     "title": "Wellness Meets",
     "titleHighlight": "Convenience",
-    "subtitle": "A fresh approach to gym-based massage therapy, since 2026.",
+    "subtitle": "Professional massage at the gym, in your hotel, and at home — since 2026.",
     "story": {
       "title": "Our Story",
-      "p1": "MASSAVO was born from a simple observation: fitness enthusiasts deserve accessible, high-quality massage therapy exactly where they train.",
-      "p2": "Founded in 2026, we bring professional massage therapy to where you need it most—inside gyms and now also in selected hotels. We currently operate in four cities across Germany: Köln, Leverkusen, Bergisch Gladbach, and newly in Düsseldorf.",
-      "p3": "With our hotel service, we deliver the full MASSAVO experience directly to business travelers and wellness guests, in-room or in the spa. Our dream is to expand throughout all of Germany—in gyms and hotels alike—giving you instant access to real recovery in seconds through our QR-code booking system."
+      "p1": "MASSAVO began with a simple idea: high-quality massage therapy should be available exactly where you need it — after training, while traveling, or in your own home.",
+      "p2": "Since 2026, we have brought professional massage to gyms, selected hotels, and directly to clients at home. We currently serve Köln, Leverkusen, Bergisch Gladbach, and Düsseldorf.",
+      "p3": "Whether after a workout, during a hotel stay, or through a relaxing home visit, MASSAVO combines personal care with fast digital booking. Our goal is to make real recovery simple and flexible across Germany."
     },
     "provider": {
       "badge": "About me",
@@ -198,7 +198,7 @@
     },
     "mission": {
       "title": "Our Mission",
-      "description": "To make professional massage therapy accessible to everyone, everywhere they train."
+      "description": "To make professional massage therapy easily accessible — at the gym, in your hotel, and in your own home."
     },
     "vision": {
       "title": "Our Vision",
@@ -231,10 +231,11 @@
     },
     "cta": {
       "title": "Join the Movement",
-      "subtitle": "Experience the future of wellness therapy — at gyms and partner hotels.",
+      "subtitle": "Experience professional massage at the gym, in your hotel, or comfortably at home.",
       "button": "Find a Gym Near You",
       "buttonGym": "Find a Gym",
-      "buttonHotel": "Find a Hotel"
+      "buttonHotel": "Find a Hotel",
+      "buttonHome": "Book a Home Visit"
     }
   },
   "servicesPage": {
