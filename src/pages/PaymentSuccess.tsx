@@ -47,7 +47,7 @@ const PaymentSuccess = () => {
           if (data.bookingId) setBookingId(data.bookingId);
           if (data.cancellationToken) setCancellationToken(data.cancellationToken);
           
-          if (data.bookingId && !bodyAreasSavedRef.current) {
+          if (data.bookingId && data.cancellationToken && !bodyAreasSavedRef.current) {
             bodyAreasSavedRef.current = true;
             try {
               const stored = localStorage.getItem("massavo_body_areas");
@@ -57,9 +57,13 @@ const PaymentSuccess = () => {
               const hasCommPref = !!commPref;
 
               if (hasAreas || hasCommPref) {
+                // SECURITY: save-body-areas now requires the booking's
+                // cancellation token as proof of ownership before it will write
+                // health data or communication preferences.
                 const { error: saveErr } = await supabase.functions.invoke("save-body-areas", {
-                  body: { 
-                    bookingId: data.bookingId, 
+                  body: {
+                    bookingId: data.bookingId,
+                    token: data.cancellationToken,
                     areas: hasAreas ? areas : [],
                     ...(hasCommPref ? { communicationPreference: commPref } : {}),
                   },
