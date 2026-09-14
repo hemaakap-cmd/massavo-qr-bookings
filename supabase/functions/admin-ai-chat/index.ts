@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
 import { statusForError, messageForError } from "../_shared/auth-errors.ts";
+import { authorizeAdminForCountry, tenantAuthResponse } from "../_shared/tenant-auth.ts";
 
 
 serve(async (req) => {
@@ -12,21 +13,15 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Not authenticated");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !user) throw new Error("Not authenticated");
+    const { messages, country_id: requestedCountryId } = await req.json();
 
-    const { data: isAdmin } = await supabaseClient.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    if (!isAdmin) throw new Error("Unauthorized: admin role required");
-
-    const { messages, country_id } = await req.json();
-    if (!country_id) throw new Error("country_id is required");
+    // SECURITY (remediation item 5): tenant authorization from the caller's JWT.
+    // The body's country_id is only a REQUEST — it is authorized against the
+    // caller's own role rows before any service-role client exists, so a German
+    // admin can never have the AI summarise the Gulf operation (or vice versa).
+    const auth = await authorizeAdminForCountry(req, requestedCountryId);
+    if (!auth.ok) return tenantAuthResponse(corsHeaders, auth);
+    const country_id = auth.countryId;
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
