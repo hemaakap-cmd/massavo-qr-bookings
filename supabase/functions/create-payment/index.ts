@@ -206,47 +206,26 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
   };
 }
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-
-function getClientIP(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  const realIP = req.headers.get("x-real-ip");
-  if (realIP) return realIP.trim();
-  return `fallback-${(req.headers.get("user-agent") || "").slice(0, 50)}-${req.headers.get("origin") || ""}`;
-}
-
-function checkRateLimit(clientIP: string): { allowed: boolean; remaining: number; resetIn: number } {
-  const now = Date.now();
-  const existing = rateLimitMap.get(clientIP);
-  if (rateLimitMap.size > 10000) {
-    for (const [key, value] of rateLimitMap.entries()) { if (now > value.resetTime) rateLimitMap.delete(key); }
-  }
-  if (!existing || now > existing.resetTime) {
-    rateLimitMap.set(clientIP, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW_MS };
-  }
-  if (existing.count >= RATE_LIMIT_MAX) return { allowed: false, remaining: 0, resetIn: existing.resetTime - now };
-  existing.count++;
-  return { allowed: true, remaining: RATE_LIMIT_MAX - existing.count, resetIn: existing.resetTime - now };
-}
-
 serve(async (req) => {
   const cors = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const clientIP = getClientIP(req);
-    const rateLimit = checkRateLimit(clientIP);
+    // SECURITY (remediation item 12): the previous limiter was an in-memory Map
+    // keyed on the LEFTMOST X-Forwarded-For value — both client-forgeable and
+    // per-isolate, so it stopped nobody. Now durable (Postgres-backed) and keyed
+    // on the platform-trusted peer address.
+    const clientIP = getRateLimitIdentity(req);
+    const rateLimit = await enforceRateLimit(req, {
+      action: "create_payment",
+      ipMax: 10,
+      ipWindowMinutes: 60,
+      blockMinutes: 60,
+    });
     if (!rateLimit.allowed) {
-      return new Response(JSON.stringify({ error: "Too many payment requests. Please try again later.", retryAfter: Math.ceil(rateLimit.resetIn / 1000) }), {
-        headers: { ...cors, "Content-Type": "application/json", "Retry-After": String(Math.ceil(rateLimit.resetIn / 1000)) },
-        status: 429,
-      });
+      return tooManyRequests(cors, rateLimit, "Too many payment requests. Please try again later.");
     }
+
 
     const body = await req.json();
     const input = validatePaymentInput(body);
