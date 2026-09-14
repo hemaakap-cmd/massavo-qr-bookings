@@ -4,7 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { Award, Users, Zap, Heart, Star, ArrowRight, MapPin, Hotel, GraduationCap, Sparkles } from "lucide-react";
+import { Award, Users, Zap, Heart, Star, ArrowRight, MapPin, Hotel, House, GraduationCap, Sparkles } from "lucide-react";
 import ibrahimPortrait from "@/assets/ibrahim-elatir.png";
 
 const About = () => {
@@ -210,6 +210,13 @@ const About = () => {
                 <Link to="/hotels">
                   <Hotel className="w-5 h-5" strokeWidth={2.2} />
                   <span>{t("about.cta.buttonHotel")}</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button asChild size="xl" variant="hero" className="group">
+                <Link to="/home-visit">
+                  <House className="w-5 h-5" strokeWidth={2.2} />
+                  <span>{t("about.cta.buttonHome")}</span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180" />
                 </Link>
               </Button>

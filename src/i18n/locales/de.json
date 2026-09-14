@@ -178,12 +178,12 @@
     "badge": "Über MASSAVO",
     "title": "Wellness trifft",
     "titleHighlight": "Komfort",
-    "subtitle": "Ein frischer Ansatz für fitnessstudio-basierte Massagetherapie, seit 2026.",
+    "subtitle": "Professionelle Massage im Fitnessstudio, im Hotel und bei dir zu Hause – seit 2026.",
     "story": {
       "title": "Unsere Geschichte",
-      "p1": "MASSAVO entstand aus einer einfachen Beobachtung: Fitness-Enthusiasten verdienen zugängliche, hochwertige Massagetherapie genau dort, wo sie trainieren.",
-      "p2": "Gegründet 2026, bringen wir professionelle Massage dorthin, wo du sie brauchst – in Fitnessstudios und jetzt auch in ausgewählten Hotels. Aktuell sind wir in vier Städten in Deutschland aktiv: Köln, Leverkusen, Bergisch Gladbach und neu in Düsseldorf.",
-      "p3": "Mit unserem Hotel-Service holen wir die MASSAVO-Erfahrung direkt zu Geschäftsreisenden und Wellness-Gästen aufs Zimmer oder in den Spa-Bereich. Unser Traum ist es, in ganz Deutschland zu expandieren – im Fitnessstudio wie im Hotel – und dir mit unserem QR-Code-Buchungssystem in Sekunden Zugang zu echter Erholung zu geben."
+      "p1": "MASSAVO entstand aus einer einfachen Idee: Hochwertige Massagetherapie soll genau dort verfügbar sein, wo du sie brauchst – beim Training, auf Reisen oder in deinem eigenen Zuhause.",
+      "p2": "Seit 2026 bringen wir professionelle Massage in Fitnessstudios, ausgewählte Hotels und direkt zu dir nach Hause. Aktuell sind wir in Köln, Leverkusen, Bergisch Gladbach und Düsseldorf aktiv.",
+      "p3": "Ob nach dem Training, während eines Hotelaufenthalts oder als entspannter Hausbesuch: MASSAVO verbindet persönliche Betreuung mit einer schnellen digitalen Buchung. Unser Ziel ist es, echte Erholung in ganz Deutschland einfach und flexibel zugänglich zu machen."
     },
     "provider": {
       "badge": "Über mich",
@@ -198,7 +198,7 @@
     },
     "mission": {
       "title": "Unsere Mission",
-      "description": "Professionelle Massagetherapie für jeden zugänglich zu machen – überall dort, wo trainiert wird."
+      "description": "Professionelle Massagetherapie flexibel zugänglich zu machen – im Fitnessstudio, im Hotel und bei dir zu Hause."
     },
     "vision": {
       "title": "Unsere Vision",
@@ -231,10 +231,11 @@
     },
     "cta": {
       "title": "Werde Teil der Bewegung",
-      "subtitle": "Erlebe die Zukunft der Wellness-Therapie – direkt in Fitnessstudios und Partnerhotels.",
+      "subtitle": "Erlebe professionelle Massage im Fitnessstudio, im Hotel oder bequem bei dir zu Hause.",
       "button": "Finde ein Fitnessstudio in deiner Nähe",
       "buttonGym": "Fitnessstudio finden",
-      "buttonHotel": "Hotel finden"
+      "buttonHotel": "Hotel finden",
+      "buttonHome": "Hausbesuch buchen"
     }
   },
   "servicesPage": {
