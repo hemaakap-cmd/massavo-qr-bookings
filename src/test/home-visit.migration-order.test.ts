@@ -135,10 +135,12 @@ const stripGrants = (sql: string) =>
   sql.split("\n").filter((l) => !/^\s*(GRANT|REVOKE)\b/i.test(l)).join("\n");
 
 /** Install today's production state, then upgrade through the migrations. */
+const PGLITE_MODULE = "@electric-sql/pglite";
+
 async function boot(): Promise<{ db: Db; upgrade: () => Promise<void> } | null> {
   let PGlite: new () => Db;
   try {
-    ({ PGlite } = (await import("@electric-sql/pglite")) as unknown as { PGlite: new () => Db });
+    ({ PGlite } = (await import(/* @vite-ignore */ PGLITE_MODULE)) as unknown as { PGlite: new () => Db });
   } catch {
     return null;
   }

@@ -109,10 +109,12 @@ type Db = {
 const stripGrants = (sql: string) =>
   sql.split("\n").filter((l) => !/^\s*(GRANT|REVOKE)\b/i.test(l)).join("\n");
 
+const PGLITE_MODULE = "@electric-sql/pglite";
+
 async function boot(): Promise<Db | null> {
   let PGlite: new () => Db;
   try {
-    ({ PGlite } = (await import("@electric-sql/pglite")) as unknown as { PGlite: new () => Db });
+    ({ PGlite } = (await import(/* @vite-ignore */ PGLITE_MODULE)) as unknown as { PGlite: new () => Db });
   } catch {
     return null;
   }
