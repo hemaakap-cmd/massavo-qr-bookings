@@ -1,28 +1,35 @@
 /**
  * Shared CORS helper for Edge Functions.
  *
- * Replaces the previous per-function `Access-Control-Allow-Origin: *` pattern
- * with a request-scoped allowlist. Server-to-server callers (no Origin header,
- * e.g. Stripe webhook deliveries, scheduled jobs) continue to work because we
- * only set ACA-Origin when the incoming origin is explicitly allowed.
+ * SECURITY (remediation item 8): the previous implementation accepted ANY
+ * `https://<anything>.lovable.app` / `.lovable.dev` origin. Because anybody can
+ * publish a Lovable project on that shared parent domain, that was effectively
+ * an open CORS policy for attacker-controlled sites. Origins are now an
+ * EXPLICIT allowlist: Massavo production domains plus this project's own
+ * preview/published hosts.
  *
- * To allow a new origin at runtime without code changes, set the
- * ALLOWED_ORIGINS_EXTRA env var (comma-separated, exact match).
+ * Server-to-server callers (no Origin header, e.g. Stripe webhook deliveries,
+ * pg_cron jobs) keep working because ACA-Origin is only set when the incoming
+ * origin is explicitly allowed.
+ *
+ * To allow an additional origin at runtime without a code change, set the
+ * ALLOWED_ORIGINS_EXTRA env var (comma-separated, exact match only).
  */
 
-const PROD_ORIGINS = new Set([
+/** Canonical Massavo production + approved Lovable-hosted origins. */
+const ALLOWED_ORIGINS = new Set([
+  // Production custom domains
   "https://massavo.com",
   "https://www.massavo.com",
+  // Published Lovable app for this project
   "https://massavo-qr-bookings.lovable.app",
+  // This project's own preview hosts (exact, project-scoped)
+  "https://id-preview--369aef19-a038-49ae-a508-6d58e380afe0.lovable.app",
+  "https://369aef19-a038-49ae-a508-6d58e380afe0.lovableproject.com",
+  "https://preview--massavo-qr-bookings.lovable.app",
 ]);
 
-// Lovable preview deployments + Lovable AI/connector gateway.
-const PREVIEW_ORIGIN_PATTERNS: RegExp[] = [
-  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
-  /^https:\/\/[a-z0-9-]+\.lovable\.dev$/,
-];
-
-// Local dev (Vite is on :8080 per vite.config.ts but allow any port).
+// Local dev only (Vite is on :8080 per vite.config.ts but allow any port).
 const DEV_ORIGIN_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 const ALLOW_HEADERS = [
@@ -48,9 +55,8 @@ function extraAllowed(): Set<string> {
 
 export function isAllowedOrigin(origin: string | null | undefined): boolean {
   if (!origin) return false;
-  if (PROD_ORIGINS.has(origin)) return true;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
   if (DEV_ORIGIN_PATTERN.test(origin)) return true;
-  if (PREVIEW_ORIGIN_PATTERNS.some((re) => re.test(origin))) return true;
   if (extraAllowed().has(origin)) return true;
   return false;
 }
@@ -79,6 +85,8 @@ export function buildCorsHeaders(req: Request, options: CorsOptions = {}): Recor
     "Access-Control-Allow-Methods": options.methods ?? "POST, GET, OPTIONS",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
   };
   if (isAllowedOrigin(origin)) {
     headers["Access-Control-Allow-Origin"] = origin!;

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar, Clock, MapPin, Search, Loader2, XCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, Calendar, Clock, MapPin, Send, Loader2, XCircle, CheckCircle, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -41,7 +41,7 @@ const CancelBooking = () => {
   const tokenFromUrl = searchParams.get("token");
   
   const [email, setEmail] = useState("");
-  const [bookings, setBookings] = useState<BookingItem[]>([]);
+  const [accessRequested, setAccessRequested] = useState(false);
   const [tokenBooking, setTokenBooking] = useState<BookingItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -85,7 +85,14 @@ const CancelBooking = () => {
     }
   };
 
-  const handleLookup = async () => {
+  /**
+   * SECURITY: the old `lookup` action returned every booking for any email an
+   * anonymous visitor typed in. That contract is gone (the function answers 410).
+   * We now ask the backend to email a personal management link to the mailbox,
+   * and the response is deliberately identical whether or not bookings exist —
+   * so this form can no longer be used to discover Massavo customers.
+   */
+  const handleAccessRequest = async () => {
     if (!email.trim()) {
       toast({
         title: t("cancelBooking.emailRequired"),
@@ -100,24 +107,23 @@ const CancelBooking = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("cancel-booking", {
-        body: { email: email.trim(), action: "lookup" },
+        body: { email: email.trim(), action: "request-access" },
       });
 
       if (error) throw error;
 
-      if (data.success) {
-        setBookings(data.bookings || []);
-      } else {
-        throw new Error(data.error || t("cancelBooking.fetchError"));
-      }
+      setAccessRequested(true);
+      toast({
+        title: t("cancelBooking.requestSentTitle"),
+        description: data?.message || t("cancelBooking.requestSentDesc"),
+      });
     } catch (error) {
-      console.error("Lookup error:", error);
+      console.error("Access request error:", error);
       toast({
         title: t("cancelBooking.error"),
-        description: error instanceof Error ? error.message : t("cancelBooking.error"),
+        description: t("cancelBooking.requestFailed"),
         variant: "destructive",
       });
-      setBookings([]);
     } finally {
       setIsLoading(false);
     }
@@ -130,12 +136,14 @@ const CancelBooking = () => {
     setIsCancelling(true);
 
     try {
-      const requestBody = isTokenMode && tokenFromUrl
-        ? { token: tokenFromUrl, action: "token-cancel" }
-        : { email: email.trim(), bookingId: bookingToCancel.id, action: "cancel" };
+      // SECURITY: cancellation requires the unguessable per-booking token from
+      // the confirmation email. There is no email+id fallback any more.
+      if (!tokenFromUrl) {
+        throw new Error(t("cancelBooking.tokenRequired"));
+      }
 
       const { data, error } = await supabase.functions.invoke("cancel-booking", {
-        body: requestBody,
+        body: { token: tokenFromUrl, action: "token-cancel" },
       });
 
       if (error) throw error;
@@ -148,11 +156,7 @@ const CancelBooking = () => {
             : t("cancelBooking.cancelledNoRefund"),
         });
         
-        if (isTokenMode) {
-          setTokenBooking(null);
-        } else {
-          setBookings(prev => prev.filter(b => b.id !== bookingToCancel.id));
-        }
+        setTokenBooking(null);
         setSelectedBooking(null);
       } else {
         throw new Error(data.error || t("cancelBooking.cancelError"));
@@ -326,12 +330,12 @@ const CancelBooking = () => {
                         placeholder={t("cancelBooking.emailPlaceholder")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+                        onKeyDown={(e) => e.key === "Enter" && handleAccessRequest()}
                         className="bg-background"
                       />
                     </div>
                     <Button 
-                      onClick={handleLookup} 
+                      onClick={handleAccessRequest} 
                       disabled={isLoading}
                       variant="sage"
                     >
@@ -339,8 +343,8 @@ const CancelBooking = () => {
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          <Search className="w-4 h-4 mr-2" />
-                          {t("cancelBooking.search")}
+                          <Send className="w-4 h-4 mr-2" />
+                          {t("cancelBooking.sendLink")}
                         </>
                       )}
                     </Button>
@@ -348,92 +352,18 @@ const CancelBooking = () => {
                 </CardContent>
               </Card>
 
-              {hasSearched && !isLoading && (
-                <div className="space-y-4">
-                  {bookings.length === 0 ? (
-                    <Card>
-                      <CardContent className="pt-6 text-center py-12">
-                        <XCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="font-medium text-foreground mb-2">{t("cancelBooking.noBookings")}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {t("cancelBooking.noBookingsDesc")}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <>
-                      <h2 className="font-display text-lg font-semibold text-foreground">
-                        {bookings.length === 1 
-                          ? t("cancelBooking.bookingsFound", { count: bookings.length })
-                          : t("cancelBooking.bookingsFoundPlural", { count: bookings.length })
-                        }
-                      </h2>
-                      
-                      {bookings.map((booking) => (
-                        <Card key={booking.id} className="overflow-hidden">
-                          <CardContent className="p-0">
-                            <div className="p-6">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <h3 className="font-semibold text-foreground">
-                                      {booking.serviceName}
-                                    </h3>
-                                    <Badge variant={booking.canCancel ? "outline" : "secondary"}>
-                                      {booking.duration} Min
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div className="space-y-1 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                      <MapPin className="w-4 h-4" />
-                                      {booking.gymName}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Calendar className="w-4 h-4" />
-                                      {formatDate(booking.booking_date)}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-4 h-4" />
-                                      {formatTime(booking.booking_time)}
-                                    </div>
-                                  </div>
-
-                                  <div className="mt-3 pt-3 border-t border-border">
-                                    <span className="font-semibold text-foreground">
-                                      €{booking.total_amount}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <div className="text-right">
-                                  {booking.canCancel ? (
-                                    <Button
-                                      variant="destructive"
-                                      size="sm"
-                                      onClick={() => setSelectedBooking(booking)}
-                                    >
-                                      {t("cancelBooking.cancel")}
-                                    </Button>
-                                  ) : (
-                                    <div className="text-right">
-                                      <Badge variant="secondary" className="mb-2">
-                                        {t("cancelBooking.notCancellable")}
-                                      </Badge>
-                                      <p className="text-xs text-muted-foreground max-w-[120px]">
-                                        {t("cancelBooking.appointmentIn", { hours: booking.hoursUntil })}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </>
-                  )}
-                </div>
+              {accessRequested && !isLoading && (
+                <Card>
+                  <CardContent className="pt-6 text-center py-12">
+                    <Mail className="w-12 h-12 text-primary mx-auto mb-4" />
+                    <h3 className="font-medium text-foreground mb-2">
+                      {t("cancelBooking.requestSentTitle")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      {t("cancelBooking.requestSentDesc")}
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </>
           )}
