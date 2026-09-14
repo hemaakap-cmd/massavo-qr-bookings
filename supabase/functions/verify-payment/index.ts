@@ -1064,6 +1064,52 @@ serve(async (req) => {
       }
     }
 
+    // Notify the assigned therapist about the new (paid) appointment
+    try {
+      const { data: assigned } = await supabaseAdmin
+        .from("bookings")
+        .select("therapist_id")
+        .eq("id", booking.id)
+        .maybeSingle();
+
+      if (assigned?.therapist_id) {
+        const homeAddress = venueType === "home"
+          ? `${metadata.homeStreet || ""} ${metadata.homeHouseNo || ""}, ${metadata.homePostalCode || ""}`.trim()
+          : null;
+
+        const notified = await sendTherapistNotification({
+          bookingId: booking.id,
+          therapistId: assigned.therapist_id,
+          serviceName,
+          bookingDate,
+          bookingTime,
+          customerName,
+          customerPhone: metadata.clientPhone || null,
+          venueType: String(venueType),
+          venueName: venueType === "hotel" ? (hotelNameFromMeta || gymName) : gymName,
+          homeAddress: homeAddress && homeAddress !== "," ? homeAddress : null,
+          notes: metadata.notes || null,
+          supabaseAdmin,
+        });
+
+        await supabaseAdmin.from("booking_events").insert({
+          event_type: notified ? "therapist_notified" : "therapist_notify_failed",
+          booking_id: booking.id,
+          gym_id: venueType === "gym" ? gymId : null,
+          hotel_id: venueType === "hotel" ? (hotelId as string) : null,
+          venue_type: String(venueType),
+          booking_date: bookingDate,
+          booking_time: bookingTime,
+          details: { therapist_id: assigned.therapist_id },
+          severity: notified ? "info" : "warning",
+        });
+      } else {
+        console.log(`[THERAPIST-NOTIFY] No therapist assigned to booking ${booking.id}`);
+      }
+    } catch (notifyErr) {
+      console.error("[THERAPIST-NOTIFY] Failed:", notifyErr);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
