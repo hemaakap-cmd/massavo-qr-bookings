@@ -113,10 +113,12 @@ const stripGrants = (sql: string) =>
  * Resolved at module load rather than in beforeAll: describe.skipIf() is
  * evaluated during collection, so the decision must already be made.
  */
+const PGLITE_MODULE = "@electric-sql/pglite";
+
 async function boot(): Promise<Db | null> {
   let PGlite: new () => Db;
   try {
-    ({ PGlite } = (await import("@electric-sql/pglite")) as unknown as { PGlite: new () => Db });
+    ({ PGlite } = (await import(/* @vite-ignore */ PGLITE_MODULE)) as unknown as { PGlite: new () => Db });
   } catch {
     return null; // not installed — every suite below skips
   }
