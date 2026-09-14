@@ -480,15 +480,15 @@ function LiveTotalPrice({ selectedAreas, basePrice, isUpgradeActive }: { selecte
   const total = basePrice + totalExtra;
 
   return (
-    <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-3 space-y-2 animate-in fade-in-0 duration-300">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 w-full min-w-0">
+    <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 p-4 space-y-2 animate-in fade-in-0 duration-300 w-full">
+      <div className="flex flex-nowrap items-center justify-between gap-3 w-full min-w-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/15 shrink-0">
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <span className="text-sm font-semibold text-foreground leading-snug break-words min-w-0">{t("bodyDiagram.totalPrice")}</span>
+          <span className="text-sm sm:text-base font-semibold text-foreground leading-snug whitespace-nowrap min-w-0">{t("bodyDiagram.totalPrice")}</span>
         </div>
-        <span className="text-xl font-bold text-primary whitespace-nowrap shrink-0 ms-auto">{total.toFixed(2)} €</span>
+        <span className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap shrink-0">{total.toFixed(2)} €</span>
       </div>
 
 
@@ -741,10 +741,6 @@ export function BodyDiagram({
             })}
           </div>
 
-          {!readOnly && basePrice != null && selectedAreas.length > 0 && (
-            <LiveTotalPrice selectedAreas={selectedAreas} basePrice={basePrice} isUpgradeActive={isUpgradeActive} />
-          )}
-
           {/* Notes section with ref for scroll-to */}
           {!readOnly && onNotesChange && selectedAreas.filter(a => a.side === activeSide).length > 0 && (
             <div ref={notesRef} className="space-y-2 pt-2 border-t border-border">
@@ -821,6 +817,11 @@ export function BodyDiagram({
           </div>
         </div>
       </div>
+
+      {/* Full-width live total so the label never wraps on narrow mobile columns */}
+      {!readOnly && basePrice != null && selectedAreas.length > 0 && (
+        <LiveTotalPrice selectedAreas={selectedAreas} basePrice={basePrice} isUpgradeActive={isUpgradeActive} />
+      )}
 
       {/* Scroll-to-notes nudge when areas selected but currently scrolled away from notes */}
       {!readOnly && selectedAreas.length > 0 && onNotesChange && (
