@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildCorsHeaders } from "../_shared/cors.ts";
+import { getTrustedClientIp } from "../_shared/client-identity.ts";
 
 
 const MAX_ATTEMPTS = 5;
@@ -42,10 +43,10 @@ Deno.serve(async (req) => {
 
     // F1: IP + email rate limiting (allow up to 3 send attempts/email per 10 min,
     // and up to 10 per IP per 15 min; block on the next request)
-    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-      || req.headers.get("cf-connecting-ip")
-      || req.headers.get("x-real-ip")
-      || null;
+    // SECURITY (remediation item 12): the LEFTMOST X-Forwarded-For hop is fully
+    // attacker-controlled, so the old order let anyone reset their own bucket by
+    // sending a random header value. Use the platform-trusted peer address.
+    const ipAddress = getTrustedClientIp(req);
     const maskedEmail = normalizedEmail.replace(/(.{2}).*(@.*)/, "$1***$2");
     const { data: rateCheck } = await supabaseAdmin.rpc("check_otp_rate_limit", {
       p_email: normalizedEmail,
@@ -65,63 +66,60 @@ Deno.serve(async (req) => {
       }, 429);
     }
 
-    // Check rate limiting
-    const { data: attempts } = await supabaseAdmin
-      .from("otp_attempts")
-      .select("*")
+    // SECURITY (remediation item 7): resolve the account WITHOUT enumerating the
+    // whole auth user list (listUsers() is paginated, so it also silently failed
+    // for later-registered staff). Every outcome below returns the SAME generic
+    // body, so a caller cannot tell "unknown address" from "registered client"
+    // from "privileged staff account".
+    const { data: profileRow } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id")
       .eq("email", normalizedEmail)
-      .single();
+      .maybeSingle();
 
-    if (attempts) {
-      if (attempts.locked_until && new Date(attempts.locked_until) > new Date()) {
-        const remainingMinutes = Math.ceil(
-          (new Date(attempts.locked_until).getTime() - Date.now()) / 60000
-        );
-        return json(
-          { error: `Account temporarily locked. Try again in ${remainingMinutes} minutes.` },
-          429
-        );
-      }
-
-      if (attempts.last_attempt_at) {
-        const elapsed = (Date.now() - new Date(attempts.last_attempt_at).getTime()) / 1000;
-        if (elapsed < RESEND_COOLDOWN_SECONDS) {
-          return json(
-            { error: `Please wait ${Math.ceil(RESEND_COOLDOWN_SECONDS - elapsed)} seconds before requesting a new code.` },
-            429
-          );
-        }
-      }
-
-      if (attempts.locked_until && new Date(attempts.locked_until) <= new Date()) {
-        await supabaseAdmin
-          .from("otp_attempts")
-          .update({ attempt_count: 0, locked_until: null, last_attempt_at: new Date().toISOString() })
-          .eq("id", attempts.id);
-      }
-    }
-
-    // Check if user exists with correct role
-    const { data: userData } = await supabaseAdmin.auth.admin.listUsers();
-    const user = userData?.users?.find(
-      (u) => u.email?.toLowerCase() === normalizedEmail
-    );
-
-    if (!user) {
+    if (!profileRow?.user_id) {
       return json(genericSuccess);
     }
 
-    // Check role
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id);
+      .eq("user_id", profileRow.user_id);
 
     const userRoles = roles?.map((r) => r.role) || [];
     const hasAllowedRole = userRoles.some((r) => allowedRoles.includes(r));
 
     if (!hasAllowedRole) {
       return json(genericSuccess);
+    }
+
+    // Per-account resend cooldown. This check depends on account existence, so it
+    // must NEVER surface a distinct status/message — when the account is inside
+    // the cooldown we simply do not resend and return the generic body.
+    const { data: attempts } = await supabaseAdmin
+      .from("otp_attempts")
+      .select("*")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    if (attempts) {
+      if (attempts.locked_until && new Date(attempts.locked_until) > new Date()) {
+        console.warn("[SEND-OTP] account locked, suppressing send:", maskedEmail);
+        return json(genericSuccess);
+      }
+      if (attempts.last_attempt_at) {
+        const elapsed = (Date.now() - new Date(attempts.last_attempt_at).getTime()) / 1000;
+        if (elapsed < RESEND_COOLDOWN_SECONDS) {
+          console.warn("[SEND-OTP] resend cooldown, suppressing send:", maskedEmail);
+          return json(genericSuccess);
+        }
+      }
+      if (attempts.locked_until && new Date(attempts.locked_until) <= new Date()) {
+        await supabaseAdmin
+          .from("otp_attempts")
+          .update({ attempt_count: 0, locked_until: null, last_attempt_at: new Date().toISOString() })
+          .eq("id", attempts.id);
+      }
     }
 
     // Generate OTP link (does NOT send email) — we send it ourselves
@@ -134,8 +132,10 @@ Deno.serve(async (req) => {
     });
 
     if (linkError || !linkData) {
+      // Do not distinguish backend failure for an existing account from an
+      // unknown address — log the detail, return the generic body.
       console.error("generateLink error:", linkError);
-      return json({ error: "Failed to generate verification code. Please try again." }, 500);
+      return json(genericSuccess);
     }
 
     // Extract the 6-digit OTP code
@@ -217,10 +217,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    return json({
-      ...genericSuccess,
-      matchedRole: userRoles.find((r) => allowedRoles.includes(r)),
-    });
+    // SECURITY (remediation item 7): `matchedRole` used to be returned here, which
+    // told any anonymous caller both that the address was a real account AND that
+    // it held admin/super_admin — a ready-made target list. The client learns the
+    // role after the code is verified and a session exists, not before.
+    return json(genericSuccess);
   } catch (err) {
     console.error("OTP error:", err);
     return json({ error: "Internal server error" }, 500);
