@@ -185,6 +185,17 @@
       "p2": "Founded in 2026, we bring professional massage therapy to where you need it most—inside gyms and now also in selected hotels. We currently operate in four cities across Germany: Köln, Leverkusen, Bergisch Gladbach, and newly in Düsseldorf.",
       "p3": "With our hotel service, we deliver the full MASSAVO experience directly to business travelers and wellness guests, in-room or in the spa. Our dream is to expand throughout all of Germany—in gyms and hotels alike—giving you instant access to real recovery in seconds through our QR-code booking system."
     },
+    "provider": {
+      "badge": "About me",
+      "title": "Understanding movement. Rethinking recovery.",
+      "role": "Sports Scientist & MASSAVO Massage Provider",
+      "bio": "I’m Ibrahim Elatir, a sports scientist with a passion for movement, rehabilitation, and sports massage. Since 2016, I have worked in sports therapy, movement rehabilitation, and sports massage. Today, I work at a rehabilitation center in Bergisch Gladbach.",
+      "educationTitle": "Education & experience",
+      "education": "Bachelor’s degree in 2016, Master’s degree in 2025, and extensive practical experience since 2016.",
+      "approachTitle": "Magic Massage",
+      "approach": "Sports massage is my particular passion, expressed through my own approach: “Magic Massage.”",
+      "imageAlt": "Ibrahim Elatir, sports scientist and MASSAVO massage provider"
+    },
     "mission": {
       "title": "Our Mission",
       "description": "To make professional massage therapy accessible to everyone, everywhere they train."
