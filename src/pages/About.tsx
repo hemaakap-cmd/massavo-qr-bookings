@@ -4,7 +4,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { Award, Users, Zap, Heart, Star, ArrowRight, MapPin, Hotel } from "lucide-react";
+import { Award, Users, Zap, Heart, Star, ArrowRight, MapPin, Hotel, GraduationCap, Sparkles } from "lucide-react";
+import ibrahimPortrait from "@/assets/ibrahim-elatir.png";
 
 const About = () => {
   const { t } = useTranslation();
@@ -71,6 +72,57 @@ const About = () => {
                 <p className="animate-fade-up">{t("about.story.p1")}</p>
                 <p className="animate-fade-up" style={{ animationDelay: "0.1s" }}>{t("about.story.p2")}</p>
                 <p className="animate-fade-up" style={{ animationDelay: "0.2s" }}>{t("about.story.p3")}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Provider Profile */}
+        <section className="py-20 md:py-28 bg-sage-light overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-10 lg:gap-16 max-w-6xl mx-auto">
+              <div className="relative max-w-md mx-auto lg:max-w-none animate-fade-up">
+                <div className="aspect-[4/5] overflow-hidden rounded-2xl shadow-card">
+                  <img
+                    src={ibrahimPortrait}
+                    alt={t("about.provider.imageAlt")}
+                    className="h-full w-full object-cover object-top"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-cream/30 bg-card/90 p-4 shadow-card backdrop-blur-md">
+                  <p className="font-display text-xl font-bold text-foreground">Ibrahim Elatir</p>
+                  <p className="mt-1 text-sm font-medium text-gold">{t("about.provider.role")}</p>
+                </div>
+              </div>
+
+              <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
+                <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-card/60 px-4 py-1.5 text-sm font-semibold text-gold">
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  {t("about.provider.badge")}
+                </span>
+                <h2 className="mt-5 font-display text-3xl font-bold text-foreground md:text-4xl">
+                  {t("about.provider.title")}
+                </h2>
+                <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
+                  {t("about.provider.bio")}
+                </p>
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  <div className="flex items-start gap-3 border-t border-border pt-4">
+                    <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold text-foreground">{t("about.provider.educationTitle")}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("about.provider.education")}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 border-t border-border pt-4">
+                    <Heart className="mt-0.5 h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold text-foreground">{t("about.provider.approachTitle")}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("about.provider.approach")}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
