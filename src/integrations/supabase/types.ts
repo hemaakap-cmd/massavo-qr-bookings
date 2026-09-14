@@ -3129,7 +3129,7 @@ export type Database = {
         }[]
       }
       get_home_booked_slots: {
-        Args: { p_city_id: string; p_date: string }
+        Args: { p_city_id: string; p_date: string; p_duration_minutes?: number }
         Returns: {
           slot_time: string
         }[]
