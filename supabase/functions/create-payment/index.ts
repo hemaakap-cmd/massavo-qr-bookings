@@ -2,6 +2,9 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { buildCorsHeaders, getRedirectOrigin } from "../_shared/cors.ts";
+import { validateBookingWindow } from "../_shared/booking-window.ts";
+import { enforceRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
+import { getRateLimitIdentity } from "../_shared/client-identity.ts";
 
 function getSafeErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
