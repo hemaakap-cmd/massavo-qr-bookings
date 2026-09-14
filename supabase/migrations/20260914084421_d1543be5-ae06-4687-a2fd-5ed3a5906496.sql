@@ -1,0 +1,1 @@
+ALTER FUNCTION public.get_home_available_dates(uuid, date, integer, integer) SECURITY DEFINER SET search_path = public;
