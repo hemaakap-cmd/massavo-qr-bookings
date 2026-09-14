@@ -741,10 +741,6 @@ export function BodyDiagram({
             })}
           </div>
 
-          {!readOnly && basePrice != null && selectedAreas.length > 0 && (
-            <LiveTotalPrice selectedAreas={selectedAreas} basePrice={basePrice} isUpgradeActive={isUpgradeActive} />
-          )}
-
           {/* Notes section with ref for scroll-to */}
           {!readOnly && onNotesChange && selectedAreas.filter(a => a.side === activeSide).length > 0 && (
             <div ref={notesRef} className="space-y-2 pt-2 border-t border-border">
