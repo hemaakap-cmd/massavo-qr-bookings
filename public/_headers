@@ -1,0 +1,13 @@
+# Cloudflare Pages / Netlify static header file.
+# Mirrors netlify.toml and vercel.json so the headers survive whichever of the
+# three static hosts serves the build. frame-ancestors cannot be set from the
+# <meta http-equiv="Content-Security-Policy"> tag in index.html — it is ignored
+# there — so without this file the app has no clickjacking protection at all.
+/*
+  Content-Security-Policy: frame-ancestors 'self' https://lovable.dev https://*.lovable.dev
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(self "https://js.stripe.com")
+  Cross-Origin-Opener-Policy: same-origin-allow-popups

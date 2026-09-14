@@ -20,7 +20,21 @@ const Login = () => {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const rawNext = searchParams.get("next");
-  const next = rawNext && /^\/(?!\/)/.test(rawNext) ? rawNext : null;
+  // Remediation item 10 — open redirect. The old guard /^\/(?!\/)/ accepts
+  // "/\evil.com": the URL parser treats the backslash as a slash, so it resolves
+  // to https://evil.com — an off-origin redirect straight out of a real login
+  // page (phishing). Resolve the candidate against this origin and keep it only
+  // if it stays on-origin; this rejects every off-origin spelling.
+  const next = (() => {
+    if (!rawNext) return null;
+    try {
+      const resolved = new URL(rawNext, window.location.origin);
+      if (resolved.origin !== window.location.origin) return null;
+      return resolved.pathname + resolved.search + resolved.hash;
+    } catch {
+      return null;
+    }
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
