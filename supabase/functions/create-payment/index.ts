@@ -251,6 +251,20 @@ serve(async (req) => {
     const body = await req.json();
     const input = validatePaymentInput(body);
 
+    // SECURITY (remediation item 4): the booking window is enforced HERE, at the
+    // authoritative layer, before Stripe is ever contacted. The UI calendar is
+    // not a control — a crafted request could otherwise buy a slot in the past
+    // (unrefundable, unservable) or years in the future.
+    // Price and currency are likewise resolved from the database below; any
+    // price/currency field present in `body` is ignored by design.
+    const windowCheck = validateBookingWindow(input.bookingDate, input.timeSlot);
+    if (!windowCheck.valid) {
+      return new Response(JSON.stringify({ error: windowCheck.error }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 
     // Fetch service from DB (base price + duration)
