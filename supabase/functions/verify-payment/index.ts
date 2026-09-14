@@ -160,6 +160,81 @@ async function sendBookingEmails(data: EmailData): Promise<boolean> {
   return success;
 }
 
+interface TherapistNotificationData {
+  bookingId: string;
+  therapistId: string;
+  serviceName: string;
+  bookingDate: string;
+  bookingTime: string;
+  customerName: string | null;
+  customerPhone: string | null;
+  venueType: string;
+  venueName: string;
+  homeAddress: string | null;
+  notes: string | null;
+  supabaseAdmin: any;
+}
+
+// Sends a booking request notification to the assigned therapist.
+async function sendTherapistNotification(data: TherapistNotificationData): Promise<boolean> {
+  try {
+    const { data: therapist } = await data.supabaseAdmin
+      .from("therapists")
+      .select("name")
+      .eq("id", data.therapistId)
+      .maybeSingle();
+
+    const { data: priv } = await data.supabaseAdmin
+      .from("therapist_private_info")
+      .select("email")
+      .eq("therapist_id", data.therapistId)
+      .maybeSingle();
+
+    const therapistEmail = priv?.email;
+    if (!therapistEmail) {
+      console.log(`[THERAPIST-NOTIFY] No email on file for therapist ${data.therapistId}`);
+      return false;
+    }
+
+    const isHome = data.venueType === "home";
+    const html = emailLayout(`
+      ${emailHeading("Neuer Termin für dich")}
+      ${emailGreeting(sanitizeHtml(therapist?.name || "Therapeut"))}
+      ${emailParagraph("Ein neuer bezahlter Termin wurde dir zugewiesen. Bitte prüfe die Details.")}
+      ${emailSubheading("Termindetails")}
+      ${emailDetailTable(
+        emailDetailRow("Datum", sanitizeHtml(data.bookingDate)) +
+        emailDetailRow("Uhrzeit", sanitizeHtml(data.bookingTime)) +
+        emailDetailRow("Behandlung", sanitizeHtml(data.serviceName)) +
+        emailDetailRow("Art", isHome ? "Hausbesuch" : sanitizeHtml(data.venueName)) +
+        (isHome && data.homeAddress ? emailDetailRow("Adresse", sanitizeHtml(data.homeAddress)) : "") +
+        emailDetailRow("Kunde", sanitizeHtml(data.customerName || "Gast")) +
+        (data.customerPhone ? emailDetailRow("Telefon", sanitizeHtml(data.customerPhone)) : "") +
+        (data.notes ? emailDetailRow("Hinweise", sanitizeHtml(data.notes)) : "")
+      )}
+      ${emailNotice("Details und Körperzonen findest du im Staff-Portal.", "info")}
+      <div style="text-align:center;">${emailButton("Zum Staff-Portal", "https://massavo-qr-bookings.lovable.app/staff")}</div>
+    `);
+
+    const result = await resend.emails.send({
+      from: "Massavo <noreply@massavo.com>",
+      to: [therapistEmail],
+      subject: `Neuer Termin: ${data.bookingDate} ${data.bookingTime} – ${data.serviceName}`,
+      html,
+    });
+
+    if (result.error) {
+      console.error("[THERAPIST-NOTIFY] ❌ Error:", result.error);
+      return false;
+    }
+    console.log(`[THERAPIST-NOTIFY] ✅ Sent to therapist ${data.therapistId} for booking ${data.bookingId}`);
+    return true;
+  } catch (err) {
+    console.error("[THERAPIST-NOTIFY] ❌ Exception:", err);
+    return false;
+  }
+}
+
 // Validation helpers
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -987,6 +1062,52 @@ serve(async (req) => {
       } catch (logError) {
         console.error("[EMAIL-DIRECT] Failed to log email failure:", logError);
       }
+    }
+
+    // Notify the assigned therapist about the new (paid) appointment
+    try {
+      const { data: assigned } = await supabaseAdmin
+        .from("bookings")
+        .select("therapist_id")
+        .eq("id", booking.id)
+        .maybeSingle();
+
+      if (assigned?.therapist_id) {
+        const homeAddress = venueType === "home"
+          ? `${metadata.homeStreet || ""} ${metadata.homeHouseNo || ""}, ${metadata.homePostalCode || ""}`.trim()
+          : null;
+
+        const notified = await sendTherapistNotification({
+          bookingId: booking.id,
+          therapistId: assigned.therapist_id,
+          serviceName,
+          bookingDate,
+          bookingTime,
+          customerName,
+          customerPhone: metadata.clientPhone || null,
+          venueType: String(venueType),
+          venueName: venueType === "hotel" ? (hotelNameFromMeta || gymName) : gymName,
+          homeAddress: homeAddress && homeAddress !== "," ? homeAddress : null,
+          notes: metadata.notes || null,
+          supabaseAdmin,
+        });
+
+        await supabaseAdmin.from("booking_events").insert({
+          event_type: notified ? "therapist_notified" : "therapist_notify_failed",
+          booking_id: booking.id,
+          gym_id: venueType === "gym" ? gymId : null,
+          hotel_id: venueType === "hotel" ? (hotelId as string) : null,
+          venue_type: String(venueType),
+          booking_date: bookingDate,
+          booking_time: bookingTime,
+          details: { therapist_id: assigned.therapist_id },
+          severity: notified ? "info" : "warning",
+        });
+      } else {
+        console.log(`[THERAPIST-NOTIFY] No therapist assigned to booking ${booking.id}`);
+      }
+    } catch (notifyErr) {
+      console.error("[THERAPIST-NOTIFY] Failed:", notifyErr);
     }
 
     return new Response(
