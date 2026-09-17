@@ -91,7 +91,7 @@ const AdminTherapists = () => {
     // Fetch therapists - filter by gym_ids belonging to selected country
     let therapistsQuery = supabase
       .from("therapists")
-      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
+      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address, notes), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
       .order("name");
 
     if (selectedCountry?.id && countryGymIds.length > 0) {
@@ -113,6 +113,7 @@ const AdminTherapists = () => {
         phone: therapist.therapist_private_info?.phone ?? null,
         email: therapist.therapist_private_info?.email ?? null,
         address: therapist.therapist_private_info?.address ?? null,
+        notes: therapist.therapist_private_info?.notes ?? null,
       }));
       setTherapists(mappedTherapists as unknown as Therapist[]);
     }
@@ -324,7 +325,6 @@ const AdminTherapists = () => {
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       profession: formData.profession as ProfessionType,
       education: formData.education || null,
-      notes: formData.notes || null,
       gender: formData.gender || null,
     };
 
@@ -336,6 +336,8 @@ const AdminTherapists = () => {
       phone: formData.phone || null,
       email: formData.email || null,
       address: formData.address || null,
+      // Internal remarks live in the admin-only private table, never in the public therapist row.
+      notes: formData.notes || null,
     });
 
     if (editingTherapist) {
