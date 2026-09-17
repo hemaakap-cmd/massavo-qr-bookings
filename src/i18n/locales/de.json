@@ -635,7 +635,7 @@
       "Alle Buchungen sind abhängig von der Verfügbarkeit",
       "Die Zahlung ist bei Buchung fällig",
       "Preise werden in der Landeswährung angezeigt und enthalten die gesetzliche Mehrwertsteuer",
-      "Wir akzeptieren Kreditkarten, PayPal und Google Pay über unseren sicheren Zahlungsdienstleister Stripe",
+      "Zahlungen werden sicher über Stripe abgewickelt. Welche Zahlungsarten verfügbar sind, wird dir im Bezahlvorgang angezeigt.",
       "Nach erfolgreicher Buchung erhältst du eine Bestätigungs-E-Mail"
     ],
     "s4Title": "4. Stornierungsrichtlinien",

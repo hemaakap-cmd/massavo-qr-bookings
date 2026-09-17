@@ -635,7 +635,7 @@
       "All bookings are subject to availability",
       "Payment is due at the time of booking",
       "Prices are displayed in the local currency and include applicable taxes",
-      "We accept credit cards, PayPal and Google Pay via our secure payment processor Stripe",
+      "Payments are processed securely via Stripe. The payment methods available to the customer are displayed at checkout.",
       "You will receive a confirmation email after a successful booking"
     ],
     "s4Title": "4. Cancellation Policy",

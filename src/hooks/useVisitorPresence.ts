@@ -13,49 +13,21 @@ export function useVisitorPresence() {
     let mounted = true;
 
     const init = async () => {
-      // Fetch visitor's city from multiple geolocation providers for accuracy
+      // Approximate region comes from our own backend (visitor-region), which
+      // derives it from edge metadata it already receives. No third-party
+      // geolocation service is contacted from the browser, and no IP is stored.
       let city = "Unknown";
       let country = "";
-      
-      // Provider 1: ipapi.co (HTTPS, free tier) — http://ip-api.com blocked by mixed-content + CSP
+
       try {
-        const res = await fetch("https://ipapi.co/json/");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.city) { city = data.city; country = data.country_name || ""; }
+        const { data } = await supabase.functions.invoke("visitor-region");
+        if (data && typeof data === "object") {
+          const d = data as { city?: string; country?: string };
+          if (d.city) city = d.city;
+          if (d.country) country = d.country;
         }
       } catch {
-        // Try fallback
-      }
-
-      // Provider 2: fallback to ipapi.co if first failed
-      if (city === "Unknown") {
-        try {
-          const res = await fetch("https://ipapi.co/json/");
-          if (res.ok) {
-            const data = await res.json();
-            city = data.city || "Unknown";
-            country = data.country_name || "";
-          }
-        } catch {
-          // Try last fallback
-        }
-      }
-
-      // Provider 3: fallback to ipwho.is
-      if (city === "Unknown") {
-        try {
-          const res = await fetch("https://ipwho.is/");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success !== false && data.city) {
-              city = data.city;
-              country = data.country || "";
-            }
-          }
-        } catch {
-          // All providers failed
-        }
+        // Region stays "Unknown" — presence tracking still works.
       }
 
       if (!mounted) return;
