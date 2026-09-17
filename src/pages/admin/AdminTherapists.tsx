@@ -91,7 +91,7 @@ const AdminTherapists = () => {
     // Fetch therapists - filter by gym_ids belonging to selected country
     let therapistsQuery = supabase
       .from("therapists")
-      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
+      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address, notes), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
       .order("name");
 
     if (selectedCountry?.id && countryGymIds.length > 0) {
@@ -113,6 +113,7 @@ const AdminTherapists = () => {
         phone: therapist.therapist_private_info?.phone ?? null,
         email: therapist.therapist_private_info?.email ?? null,
         address: therapist.therapist_private_info?.address ?? null,
+        notes: therapist.therapist_private_info?.notes ?? null,
       }));
       setTherapists(mappedTherapists as unknown as Therapist[]);
     }

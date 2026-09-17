@@ -16,7 +16,7 @@ export interface Therapist {
   longitude: number | null;
   profession: ProfessionType;
   education: string | null;
-  notes: string | null;
+  notes?: string | null;
   created_at: string;
   updated_at: string;
   // Joined data
