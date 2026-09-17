@@ -101,15 +101,14 @@ describe("public catalog (anon) — schema contract", () => {
   );
 
   it(
-    "gym_schedules: anon can read active schedules (calendar picker)",
+    "gym_schedules: anon must NOT read schedules (QR-gated venue data)",
     async () => {
-      const { data, error } = await sb
+      const { error } = await sb
         .from("gym_schedules")
         .select("id, gym_id, day_of_week, start_time, end_time, is_active")
         .eq("is_active", true)
         .limit(5);
-      expect(error).toBeNull();
-      expect(Array.isArray(data)).toBe(true);
+      expect(error).not.toBeNull();
     },
     TIMEOUT,
   );
@@ -158,22 +157,17 @@ describe("RLS protection — anon must NOT read sensitive tables", () => {
 
 describe("RPCs the booking flow depends on", () => {
   it(
-    "get_gym_available_dates exists and returns rows with expected shape",
+    "get_gym_available_dates is not callable by anon (QR-gated)",
     async () => {
       const { data: gyms } = await sb.from("gyms").select("id").limit(1);
       const gymId = gyms?.[0]?.id;
       if (!gymId) return; // no gyms in tenant — skip silently
-      const { data, error } = await sb.rpc("get_gym_available_dates", {
+      const { error } = await sb.rpc("get_gym_available_dates", {
         p_gym_id: gymId,
         p_start_date: new Date().toISOString().split("T")[0],
         p_months_ahead: 1,
       });
-      expect(error).toBeNull();
-      for (const row of (data || []).slice(0, 3)) {
-        expect(row).toHaveProperty("available_date");
-        expect(row).toHaveProperty("start_time");
-        expect(row).toHaveProperty("end_time");
-      }
+      expect(error).not.toBeNull();
     },
     TIMEOUT,
   );

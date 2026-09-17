@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { callVenueAccess } from "@/hooks/useVenueSession";
 import { format, parseISO } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,8 @@ interface ScheduleAwareTimeSlotPickerProps {
   gymId?: string;
   hotelId?: string;
   venueType?: "gym" | "hotel";
+  /** Server-issued QR/venue token — required for gym/hotel availability (N-2). */
+  venueToken?: string | null;
   serviceDurationMinutes: number;
   selectedDate: string | null;
   selectedTime: string | null;
@@ -29,6 +31,7 @@ export function ScheduleAwareTimeSlotPicker({
   gymId,
   hotelId,
   venueType = "gym",
+  venueToken,
   serviceDurationMinutes,
   selectedDate,
   selectedTime,
@@ -42,25 +45,22 @@ export function ScheduleAwareTimeSlotPicker({
   const isHotel = venueType === "hotel";
   const venueId = isHotel ? hotelId : gymId;
 
-  // Fetch available dates from venue schedule
+  // Availability is venue-specific booking data: it is fetched through the
+  // QR-authorized server path, never directly from the database (N-2).
   const { data: availableDates = [], isLoading: datesLoading } = useQuery({
     queryKey: ["venue-available-dates", venueType, venueId],
     queryFn: async () => {
-      const { data, error } = isHotel
-        ? await supabase.rpc("get_hotel_available_dates", {
-            p_hotel_id: venueId as string,
-            p_start_date: new Date().toISOString().split("T")[0],
-            p_months_ahead: 3,
-          })
-        : await supabase.rpc("get_gym_available_dates", {
-            p_gym_id: venueId as string,
-            p_start_date: new Date().toISOString().split("T")[0],
-            p_months_ahead: 3,
-          });
-      if (error) throw error;
-      return data as AvailableDate[];
+      const { data, error } = await callVenueAccess<{ availableDates: AvailableDate[] }>({
+        action: "availability",
+        venueType,
+        venueId,
+        token: venueToken,
+        monthsAhead: 3,
+      });
+      if (error) throw new Error(error);
+      return (data?.availableDates ?? []) as AvailableDate[];
     },
-    enabled: !!venueId,
+    enabled: !!venueId && !!venueToken,
   });
 
   // Fetch existing bookings with per-service buffer data
@@ -68,24 +68,24 @@ export function ScheduleAwareTimeSlotPicker({
     queryKey: ["venue-booked-slots", venueType, venueId, selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
-      const { data, error } = isHotel
-        ? await supabase.rpc("get_hotel_booked_slots", {
-            p_hotel_id: venueId as string,
-            p_date: selectedDate,
-          })
-        : await supabase.rpc("get_booked_slots", {
-            p_gym_id: venueId as string,
-            p_date: selectedDate,
-          });
-      if (error) throw error;
-      return (data || []).map((slot: { booking_time: string; duration_minutes: number; buffer_before: number; buffer_after: number }) => ({
+      const { data, error } = await callVenueAccess<{
+        bookedSlots: Array<{ booking_time: string; duration_minutes: number; buffer_before: number; buffer_after: number }>;
+      }>({
+        action: "availability",
+        venueType,
+        venueId,
+        token: venueToken,
+        date: selectedDate,
+      });
+      if (error) throw new Error(error);
+      return (data?.bookedSlots || []).map((slot) => ({
         booking_time: slot.booking_time,
         service: { duration_minutes: slot.duration_minutes },
         buffer_before: slot.buffer_before,
         buffer_after: slot.buffer_after,
       })) as ExistingBooking[];
     },
-    enabled: !!venueId && !!selectedDate,
+    enabled: !!venueId && !!venueToken && !!selectedDate,
   });
 
   const selectedSchedule = useMemo(() => {

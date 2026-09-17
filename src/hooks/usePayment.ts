@@ -13,6 +13,8 @@ interface PaymentDetails {
   hotelId?: string;
   hotelName?: string;
   venueType?: "gym" | "hotel" | "home";
+  /** Server-issued QR/venue authorization token (required for gym + hotel). */
+  venueToken?: string;
   // Home-visit destination (set only when venueType === "home").
   homeCityId?: string;
   homeCountryId?: string;
