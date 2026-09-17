@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ShieldCheck, Clock, AlertTriangle } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import massavoLogo from "@/assets/massavo-logo-3d.png";
+import massavoLogo from "@/assets/massavo-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import type { AppRole } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
@@ -224,7 +224,7 @@ export default function OTPVerifyPage({ title, loginPath, redirectMap }: OTPVeri
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src={massavoLogo} alt="MASSAVO" className="w-16 h-16 mx-auto mb-4" />
+          <img src={massavoLogo} alt="MASSAVO" className="h-16 w-auto mx-auto mb-4" />
           <h1 className="font-display text-3xl font-bold text-foreground">{title}</h1>
           <p className="text-muted-foreground mt-2">
             {t("auth.enterCodeSentTo")} <strong>{email}</strong>
