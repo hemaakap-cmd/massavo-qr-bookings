@@ -268,7 +268,7 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
   );
 
   it(
-    "get_booked_slots RPC returns array contract for gym",
+    "booked slots for a gym require QR authorization",
     async () => {
       const { data: gym } = await sb
         .from("gyms")
@@ -277,18 +277,25 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
         .limit(1)
         .maybeSingle();
       const today = new Date().toISOString().slice(0, 10);
-      const { data, error } = await sb.rpc("get_booked_slots", {
-        p_gym_id: gym!.id,
-        p_date: today,
+      const direct = await sb.rpc("get_booked_slots", { p_gym_id: gym!.id, p_date: today });
+      expect(direct.error).not.toBeNull();
+
+      const claimed = await claimVenue("gym", gym!.id);
+      const avail = await venueAccess({
+        action: "availability",
+        venueType: "gym",
+        venueId: gym!.id,
+        token: claimed.token,
+        date: today,
       });
-      expect(error).toBeNull();
-      expect(Array.isArray(data)).toBe(true);
+      expect(avail.status).toBe(200);
+      expect(Array.isArray(avail.body.bookedSlots)).toBe(true);
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 
   it(
-    "get_hotel_booked_slots RPC returns array contract",
+    "booked slots for a hotel require QR authorization",
     async () => {
       const { data: hotel } = await sb
         .from("hotels")
@@ -298,14 +305,21 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
         .maybeSingle();
       if (!hotel?.id) return;
       const today = new Date().toISOString().slice(0, 10);
-      const { data, error } = await sb.rpc("get_hotel_booked_slots", {
-        p_hotel_id: hotel.id,
-        p_date: today,
+      const direct = await sb.rpc("get_hotel_booked_slots", { p_hotel_id: hotel.id, p_date: today });
+      expect(direct.error).not.toBeNull();
+
+      const claimed = await claimVenue("hotel", hotel.id);
+      const avail = await venueAccess({
+        action: "availability",
+        venueType: "hotel",
+        venueId: hotel.id,
+        token: claimed.token,
+        date: today,
       });
-      expect(error).toBeNull();
-      expect(Array.isArray(data)).toBe(true);
+      expect(avail.status).toBe(200);
+      expect(Array.isArray(avail.body.bookedSlots)).toBe(true);
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 });
 
