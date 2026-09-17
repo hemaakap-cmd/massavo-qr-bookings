@@ -69,6 +69,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 </Link>
               </li>
               <li>
+                <Link to="/home-visit" className="text-cream/80 hover:text-cream transition-colors text-sm">
+                  {t("nav.homeVisit", "Hausbesuch")}
+                </Link>
+              </li>
+              <li>
                 <Link to="/services" className="text-cream/80 hover:text-cream transition-colors text-sm">
                   {t("nav.services")}
                 </Link>
@@ -133,13 +138,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           </div>
         </div>
 
+        {/* Internal portals are reachable directly at /staff/login and /admin/login.
+            Admin / Super Admin links are intentionally not listed publicly. */}
         <div className="border-t border-cream/10 mt-6 pt-4">
           <div className="flex justify-center items-center gap-4 text-[11px] text-cream/40">
+            <span>{t("footer.hours")}</span>
+            <span className="text-cream/20">·</span>
             <Link to="/staff/login" className="hover:text-cream/70 transition-colors">{t("nav_extra.staffPortal")}</Link>
-            <span className="text-cream/20">·</span>
-            <Link to="/admin/login" className="hover:text-cream/70 transition-colors">Admin</Link>
-            <span className="text-cream/20">·</span>
-            <Link to="/admin/login" className="hover:text-cream/70 transition-colors">Super Admin</Link>
           </div>
         </div>
       </div>

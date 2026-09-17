@@ -37,7 +37,7 @@ const Impressum = () => {
               {t("contact.info.email")}:{" "}
               <a href="mailto:info@massavo.com" className="text-primary hover:underline">info@massavo.com</a>
               <br />
-              Telefon: <a href="tel:+4916056521540" className="text-primary hover:underline">+49 160 5652154</a>
+              Telefon: <a href="tel:+491605652154" className="text-primary hover:underline">+49 160 5652154</a>
             </p>
           </section>
 

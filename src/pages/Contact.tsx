@@ -63,6 +63,18 @@ const Contact = () => {
 
   const contactInfo = [
     {
+      icon: Mail,
+      label: t("contact.info.email"),
+      value: "info@massavo.com",
+      href: "mailto:info@massavo.com",
+    },
+    {
+      icon: Clock,
+      label: t("contact.info.hours"),
+      value: t("contact.info.hoursValue"),
+      href: null,
+    },
+    {
       icon: MapPin,
       label: t("contact.info.address"),
       value: "Bracknellstraße 41, 51379 Leverkusen",
@@ -191,8 +203,9 @@ const Contact = () => {
               <div className="space-y-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
                 <div>
                   <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-                    {t("contact.info.address")}
+                    {t("contact.info.title")}
                   </h2>
+                  <p className="text-sm text-muted-foreground">{t("contact.info.subtitle")}</p>
                 </div>
 
                 <div className="space-y-4">
@@ -230,7 +243,7 @@ const Contact = () => {
                     {t("contact.faq.description")}
                   </p>
                   <Button variant="sage" size="sm" asChild>
-                    <Link to="/about">{t("contact.faq.button")}</Link>
+                    <Link to="/booking-policy">{t("contact.faq.button")}</Link>
                   </Button>
                 </div>
               </div>
