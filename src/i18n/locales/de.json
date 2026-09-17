@@ -59,17 +59,17 @@
     },
     "info": {
       "title": "Kontaktinformationen",
-      "subtitle": "Erreiche uns über einen dieser Kanäle.",
+      "subtitle": "So erreichst du unseren Kundensupport.",
       "email": "E-Mail",
       "phone": "Telefon",
       "address": "Hauptsitz",
       "hours": "Geschäftszeiten",
-      "hoursValue": "Nur Sa & So"
+      "hoursValue": "Täglich 09:00–21:00"
     },
     "faq": {
-      "title": "Suchst du Antworten?",
-      "description": "Besuche unsere Über-uns-Seite, um mehr über MASSAVO zu erfahren.",
-      "button": "Mehr erfahren"
+      "title": "Fragen zu Buchung, Stornierung oder Umbuchung?",
+      "description": "In unseren Buchungsrichtlinien findest du die Antworten zu Terminen, Stornierung, Rückerstattung und Handtuchpflicht.",
+      "button": "Buchungsrichtlinien ansehen"
     }
   },
   "hero": {
@@ -141,7 +141,7 @@
     "terms": "Nutzungsbedingungen",
     "rights": "Alle Rechte vorbehalten.",
     "availableIn": "Verfügbar in 3 Städten in Deutschland",
-    "hours": "Öffnungszeiten: Nur Sa & So"
+    "hours": "Kundensupport: täglich 09:00–21:00"
   },
   "stats": {
     "newLabel": "2026",
