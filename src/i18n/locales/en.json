@@ -59,17 +59,17 @@
     },
     "info": {
       "title": "Contact Information",
-      "subtitle": "Reach out through any of these channels.",
+      "subtitle": "How to reach our customer support.",
       "email": "Email",
       "phone": "Phone",
       "address": "Headquarters",
       "hours": "Business Hours",
-      "hoursValue": "Sat & Sun only"
+      "hoursValue": "Daily 09:00–21:00"
     },
     "faq": {
-      "title": "Looking for answers?",
-      "description": "Check out our About page to learn more about MASSAVO and how we work.",
-      "button": "Learn More"
+      "title": "Questions about booking, cancelling or rescheduling?",
+      "description": "Our Booking Policy answers questions about appointments, cancellation, refunds and the towel requirement.",
+      "button": "View Booking Policy"
     }
   },
   "hero": {
@@ -141,7 +141,7 @@
     "terms": "Terms of Service",
     "rights": "All rights reserved.",
     "availableIn": "Available in 3 cities in Germany",
-    "hours": "Hours: Sat & Sun only"
+    "hours": "Customer support: daily 09:00–21:00"
   },
   "stats": {
     "newLabel": "2026",
