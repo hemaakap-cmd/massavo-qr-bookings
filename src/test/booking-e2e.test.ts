@@ -23,6 +23,38 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 const TIMEOUT = 25_000;
 
+const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+
+/** Claim a QR/venue token the same way a scanning customer does. */
+async function claimVenue(venueType: "gym" | "hotel", venueId: string) {
+  const res = await fetch(`${FUNCTIONS_URL}/venue-access`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ action: "claim", venueType, venueId }),
+  });
+  return (await res.json()) as { token?: string; venue?: { id: string }; error?: string };
+}
+
+async function venueAccess(body: Record<string, unknown>) {
+  const res = await fetch(`${FUNCTIONS_URL}/venue-access`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+  return { status: res.status, body: (await res.json()) as Record<string, any> };
+}
+
+const TIMEOUT_LIVE = 30_000;
+
+
 /* ----------------------------------------------------------------------
  * STEP 1 — Customer opens a city/QR link.
  * The home + city pages query active countries → cities → venues.
@@ -102,7 +134,7 @@ describe("E2E booking journey — Step 1: city / QR entry point", () => {
  * -------------------------------------------------------------------- */
 describe("E2E booking journey — Step 2: services per venue", () => {
   it(
-    "gym exposes at least one active service via gym_services",
+    "gym service catalogue is served through the QR-authorized path only",
     async () => {
       const { data: gym } = await sb
         .from("gyms")
@@ -112,24 +144,32 @@ describe("E2E booking journey — Step 2: services per venue", () => {
         .maybeSingle();
       expect(gym?.id).toBeTruthy();
 
-      const { data, error } = await sb
-        .from("gym_services")
-        .select("service_id, custom_price, services!inner(id, name, price, duration_minutes, is_active)")
-        .eq("gym_id", gym!.id)
-        .eq("is_active", true);
-      expect(error).toBeNull();
-      expect((data || []).length).toBeGreaterThan(0);
-      for (const row of data || []) {
-        // services join must be active
-        // @ts-expect-error inferred join type
-        expect(row.services.is_active).toBe(true);
+      // anon must NOT be able to read the venue catalogue directly (N-2)
+      const direct = await sb.from("gym_services").select("service_id").eq("gym_id", gym!.id);
+      expect(direct.error).not.toBeNull();
+
+      const claimed = await claimVenue("gym", gym!.id);
+      expect(claimed.token).toBeTruthy();
+
+      const cat = await venueAccess({
+        action: "catalogue",
+        venueType: "gym",
+        venueId: gym!.id,
+        token: claimed.token,
+      });
+      expect(cat.status).toBe(200);
+      expect(Array.isArray(cat.body.services)).toBe(true);
+      expect(cat.body.services.length).toBeGreaterThan(0);
+      for (const svc of cat.body.services) {
+        expect(typeof svc.price).toBe("number");
+        expect(svc.duration_minutes).toBeGreaterThan(0);
       }
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 
   it(
-    "hotel exposes at least one active service via hotel_services",
+    "hotel service catalogue is served through the QR-authorized path only",
     async () => {
       const { data: hotel } = await sb
         .from("hotels")
@@ -139,15 +179,22 @@ describe("E2E booking journey — Step 2: services per venue", () => {
         .maybeSingle();
       if (!hotel?.id) return;
 
-      const { data, error } = await sb
-        .from("hotel_services")
-        .select("service_id, custom_price, services!inner(id, name, duration_minutes, is_active)")
-        .eq("hotel_id", hotel.id)
-        .eq("is_active", true);
-      expect(error).toBeNull();
-      expect((data || []).length).toBeGreaterThan(0);
+      const direct = await sb.from("hotel_services").select("service_id").eq("hotel_id", hotel.id);
+      expect(direct.error).not.toBeNull();
+
+      const claimed = await claimVenue("hotel", hotel.id);
+      expect(claimed.token).toBeTruthy();
+
+      const cat = await venueAccess({
+        action: "catalogue",
+        venueType: "hotel",
+        venueId: hotel.id,
+        token: claimed.token,
+      });
+      expect(cat.status).toBe(200);
+      expect(Array.isArray(cat.body.services)).toBe(true);
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 });
 
@@ -156,7 +203,7 @@ describe("E2E booking journey — Step 2: services per venue", () => {
  * -------------------------------------------------------------------- */
 describe("E2E booking journey — Step 3: schedule + slot availability", () => {
   it(
-    "gym schedule + RPC get_gym_available_dates returns future dates",
+    "gym availability is served through the QR-authorized path (anon denied)",
     async () => {
       const { data: gym } = await sb
         .from("gyms")
@@ -164,26 +211,33 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
         .eq("is_active", true)
         .limit(1)
         .maybeSingle();
-      const { data: schedule, error } = await sb
-        .from("gym_schedules")
-        .select("day_of_week, start_time, end_time, slot_duration_minutes")
-        .eq("gym_id", gym!.id)
-        .eq("is_active", true);
-      expect(error).toBeNull();
-      expect((schedule || []).length).toBeGreaterThan(0);
 
-      const { data: dates, error: rpcErr } = await sb.rpc("get_gym_available_dates", {
+      // schedules + availability RPCs are no longer public
+      const directSchedules = await sb.from("gym_schedules").select("id").eq("gym_id", gym!.id);
+      expect(directSchedules.error).not.toBeNull();
+      const directRpc = await sb.rpc("get_gym_available_dates", {
         p_gym_id: gym!.id,
         p_months_ahead: 1,
       });
-      expect(rpcErr).toBeNull();
-      expect(Array.isArray(dates)).toBe(true);
+      expect(directRpc.error).not.toBeNull();
+
+      const claimed = await claimVenue("gym", gym!.id);
+      const avail = await venueAccess({
+        action: "availability",
+        venueType: "gym",
+        venueId: gym!.id,
+        token: claimed.token,
+        monthsAhead: 1,
+      });
+      expect(avail.status).toBe(200);
+      expect(Array.isArray(avail.body.availableDates)).toBe(true);
+      expect(avail.body.availableDates.length).toBeGreaterThan(0);
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 
   it(
-    "hotel schedule + RPC get_hotel_available_dates returns future dates",
+    "hotel availability is served through the QR-authorized path (anon denied)",
     async () => {
       const { data: hotel } = await sb
         .from("hotels")
@@ -192,22 +246,25 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
         .limit(1)
         .maybeSingle();
       if (!hotel?.id) return;
-      const { data: schedule, error } = await sb
-        .from("hotel_schedules")
-        .select("day_of_week, start_time, end_time")
-        .eq("hotel_id", hotel.id)
-        .eq("is_active", true);
-      expect(error).toBeNull();
-      expect((schedule || []).length).toBeGreaterThan(0);
 
-      const { data: dates, error: rpcErr } = await sb.rpc("get_hotel_available_dates", {
+      const directRpc = await sb.rpc("get_hotel_available_dates", {
         p_hotel_id: hotel.id,
         p_months_ahead: 1,
       });
-      expect(rpcErr).toBeNull();
-      expect(Array.isArray(dates)).toBe(true);
+      expect(directRpc.error).not.toBeNull();
+
+      const claimed = await claimVenue("hotel", hotel.id);
+      const avail = await venueAccess({
+        action: "availability",
+        venueType: "hotel",
+        venueId: hotel.id,
+        token: claimed.token,
+        monthsAhead: 1,
+      });
+      expect(avail.status).toBe(200);
+      expect(Array.isArray(avail.body.availableDates)).toBe(true);
     },
-    TIMEOUT,
+    TIMEOUT_LIVE,
   );
 
   it(

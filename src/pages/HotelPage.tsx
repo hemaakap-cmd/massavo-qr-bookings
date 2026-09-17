@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { grantQRAccess } from "@/lib/qrAccess";
+import { useVenueSession } from "@/hooks/useVenueSession";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HotelQRCode from "@/components/hotel/HotelQRCode";
@@ -62,12 +62,6 @@ interface Service {
 const HotelPage = () => {
   const { hotelId } = useParams();
   const { t, i18n } = useTranslation();
-  useEffect(() => {
-    grantQRAccess("hotel");
-  }, []);
-  const [hotel, setHotel] = useState<Hotel | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -113,84 +107,26 @@ const HotelPage = () => {
     [selectedBodyAreas, deepTissueUpgradeActive]
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch hotel data (public-readable columns only)
-      const { data: hotelData } = await supabase
-        .from("hotels")
-        .select("id, name, address, city_id, rating, review_count, image_url, open_hours, star_rating, is_active")
-        .eq("id", hotelId)
-        .eq("is_active", true)
-        .single();
-
-      if (hotelData) {
-        let cityName: string | null = null;
-
-        if (hotelData.city_id) {
-          const { data: cityData } = await supabase
-            .from("cities")
-            .select("name")
-            .eq("id", hotelData.city_id)
-            .maybeSingle();
-
-          cityName = cityData?.name ?? null;
-        }
-
-        setHotel({ ...(hotelData as Hotel), city_name: cityName });
-
-        // Fetch hotel_services assignments to get only assigned services
-        const { data: hotelServiceData } = await supabase
-          .from("hotel_services")
-          .select("service_id, custom_price, promo_price, promo_starts_at, promo_ends_at, promo_label, services(id, name, name_ar, description, description_ar, duration_minutes, price, icon, is_active)")
-          .eq("hotel_id", hotelId)
-          .eq("is_active", true);
-
-        if (hotelServiceData && hotelServiceData.length > 0) {
-          const nowMs = Date.now();
-          const assignedServices = hotelServiceData
-            .filter((gs: any) => gs.services && gs.services.is_active)
-            .map((gs: any) => {
-              const promoActive =
-                gs.promo_price != null &&
-                (!gs.promo_starts_at || new Date(gs.promo_starts_at).getTime() <= nowMs) &&
-                (!gs.promo_ends_at || new Date(gs.promo_ends_at).getTime() >= nowMs);
-              const effective = promoActive ? Number(gs.promo_price) : (gs.custom_price ?? gs.services.price);
-              const original = gs.custom_price ?? gs.services.price;
-              return {
-                ...gs.services,
-                price: effective,
-                original_price: promoActive ? original : null,
-                promo_label: promoActive ? gs.promo_label : null,
-              };
-            });
-          setServices(assignedServices);
-        } else {
-          // Fallback: if no hotel_services assigned, show country services only
-          const { data: hotelFull } = await supabase
-            .from("hotels")
-            .select("country_id")
-            .eq("id", hotelId)
-            .single();
-
-          if (hotelFull?.country_id) {
-            const { data: servicesData } = await supabase
-              .from("services")
-              .select("*")
-              .eq("is_active", true)
-              .eq("country_id", hotelFull.country_id)
-              .order("price");
-            if (servicesData) setServices(servicesData);
+  // Venue catalogue + prices come from the QR-authorized server path only (N-1/N-2).
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("hotel", hotelId);
+  const hotel: Hotel | null = useMemo(
+    () =>
+      venueInfo
+        ? {
+            id: venueInfo.id,
+            name: venueInfo.name,
+            address: venueInfo.address,
+            rating: venueInfo.rating,
+            review_count: venueInfo.review_count,
+            open_hours: venueInfo.open_hours,
+            star_rating: venueInfo.star_rating,
+            image_url: venueInfo.image_url,
+            city_id: venueInfo.city_id,
+            city_name: venueInfo.city_name,
           }
-        }
-      }
-
-      setLoading(false);
-    };
-
-    if (hotelId) {
-      fetchData();
-    }
-  }, [hotelId]);
+        : null,
+    [venueInfo],
+  );
 
   // Validation helpers
   const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -320,6 +256,7 @@ const HotelPage = () => {
         bookingDate: selectedDate,
         hotelName: hotel.name,
         hotelId: hotel.id,
+        venueToken: venueToken || undefined,
         venueType: "hotel",
         customerEmail: clientInfo.email,
         clientName: fullName,
@@ -342,7 +279,7 @@ const HotelPage = () => {
     } finally {
       setIsProcessingPayment(false);
     }
-  }, [selectedService, selectedDate, selectedTime, hotel, canProceed, clientInfo, initiatePayment, finalSurcharge, deepTissueUpgradeActive, communicationPreference, selectedBodyAreas, t]);
+  }, [selectedService, selectedDate, selectedTime, hotel, canProceed, clientInfo, initiatePayment, finalSurcharge, deepTissueUpgradeActive, communicationPreference, selectedBodyAreas, t, venueToken]);
 
   const getSelectedServicePrice = () => {
     const service = services.find((s) => s.id === selectedService);
@@ -589,6 +526,7 @@ const HotelPage = () => {
                     <ScheduleAwareTimeSlotPicker
                       hotelId={hotelId}
                       venueType="hotel"
+                      venueToken={venueToken}
                       serviceDurationMinutes={services.find((s) => s.id === selectedService)?.duration_minutes || 30}
                       selectedDate={selectedDate}
                       selectedTime={selectedTime}

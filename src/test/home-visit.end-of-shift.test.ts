@@ -88,7 +88,10 @@ const stripGrants = (sql: string) => sql.split("\n").filter((l) => !/^\s*(GRANT|
 async function boot(): Promise<Db | null> {
   let PGlite: new () => Db;
   try {
-    ({ PGlite } = (await import(/* @vite-ignore */ "@electric-sql/pglite")) as unknown as { PGlite: new () => Db });
+    // Optional peer dep: resolved at runtime only, so keep the specifier non-literal
+    // to avoid a hard TypeScript module resolution requirement.
+    const spec = "@electric-sql/pglite";
+    ({ PGlite } = (await import(/* @vite-ignore */ spec)) as unknown as { PGlite: new () => Db });
   } catch {
     return null;
   }

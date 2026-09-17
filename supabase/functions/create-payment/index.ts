@@ -5,6 +5,7 @@ import { buildCorsHeaders, getRedirectOrigin } from "../_shared/cors.ts";
 import { validateBookingWindow } from "../_shared/booking-window.ts";
 import { enforceRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
 import { getRateLimitIdentity } from "../_shared/client-identity.ts";
+import { verifyVenueToken, venueStillActive } from "../_shared/venue-token.ts";
 
 function getSafeErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : "";
@@ -71,6 +72,8 @@ interface ValidatedInput {
   hotelId: string;
   hotelName: string;
   venueType: "gym" | "hotel" | "home";
+  /** Server-issued QR/venue authorization token (required for gym + hotel). */
+  venueToken: string;
   // Home-visit destination (set only when venueType === "home").
   homeCityId: string;
   homeCountryId: string;
@@ -95,7 +98,7 @@ interface ValidatedInput {
 }
 
 function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
-  const { serviceId, therapistName, timeSlot, bookingDate, gymName, gymId, hotelId, hotelName, venueType, homeCityId, homeCountryId, homeStreet, homeHouseNo, homePostalCode, homeAddressNotes, customerEmail, clientName, clientAge, clientPhone, clientAddress, healthConfirmed, dateOfBirth, salutation, gender, pregnancyStatus, notes, communicationPreference, selectedBodyAreas, deepTissueUpgradeActive } = body;
+  const { serviceId, therapistName, timeSlot, bookingDate, gymName, gymId, hotelId, hotelName, venueType, venueToken, homeCityId, homeCountryId, homeStreet, homeHouseNo, homePostalCode, homeAddressNotes, customerEmail, clientName, clientAge, clientPhone, clientAddress, healthConfirmed, dateOfBirth, salutation, gender, pregnancyStatus, notes, communicationPreference, selectedBodyAreas, deepTissueUpgradeActive } = body;
 
   if (!serviceId) throw new Error("Service ID is required");
   if (!isValidUUID(serviceId)) throw new Error("Invalid service ID format");
@@ -159,9 +162,9 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
     const homeTime = sanitizeString(timeSlot, 50);
     if (!homeTime || !homeTime.includes(":")) throw new Error("Time slot is required for home-visit bookings");
   }
-  if (resolvedVenueType === "gym" && !sanitizedGymId) {
-    // gymId is optional in some flows; keep prior behavior
-  }
+  // A gym booking must name its gym: the QR/venue authorization below is scoped
+  // to one exact venue, so an anonymous "some gym" booking is not valid.
+  if (resolvedVenueType === "gym" && !sanitizedGymId) throw new Error("Gym ID is required for gym bookings");
 
   // Validate body areas
   let validatedBodyAreas: Array<{ code: string; label?: string; painIntensity: number }> = [];
@@ -186,6 +189,7 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
     hotelId: sanitizedHotelId,
     hotelName: sanitizeString(hotelName, 200),
     venueType: resolvedVenueType,
+    venueToken: sanitizeString(venueToken, 512),
     homeCityId: sanitizedHomeCityId,
     homeCountryId: sanitizedHomeCountryId,
     homeStreet: sanitizeString(homeStreet, 200),
@@ -248,6 +252,26 @@ serve(async (req) => {
     }
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+
+    // SECURITY (N-2): gym and hotel are QR-only booking channels. Checkout is
+    // only reachable with a server-issued venue token that is scoped to THIS
+    // exact venue, so a crafted request cannot buy a session at a venue the
+    // caller never scanned, and a Gym A token cannot be replayed on Gym B or a
+    // hotel. Home visits keep their public funnel and are not gated here.
+    if (input.venueType === "gym" || input.venueType === "hotel") {
+      const expectedVenueId = input.venueType === "hotel" ? input.hotelId : input.gymId;
+      const tokenCheck = await verifyVenueToken(input.venueToken, {
+        venueType: input.venueType,
+        venueId: expectedVenueId,
+      });
+      if (!tokenCheck.ok || !(await venueStillActive(supabase, input.venueType, expectedVenueId))) {
+        console.error("venue authorization rejected", { venueType: input.venueType, reason: tokenCheck.error });
+        return new Response(
+          JSON.stringify({ error: "Bitte scanne den QR-Code des Standorts erneut, um fortzufahren." }),
+          { headers: { ...cors, "Content-Type": "application/json" }, status: 403 },
+        );
+      }
+    }
 
     // Fetch service from DB (base price + duration)
     const { data: serviceData, error: svcErr } = await supabase

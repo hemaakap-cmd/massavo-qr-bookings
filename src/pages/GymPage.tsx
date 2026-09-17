@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { grantQRAccess } from "@/lib/qrAccess";
+import { useVenueSession } from "@/hooks/useVenueSession";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
@@ -59,12 +59,6 @@ interface Service {
 const GymPage = () => {
   const { gymId } = useParams();
   const { t, i18n } = useTranslation();
-  useEffect(() => {
-    grantQRAccess("gym");
-  }, []);
-  const [gym, setGym] = useState<Gym | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -110,72 +104,26 @@ const GymPage = () => {
     [selectedBodyAreas, deepTissueUpgradeActive]
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Fetch gym data - use public view that excludes sensitive business data (phone, commission, qr_code_id)
-      const { data: gymData } = await supabase
-        .from("gyms_public")
-        .select("id, name, address, city_id, rating, review_count, image_url, open_hours, is_active, city:cities(name)")
-        .eq("id", gymId)
-        .single();
-
-      if (gymData) {
-        setGym(gymData as Gym);
-
-        // Fetch gym_services assignments to get only assigned services
-        const { data: gymServiceData } = await supabase
-          .from("gym_services")
-          .select("service_id, custom_price, promo_price, promo_starts_at, promo_ends_at, promo_label, services(id, name, name_ar, description, description_ar, duration_minutes, price, icon, is_active)")
-          .eq("gym_id", gymId)
-          .eq("is_active", true);
-
-        if (gymServiceData && gymServiceData.length > 0) {
-          // Use assigned services with optional custom pricing
-          const nowMs = Date.now();
-          const assignedServices = gymServiceData
-            .filter((gs: any) => gs.services && gs.services.is_active)
-            .map((gs: any) => {
-              const promoActive =
-                gs.promo_price != null &&
-                (!gs.promo_starts_at || new Date(gs.promo_starts_at).getTime() <= nowMs) &&
-                (!gs.promo_ends_at || new Date(gs.promo_ends_at).getTime() >= nowMs);
-              const effective = promoActive ? Number(gs.promo_price) : (gs.custom_price ?? gs.services.price);
-              const original = gs.custom_price ?? gs.services.price;
-              return {
-                ...gs.services,
-                price: effective,
-                original_price: promoActive ? original : null,
-                promo_label: promoActive ? gs.promo_label : null,
-              };
-            });
-          setServices(assignedServices);
-        } else {
-          // Fallback: if no gym_services assigned, show country services only
-          const { data: gymFull } = await supabase
-            .from("gyms")
-            .select("country_id")
-            .eq("id", gymId)
-            .single();
-
-          if (gymFull?.country_id) {
-            const { data: servicesData } = await supabase
-              .from("services")
-              .select("*")
-              .eq("is_active", true)
-              .eq("country_id", gymFull.country_id)
-              .order("price");
-            if (servicesData) setServices(servicesData);
+  // Venue catalogue + prices come from the QR-authorized server path only.
+  // (N-2: no public gym/hotel catalogue; N-1: server decides which services
+  // the venue offers and at which price.)
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("gym", gymId);
+  const gym: Gym | null = useMemo(
+    () =>
+      venueInfo
+        ? {
+            id: venueInfo.id,
+            name: venueInfo.name,
+            address: venueInfo.address,
+            rating: venueInfo.rating ?? 0,
+            review_count: venueInfo.review_count ?? 0,
+            open_hours: venueInfo.open_hours ?? "",
+            city_id: venueInfo.city_id,
+            city: venueInfo.city_name ? { name: venueInfo.city_name } : undefined,
           }
-        }
-      }
-
-      setLoading(false);
-    };
-
-    if (gymId) {
-      fetchData();
-    }
-  }, [gymId]);
+        : null,
+    [venueInfo],
+  );
 
   // Validation helpers
   const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -305,6 +253,7 @@ const GymPage = () => {
         bookingDate: selectedDate,
         gymName: gym.name,
         gymId: gym.id,
+        venueToken: venueToken || undefined,
         customerEmail: clientInfo.email,
         clientName: fullName,
         clientAge: calculatedAge,
@@ -326,7 +275,7 @@ const GymPage = () => {
     } finally {
       setIsProcessingPayment(false);
     }
-  }, [selectedService, selectedDate, selectedTime, gym, canProceed, clientInfo, initiatePayment, finalSurcharge, deepTissueUpgradeActive]);
+  }, [selectedService, selectedDate, selectedTime, gym, canProceed, clientInfo, initiatePayment, finalSurcharge, deepTissueUpgradeActive, venueToken]);
 
   const getSelectedServicePrice = () => {
     const service = services.find((s) => s.id === selectedService);
@@ -570,6 +519,7 @@ const GymPage = () => {
                   {step === 2 && gymId && (
                     <ScheduleAwareTimeSlotPicker
                       gymId={gymId}
+                      venueToken={venueToken}
                       serviceDurationMinutes={services.find((s) => s.id === selectedService)?.duration_minutes || 30}
                       selectedDate={selectedDate}
                       selectedTime={selectedTime}
