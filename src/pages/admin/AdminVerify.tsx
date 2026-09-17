@@ -8,8 +8,9 @@ const AdminVerify = () => {
       title={t("auth.verifyIdentity")}
       loginPath="/admin/login"
       redirectMap={{
-        admin: "/admin",
         super_admin: "/super-admin",
+        admin: "/admin",
+        therapist: "/staff/dashboard",
       }}
     />
   );
