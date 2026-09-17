@@ -90,6 +90,17 @@ export default function OTPLoginPage({
             </p>
           </div>
 
+          <div className="mb-6 rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              {t("auth.roleAssignmentInfo")}
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs font-medium text-foreground">
+              <span className="rounded-lg border border-primary/20 bg-primary/5 px-2 py-2">Super Admin</span>
+              <span className="rounded-lg border border-primary/20 bg-primary/5 px-2 py-2">Admin</span>
+              <span className="rounded-lg border border-primary/20 bg-primary/5 px-2 py-2">Staff</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.emailAddress")}</Label>
