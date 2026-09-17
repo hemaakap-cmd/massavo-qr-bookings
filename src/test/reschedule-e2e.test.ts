@@ -56,7 +56,7 @@ describe("E2E reschedule — Step 1: token lookup contract", () => {
  * -------------------------------------------------------------------- */
 describe("E2E reschedule — Step 2: availability validation for the new slot", () => {
   it(
-    "gym: schedule + booked-slots RPC respond for the chosen venue",
+    "gym: availability RPCs are not reachable by anon (QR-gated)",
     async () => {
       const { data: gym } = await sb
         .from("gyms")
@@ -67,20 +67,20 @@ describe("E2E reschedule — Step 2: availability validation for the new slot", 
       expect(gym?.id).toBeTruthy();
       const today = new Date().toISOString().slice(0, 10);
 
+      // Anon must not reach venue availability directly — it is served through
+      // the QR-authorized `venue-access` function or to signed-in staff (N-2).
       const [slots, dates] = await Promise.all([
         sb.rpc("get_booked_slots", { p_gym_id: gym!.id, p_date: today }),
         sb.rpc("get_gym_available_dates", { p_gym_id: gym!.id, p_months_ahead: 1 }),
       ]);
-      expect(slots.error).toBeNull();
-      expect(Array.isArray(slots.data)).toBe(true);
-      expect(dates.error).toBeNull();
-      expect(Array.isArray(dates.data)).toBe(true);
+      expect(slots.error).not.toBeNull();
+      expect(dates.error).not.toBeNull();
     },
     TIMEOUT,
   );
 
   it(
-    "hotel: schedule + booked-slots RPC respond for the chosen venue",
+    "hotel: availability RPCs are not reachable by anon (QR-gated)",
     async () => {
       const { data: hotel } = await sb
         .from("hotels")
@@ -95,10 +95,8 @@ describe("E2E reschedule — Step 2: availability validation for the new slot", 
         sb.rpc("get_hotel_booked_slots", { p_hotel_id: hotel.id, p_date: today }),
         sb.rpc("get_hotel_available_dates", { p_hotel_id: hotel.id, p_months_ahead: 1 }),
       ]);
-      expect(slots.error).toBeNull();
-      expect(Array.isArray(slots.data)).toBe(true);
-      expect(dates.error).toBeNull();
-      expect(Array.isArray(dates.data)).toBe(true);
+      expect(slots.error).not.toBeNull();
+      expect(dates.error).not.toBeNull();
     },
     TIMEOUT,
   );

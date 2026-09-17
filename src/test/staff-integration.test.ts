@@ -120,28 +120,26 @@ describe("Staff schema contract — required columns must exist", () => {
 /** Sanity — booked slots & available dates RPCs still callable for hotels too. */
 describe("Staff-facing RPCs", () => {
   it(
-    "get_booked_slots(p_gym_id, p_date) returns array shape",
+    "get_booked_slots(p_gym_id, p_date) is staff-only — anon is denied",
     async () => {
-      // Use a random uuid — RPC should return [] rather than 500.
-      const { data, error } = await (sb as any).rpc("get_booked_slots", {
+      // Venue availability is QR/staff gated; anon must not execute it (N-2).
+      const { error } = await (sb as any).rpc("get_booked_slots", {
         p_gym_id: "00000000-0000-0000-0000-000000000000",
         p_date: new Date().toISOString().split("T")[0],
       });
-      expect(error, error?.message).toBeNull();
-      expect(Array.isArray(data)).toBe(true);
+      expect(error).not.toBeNull();
     },
     TIMEOUT,
   );
 
   it(
-    "get_hotel_booked_slots(p_hotel_id, p_date) is reachable",
+    "get_hotel_booked_slots(p_hotel_id, p_date) is staff-only — anon is denied",
     async () => {
-      const { data, error } = await (sb as any).rpc("get_hotel_booked_slots", {
+      const { error } = await (sb as any).rpc("get_hotel_booked_slots", {
         p_hotel_id: "00000000-0000-0000-0000-000000000000",
         p_date: new Date().toISOString().split("T")[0],
       });
-      expect(error, error?.message).toBeNull();
-      expect(Array.isArray(data)).toBe(true);
+      expect(error).not.toBeNull();
     },
     TIMEOUT,
   );
