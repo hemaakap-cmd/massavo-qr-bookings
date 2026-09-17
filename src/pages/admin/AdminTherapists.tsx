@@ -257,11 +257,21 @@ const AdminTherapists = () => {
   };
 
   const saveWeeklySchedules = async (therapistId: string, assignments: GymAssignment[]) => {
-    // Delete existing schedules for this therapist
+    // Clear only the GYM-bound (and legacy unassigned) rows this editor manages.
+    //
+    // BUGFIX (hotel availability): this editor rebuilds schedules from GYM
+    // assignments only and re-inserts rows with gym_id set. It previously
+    // deleted EVERY therapist_weekly_schedules row for the therapist, which
+    // silently destroyed hotel-bound rows (hotel_id set) created in the Weekly
+    // Planner — the only place hotel working hours are configured, and the exact
+    // rows check_hotel_slot_availability + verify-payment's hotel auto-assign
+    // read. Scoping the delete to hotel_id IS NULL leaves hotel schedules intact
+    // so a routine therapist edit no longer makes hotels unbookable.
     const { error: deleteError } = await supabase
       .from("therapist_weekly_schedules")
       .delete()
-      .eq("therapist_id", therapistId);
+      .eq("therapist_id", therapistId)
+      .is("hotel_id", null);
 
     if (deleteError) {
       console.error("Failed to clear old schedules:", deleteError);
