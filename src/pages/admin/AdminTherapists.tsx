@@ -336,6 +336,8 @@ const AdminTherapists = () => {
       phone: formData.phone || null,
       email: formData.email || null,
       address: formData.address || null,
+      // Internal remarks live in the admin-only private table, never in the public therapist row.
+      notes: formData.notes || null,
     });
 
     if (editingTherapist) {
