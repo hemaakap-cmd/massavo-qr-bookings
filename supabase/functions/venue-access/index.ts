@@ -72,10 +72,11 @@ serve(async (req: Request): Promise<Response> => {
       if (!rl.allowed) return tooManyRequests(cors, rl);
 
       const code = typeof body.code === "string" ? body.code.trim() : null;
-      // `star_rating` only exists on hotels — selecting it on gyms errors out.
+      // `star_rating` only exists on hotels; hotels have no FK embed to cities,
+      // so the city name is resolved with a separate lookup below.
       const columns = venueType === "hotel"
-        ? "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active, star_rating, cities(name)"
-        : "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active, cities(name)";
+        ? "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active, star_rating"
+        : "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active";
       let query = supabase.from(table).select(columns).eq("is_active", true);
 
       if (code) {
@@ -92,7 +93,15 @@ serve(async (req: Request): Promise<Response> => {
       if (!venue) return json({ error: "Unknown or inactive QR code" }, 404, cors);
 
       const { token: issued, expiresAt } = await issueVenueToken(venueType, venue.id as string);
-      const city = Array.isArray(venue.cities) ? venue.cities[0] : venue.cities;
+      let cityName: string | null = null;
+      if (venue.city_id) {
+        const { data: city } = await supabase
+          .from("cities")
+          .select("name")
+          .eq("id", venue.city_id as string)
+          .maybeSingle();
+        cityName = (city?.name as string) ?? null;
+      }
       return json(
         {
           token: issued,
@@ -103,7 +112,7 @@ serve(async (req: Request): Promise<Response> => {
             name: venue.name,
             address: venue.address,
             city_id: venue.city_id,
-            city_name: city?.name ?? null,
+            city_name: cityName,
             rating: venue.rating,
             review_count: venue.review_count,
             image_url: venue.image_url,
