@@ -325,7 +325,6 @@ const AdminTherapists = () => {
       longitude: formData.longitude ? parseFloat(formData.longitude) : null,
       profession: formData.profession as ProfessionType,
       education: formData.education || null,
-      notes: formData.notes || null,
       gender: formData.gender || null,
     };
 
