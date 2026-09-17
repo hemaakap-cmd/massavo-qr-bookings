@@ -47,8 +47,10 @@ serve(async (req: Request): Promise<Response> => {
     }
     const userId = claimsData.user.id;
 
-    const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
-    if (!roleData) {
+    // Only admins / super admins may trigger a therapist's daily summary send.
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data: isSuperAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    if (!isAdmin && !isSuperAdmin) {
       return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
