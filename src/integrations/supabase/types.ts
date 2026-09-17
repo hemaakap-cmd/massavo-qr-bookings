@@ -2495,6 +2495,7 @@ export type Database = {
           address: string | null
           created_at: string
           email: string | null
+          notes: string | null
           phone: string | null
           therapist_id: string
           updated_at: string
@@ -2503,6 +2504,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           email?: string | null
+          notes?: string | null
           phone?: string | null
           therapist_id: string
           updated_at?: string
@@ -2511,6 +2513,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           email?: string | null
+          notes?: string | null
           phone?: string | null
           therapist_id?: string
           updated_at?: string
@@ -2674,7 +2677,6 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
-          notes: string | null
           profession: Database["public"]["Enums"]["profession_type"] | null
           rating: number | null
           score: number
@@ -2694,7 +2696,6 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
-          notes?: string | null
           profession?: Database["public"]["Enums"]["profession_type"] | null
           rating?: number | null
           score?: number
@@ -2714,7 +2715,6 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
-          notes?: string | null
           profession?: Database["public"]["Enums"]["profession_type"] | null
           rating?: number | null
           score?: number
