@@ -3370,6 +3370,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      home_free_therapists: {
+        Args: {
+          p_buffer_after_minutes?: number
+          p_city_id: string
+          p_date: string
+          p_duration_minutes?: number
+          p_time: string
+        }
+        Returns: {
+          therapist_id: string
+        }[]
+      }
       log_system_incident: {
         Args: {
           p_context?: Json
