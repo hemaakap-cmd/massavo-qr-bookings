@@ -74,34 +74,51 @@ const AdminDashboard = () => {
         const hotelIds = (hotelsRes.data || []).map((h) => h.id);
         const includeGyms = activeType === null || activeType === "gym";
         const includeHotels = activeType === null || activeType === "hotel";
+        const includeHome = activeType === null || activeType === "home";
         const scopedGymIds = includeGyms ? gymIds : [];
         const scopedHotelIds = includeHotels ? hotelIds : [];
 
         let therapistsCount = 0;
         let bookings: any[] = [];
 
-        if (selectedCountry?.id && scopedGymIds.length === 0 && scopedHotelIds.length === 0) {
-          therapistsCount = 0;
-          bookings = [];
-        } else {
+        {
           let therapistsQuery = supabase.from("therapists").select("id", { count: "exact", head: true });
 
-          if (selectedCountry?.id) {
+          if (selectedCountry?.id && gymIds.length > 0) {
             therapistsQuery = therapistsQuery.in("gym_id", gymIds);
           }
 
-          // Bookings: include both gym + hotel scoped IDs
+          // Bookings: gyms + hotels + home visits (home = no gym and no hotel)
           const orParts: string[] = [];
-          if (scopedGymIds.length > 0) orParts.push(`gym_id.in.(${scopedGymIds.join(",")})`);
-          if (scopedHotelIds.length > 0) orParts.push(`hotel_id.in.(${scopedHotelIds.join(",")})`);
+          if (includeGyms) {
+            if (selectedCountry?.id) {
+              if (scopedGymIds.length > 0) orParts.push(`gym_id.in.(${scopedGymIds.join(",")})`);
+            } else {
+              orParts.push("gym_id.not.is.null");
+            }
+          }
+          if (includeHotels) {
+            if (selectedCountry?.id) {
+              if (scopedHotelIds.length > 0) orParts.push(`hotel_id.in.(${scopedHotelIds.join(",")})`);
+            } else {
+              orParts.push("hotel_id.not.is.null");
+            }
+          }
+          if (includeHome) {
+            orParts.push(
+              selectedCountry?.id
+                ? `and(gym_id.is.null,hotel_id.is.null,home_country_id.eq.${selectedCountry.id})`
+                : "and(gym_id.is.null,hotel_id.is.null)",
+            );
+          }
           let bookingsQuery = supabase.from("bookings").select("*");
-          if (selectedCountry?.id && orParts.length > 0) {
+          if ((selectedCountry?.id || activeType !== null) && orParts.length > 0) {
             bookingsQuery = bookingsQuery.or(orParts.join(","));
           }
 
           const [therapistsRes, bookingsRes] = await Promise.all([therapistsQuery, bookingsQuery]);
           therapistsCount = therapistsRes.count || 0;
-          bookings = bookingsRes.data || [];
+          bookings = orParts.length === 0 ? [] : bookingsRes.data || [];
         }
 
         setAllBookings(bookings);
