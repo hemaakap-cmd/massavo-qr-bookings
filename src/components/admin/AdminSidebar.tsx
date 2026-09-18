@@ -43,6 +43,7 @@ import {
   Hotel as HotelIcon,
   LayoutGrid,
   CreditCard,
+  Home as HomeIcon,
 } from "lucide-react";
 import massavoLogo from "@/assets/massavo-logo.png";
 import { getAdminGeographyLabels } from "@/constants/adminGeography";
@@ -86,9 +87,10 @@ const createNavGroups = (geoLabels: ReturnType<typeof getAdminGeographyLabels>) 
     // until the AdminVenues page lands in Week 3 of the refactor roadmap.
     label: "Venues",
     items: [
-      { title: "All Venues", url: "/admin/gyms", icon: LayoutGrid },
+      { title: "All Venues", url: "/admin/venues", icon: LayoutGrid },
       { title: "Gyms", url: "/admin/gyms", icon: Building2 },
       { title: "Hotels", url: "/admin/hotels", icon: HotelIcon },
+      { title: "Home Visits", url: "/admin/home-visits", icon: HomeIcon },
       { title: "Gym Profiles", url: "/admin/gym-profiles", icon: Contact },
       { title: "Hotel Profiles", url: "/admin/hotel-profiles", icon: Contact },
     ],

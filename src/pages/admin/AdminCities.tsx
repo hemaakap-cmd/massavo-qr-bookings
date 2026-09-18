@@ -45,6 +45,7 @@ interface City {
   created_at: string;
   federal_state_id: string | null;
   county_id: string | null;
+  home_visit_travel_fee: number | null;
   federal_states?: { name: string; code: string } | null;
   counties?: { name: string; code: string } | null;
 }
@@ -73,6 +74,7 @@ const AdminCities = () => {
     is_active: true,
     federal_state_id: "",
     county_id: "",
+    home_visit_travel_fee: "",
   });
   const { toast } = useToast();
 
@@ -149,6 +151,7 @@ const AdminCities = () => {
       is_active: formData.is_active,
       federal_state_id: formData.federal_state_id || null,
       county_id: formData.county_id || null,
+      home_visit_travel_fee: formData.home_visit_travel_fee === "" ? null : Number(formData.home_visit_travel_fee),
     };
 
     if (editingCity) {
@@ -181,6 +184,7 @@ const AdminCities = () => {
       is_active: city.is_active,
       federal_state_id: city.federal_state_id || "",
       county_id: city.county_id || "",
+      home_visit_travel_fee: city.home_visit_travel_fee?.toString() || "",
     });
     setIsDialogOpen(true);
   };
@@ -205,6 +209,7 @@ const AdminCities = () => {
       is_active: true,
       federal_state_id: "",
       county_id: "",
+      home_visit_travel_fee: "",
     });
   };
 
@@ -343,6 +348,18 @@ const AdminCities = () => {
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                       placeholder="https://..."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Home Visit Travel Fee ({selectedCountry?.currency_symbol || "€"})</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.home_visit_travel_fee}
+                      onChange={(e) => setFormData({ ...formData, home_visit_travel_fee: e.target.value })}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">Leave empty when Home Visits are not offered in this city.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch

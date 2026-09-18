@@ -22,6 +22,7 @@ const baseRouteLabels: Record<string, string> = {
   "/admin/gyms": "Gyms",
   "/admin/gym-profiles": "Gym Profiles",
   "/admin/hotels": "Hotels",
+  "/admin/home-visits": "Home Visits",
   "/admin/schedules": "Schedules",
   "/admin/therapists": "Therapists",
   "/admin/bookings": "Bookings",
