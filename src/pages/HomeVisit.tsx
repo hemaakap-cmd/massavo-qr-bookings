@@ -553,7 +553,7 @@ const HomeVisit = () => {
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-muted-foreground shrink-0">{t("gymPage.date")}</span>
-                  <span className="font-medium text-foreground whitespace-nowrap">{selectedDate}</span>
+                  <span className="font-medium text-foreground whitespace-nowrap">{formatFriendlyDate(selectedDate, i18n.language)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span className="text-muted-foreground shrink-0">{t("gymPage.time")}</span>
