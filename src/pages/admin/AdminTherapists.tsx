@@ -313,8 +313,8 @@ const AdminTherapists = () => {
     const primaryAssignment = formData.gym_assignments.find((a) => a.is_primary);
     const primaryGymId = primaryAssignment?.gym_id || formData.gym_id || null;
 
-    if (formData.gym_assignments.length === 0) {
-      toast({ title: "Error", description: "Please assign at least one gym", variant: "destructive" });
+    if (formData.gym_assignments.length === 0 && formData.serviceable_city_ids.length === 0) {
+      toast({ title: "Error", description: "Please assign at least one gym or Home Visit city", variant: "destructive" });
       return;
     }
 
