@@ -57,7 +57,10 @@ interface Service {
 // Static payment links removed - all payments now use dynamic checkout via create-payment edge function
 
 const GymPage = () => {
-  const { gymId } = useParams();
+  const { gymId, code: routeCode } = useParams();
+  const [searchParams] = useSearchParams();
+  // H-1: the venue QR secret is the only accepted entry credential.
+  const qrCode = routeCode || searchParams.get("c") || undefined;
   const { t, i18n } = useTranslation();
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);

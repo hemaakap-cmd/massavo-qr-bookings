@@ -41,17 +41,6 @@ export interface VenueService {
 
 const storageKey = (type: VenueSessionType, id: string) => `massavo_venue_token_${type}_${id}`;
 
-function readCached(type: VenueSessionType, id: string): string | null {
-  try {
-    const raw = sessionStorage.getItem(storageKey(type, id));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { token: string; expiresAt: number };
-    if (!parsed.token || parsed.expiresAt * 1000 < Date.now() + 60_000) return null;
-    return parsed.token;
-  } catch {
-    return null;
-  }
-}
 
 function writeCached(type: VenueSessionType, id: string, token: string, expiresAt: number) {
   try {
