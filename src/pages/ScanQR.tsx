@@ -10,6 +10,7 @@ import Footer from "@/components/layout/Footer";
 interface Gym {
   id: string;
   name: string;
+  qr_code_id: string;
   address: string;
   cities?: { name: string };
 }
@@ -24,7 +25,7 @@ const ScanQR = () => {
       // Use admin gyms table - qr_code_id is only accessible to admins
       const { data, error } = await supabase
         .from("gyms")
-        .select("id, name, address, cities(name)")
+        .select("id, name, qr_code_id, address, cities(name)")
         .order("name");
 
       if (!error && data) {
@@ -42,8 +43,8 @@ const ScanQR = () => {
   // Use published URL for QR codes so customers can access them
   const PUBLISHED_URL = "https://massavo-qr-bookings.lovable.app";
   
-  const getBookingUrl = (gymId: string) => {
-    return `${PUBLISHED_URL}/gym/${gymId}`;
+  const getBookingUrl = (gym: Gym) => {
+    return `${PUBLISHED_URL}/g/${gym.qr_code_id}`;
   };
 
   const downloadQRCode = (gym: Gym) => {
@@ -140,7 +141,7 @@ const ScanQR = () => {
                     <div className="p-6 bg-white rounded-2xl shadow-lg">
                       <QRCodeCanvas
                         id={`qr-${selectedGym.id}`}
-                        value={getBookingUrl(selectedGym.id)}
+                        value={getBookingUrl(selectedGym)}
                         size={240}
                         level="H"
                         includeMargin
@@ -159,7 +160,7 @@ const ScanQR = () => {
                   <div className="bg-muted/50 rounded-lg p-3 mb-6">
                     <p className="text-xs text-muted-foreground mb-1">Buchungs-URL:</p>
                     <p className="text-sm font-mono text-foreground break-all">
-                      {getBookingUrl(selectedGym.id)}
+                      {getBookingUrl(selectedGym)}
                     </p>
                   </div>
 

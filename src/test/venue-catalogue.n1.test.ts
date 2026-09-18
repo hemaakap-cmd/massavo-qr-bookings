@@ -21,6 +21,9 @@ const SUPABASE_ANON_KEY =
 const TIMEOUT = 30_000;
 const SYNTHETIC_EMAIL = "qa-probe-not-a-real-customer@example.invalid";
 const UNMAPPED_SERVICE = "00000000-0000-4000-8000-000000000001";
+// Positive catalogue cases need the venue's real QR secret (never committed).
+const GYM_QR = process.env.TEST_GYM_QR_CODE || "";
+const HOTEL_QR = process.env.TEST_HOTEL_QR_CODE || "";
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -45,30 +48,31 @@ async function fn(name: string, body: unknown) {
   return { status: res.status, body: parsed };
 }
 
-async function claim(venueType: "gym" | "hotel", venueId: string) {
-  const { body } = await fn("venue-access", { action: "claim", venueType, venueId });
-  return body.token as string | undefined;
+/** A token is only obtainable with the venue's physical QR secret (H-1). */
+async function claim(venueType: "gym" | "hotel", code: string) {
+  const { body } = await fn("venue-access", { action: "claim", venueType, code });
+  return { token: body.token as string | undefined, venueId: body.venue?.id as string | undefined };
 }
 
 let gymId: string | undefined;
 let hotelId: string | undefined;
 
 beforeAll(async () => {
-  const { data: gym } = await sb.from("gyms").select("id").eq("is_active", true).limit(1).maybeSingle();
+  const { data: gym } = await sb.from("gyms_public").select("id").limit(1).maybeSingle();
   gymId = gym?.id;
-  const { data: hotel } = await sb.from("hotels").select("id").eq("is_active", true).limit(1).maybeSingle();
+  const { data: hotel } = await sb.from("hotels_public").select("id").limit(1).maybeSingle();
   hotelId = hotel?.id;
 }, TIMEOUT);
 
 describe("N-1 — venue service catalogue is authoritative", () => {
-  it(
+  it.skipIf(!GYM_QR)(
     "1. gym services with an ACTIVE mapping are returned with a server price",
     async () => {
-      const token = await claim("gym", gymId!);
+      const { token, venueId } = await claim("gym", GYM_QR);
       const { status, body } = await fn("venue-access", {
         action: "catalogue",
         venueType: "gym",
-        venueId: gymId,
+        venueId,
         token,
       });
       expect(status).toBe(200);
@@ -81,14 +85,14 @@ describe("N-1 — venue service catalogue is authoritative", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!GYM_QR)(
     "2. a service with NO mapping for the gym is not in the catalogue",
     async () => {
-      const token = await claim("gym", gymId!);
+      const { token, venueId } = await claim("gym", GYM_QR);
       const { body } = await fn("venue-access", {
         action: "catalogue",
         venueType: "gym",
-        venueId: gymId,
+        venueId,
         token,
       });
       const ids = body.services.map((s: { id: string }) => s.id);
@@ -97,14 +101,14 @@ describe("N-1 — venue service catalogue is authoritative", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!GYM_QR)(
     "3. an INACTIVE mapping is never returned by the catalogue",
     async () => {
-      const token = await claim("gym", gymId!);
+      const { token, venueId } = await claim("gym", GYM_QR);
       const { body } = await fn("venue-access", {
         action: "catalogue",
         venueType: "gym",
-        venueId: gymId,
+        venueId,
         token,
       });
       // every returned service must resolve to a concrete server price, which
@@ -116,15 +120,14 @@ describe("N-1 — venue service catalogue is authoritative", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!HOTEL_QR)(
     "4. hotel services with an ACTIVE mapping are returned",
     async () => {
-      if (!hotelId) return;
-      const token = await claim("hotel", hotelId);
+      const { token, venueId } = await claim("hotel", HOTEL_QR);
       const { status, body } = await fn("venue-access", {
         action: "catalogue",
         venueType: "hotel",
-        venueId: hotelId,
+        venueId,
         token,
       });
       expect(status).toBe(200);
@@ -136,7 +139,7 @@ describe("N-1 — venue service catalogue is authoritative", () => {
   it(
     "5+6. booking a service that the venue does not offer is rejected server-side",
     async () => {
-      const token = await claim("gym", gymId!);
+      const { token } = GYM_QR ? await claim("gym", GYM_QR) : { token: undefined };
       const { status, body } = await fn("create-payment", {
         venueType: "gym",
         gymId,
@@ -156,7 +159,7 @@ describe("N-1 — venue service catalogue is authoritative", () => {
   it(
     "7. a client-supplied price/currency cannot be used for checkout",
     async () => {
-      const token = await claim("gym", gymId!);
+      const { token } = GYM_QR ? await claim("gym", GYM_QR) : { token: undefined };
       const { status, body } = await fn("create-payment", {
         venueType: "gym",
         gymId,

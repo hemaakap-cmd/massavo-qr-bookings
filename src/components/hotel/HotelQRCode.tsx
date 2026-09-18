@@ -10,17 +10,22 @@ interface HotelQRCodeProps {
   hotelName: string;
   cityName?: string;
   size?: number;
+  /** Venue QR secret (qr_code_id). Required for a scannable booking QR. */
+  qrCodeId?: string;
 }
 
 const PUBLISHED_URL = "https://massavo-qr-bookings.lovable.app";
 
-const HotelQRCode = ({ hotelId, hotelName, cityName, size = 220 }: HotelQRCodeProps) => {
+const HotelQRCode = ({ hotelId, hotelName, cityName, size = 220, qrCodeId }: HotelQRCodeProps) => {
   const { toast } = useToast();
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const bookingUrl = `${PUBLISHED_URL}/hotel/${hotelId}`;
+  // H-1: the QR encodes the venue QR secret only (no prices, no catalogue).
+  const bookingUrl = qrCodeId
+    ? `${PUBLISHED_URL}/h/${qrCodeId}`
+    : (typeof window !== "undefined" ? window.location.href : "");
   const safeName = hotelName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
   const downloadPng = () => {

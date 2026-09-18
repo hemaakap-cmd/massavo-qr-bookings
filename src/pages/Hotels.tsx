@@ -64,7 +64,7 @@ const Hotels = () => {
         supabase.from("cities").select("*").eq("is_active", true).eq("country_id", selectedCountry.id).order("name"),
         supabase.from("federal_states").select("*").eq("is_active", true).eq("country_id", selectedCountry.id).order("name"),
         supabase.from("counties").select("*").eq("is_active", true).order("name"),
-        supabase.from("hotels").select("city_id").eq("is_active", true).eq("country_id", selectedCountry.id),
+        supabase.from("hotels_public").select("city_id").eq("is_active", true).eq("country_id", selectedCountry.id),
       ]);
 
       // Aggregate hotel counts per city

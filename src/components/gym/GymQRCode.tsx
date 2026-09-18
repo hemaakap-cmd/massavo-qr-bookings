@@ -9,16 +9,21 @@ interface GymQRCodeProps {
   gymId: string;
   gymName: string;
   cityName?: string;
+  /** Venue QR secret (qr_code_id). Required for a scannable booking QR. */
+  qrCodeId?: string;
 }
 
-const GymQRCode = ({ gymId, gymName, cityName }: GymQRCodeProps) => {
+const GymQRCode = ({ gymId, gymName, cityName, qrCodeId }: GymQRCodeProps) => {
   // Use published URL for QR codes so customers can access them
   const PUBLISHED_URL = "https://massavo-qr-bookings.lovable.app";
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
+  // H-1: the QR encodes the venue QR secret only (no prices, no catalogue).
+  // Without it the server refuses to issue a venue token.
   const getBookingUrl = () => {
-    return `${PUBLISHED_URL}/gym/${gymId}`;
+    if (qrCodeId) return `${PUBLISHED_URL}/g/${qrCodeId}`;
+    return typeof window !== "undefined" ? window.location.href : "";
   };
 
   const downloadQRCode = () => {

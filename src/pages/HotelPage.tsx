@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useVenueSession } from "@/hooks/useVenueSession";
 import Header from "@/components/layout/Header";
@@ -60,7 +60,10 @@ interface Service {
 // Static payment links removed - all payments now use dynamic checkout via create-payment edge function
 
 const HotelPage = () => {
-  const { hotelId } = useParams();
+  const { hotelId, code: routeCode } = useParams();
+  const [searchParams] = useSearchParams();
+  // H-1: the venue QR secret is the only accepted entry credential.
+  const qrCode = routeCode || searchParams.get("c") || undefined;
   const { t, i18n } = useTranslation();
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -108,7 +111,7 @@ const HotelPage = () => {
   );
 
   // Venue catalogue + prices come from the QR-authorized server path only (N-1/N-2).
-  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("hotel", hotelId);
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("hotel", hotelId, qrCode);
   const hotel: Hotel | null = useMemo(
     () =>
       venueInfo
@@ -314,8 +317,11 @@ const HotelPage = () => {
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-display text-2xl font-bold text-foreground mb-4">
-              {t("hotels.noHotels")}
+              {venueError === "QR_REQUIRED" ? t("gymPage.qrRequiredTitle") : t("hotels.noHotels")}
             </h1>
+            {venueError === "QR_REQUIRED" && (
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">{t("gymPage.qrRequiredText")}</p>
+            )}
             <Button variant="sage" asChild>
               <Link to="/hotels">{t("hotels.pageTitle")}</Link>
             </Button>

@@ -41,17 +41,6 @@ export interface VenueService {
 
 const storageKey = (type: VenueSessionType, id: string) => `massavo_venue_token_${type}_${id}`;
 
-function readCached(type: VenueSessionType, id: string): string | null {
-  try {
-    const raw = sessionStorage.getItem(storageKey(type, id));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { token: string; expiresAt: number };
-    if (!parsed.token || parsed.expiresAt * 1000 < Date.now() + 60_000) return null;
-    return parsed.token;
-  } catch {
-    return null;
-  }
-}
 
 function writeCached(type: VenueSessionType, id: string, token: string, expiresAt: number) {
   try {
@@ -83,41 +72,34 @@ export function useVenueSession(type: VenueSessionType, venueId: string | undefi
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!venueId && !qrCode) return;
     setLoading(true);
     setError(null);
 
-    let activeToken = venueId ? readCached(type, venueId) : null;
+    // H-1: only the venue's physical QR secret can start a venue session.
+    // A venue id alone is never accepted by the server.
+    if (!qrCode) {
+      setError("QR_REQUIRED");
+      setLoading(false);
+      return;
+    }
+
+    let activeToken: string | null = null;
     let claimedVenue: VenueInfo | null = null;
 
-    if (!activeToken) {
-      const { data, error: claimErr } = await callVenueAccess<{ token: string; expiresAt: number; venue: VenueInfo }>({
-        action: "claim",
-        venueType: type,
-        venueId,
-        code: qrCode,
-      });
-      if (claimErr || !data?.token) {
-        setError(claimErr || "Venue authorization failed");
-        setLoading(false);
-        return;
-      }
-      activeToken = data.token;
-      claimedVenue = data.venue;
-      writeCached(type, data.venue.id, data.token, data.expiresAt);
-    } else {
-      const { data } = await callVenueAccess<{ token: string; expiresAt: number; venue: VenueInfo }>({
-        action: "claim",
-        venueType: type,
-        venueId,
-        code: qrCode,
-      });
-      if (data?.venue) claimedVenue = data.venue;
-      if (data?.token) {
-        activeToken = data.token;
-        writeCached(type, data.venue.id, data.token, data.expiresAt);
-      }
+    const { data, error: claimErr } = await callVenueAccess<{ token: string; expiresAt: number; venue: VenueInfo }>({
+      action: "claim",
+      venueType: type,
+      venueId,
+      code: qrCode,
+    });
+    if (claimErr || !data?.token) {
+      setError(claimErr || "Venue authorization failed");
+      setLoading(false);
+      return;
     }
+    activeToken = data.token;
+    claimedVenue = data.venue;
+    writeCached(type, data.venue.id, data.token, data.expiresAt);
 
     setToken(activeToken);
     if (claimedVenue) setVenue(claimedVenue);

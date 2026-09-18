@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useVenueSession } from "@/hooks/useVenueSession";
 import Header from "@/components/layout/Header";
@@ -57,7 +57,10 @@ interface Service {
 // Static payment links removed - all payments now use dynamic checkout via create-payment edge function
 
 const GymPage = () => {
-  const { gymId } = useParams();
+  const { gymId, code: routeCode } = useParams();
+  const [searchParams] = useSearchParams();
+  // H-1: the venue QR secret is the only accepted entry credential.
+  const qrCode = routeCode || searchParams.get("c") || undefined;
   const { t, i18n } = useTranslation();
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -107,7 +110,7 @@ const GymPage = () => {
   // Venue catalogue + prices come from the QR-authorized server path only.
   // (N-2: no public gym/hotel catalogue; N-1: server decides which services
   // the venue offers and at which price.)
-  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("gym", gymId);
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("gym", gymId, qrCode);
   const gym: Gym | null = useMemo(
     () =>
       venueInfo
@@ -310,8 +313,11 @@ const GymPage = () => {
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-display text-2xl font-bold text-foreground mb-4">
-              {t("gymPage.gymNotFound")}
+              {venueError === "QR_REQUIRED" ? t("gymPage.qrRequiredTitle") : t("gymPage.gymNotFound")}
             </h1>
+            {venueError === "QR_REQUIRED" && (
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">{t("gymPage.qrRequiredText")}</p>
+            )}
             <Button variant="sage" asChild>
               <Link to="/cities">{t("gymPage.backToCities")}</Link>
             </Button>

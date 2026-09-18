@@ -189,13 +189,20 @@ describe("AUDIT D — QR entry-point integrity", () => {
   it(
     "a bogus qr_code_id resolves to no gym",
     async () => {
-      const { data, error } = await sb
-        .from("gyms")
-        .select("id, name, qr_code_id, is_active")
-        .eq("qr_code_id", "definitely-not-a-real-qr-code-xyz-123")
-        .maybeSingle();
-      expect(error).toBeNull();
-      expect(data).toBeNull();
+      // The QR secret is not readable by anonymous clients at all (H-1), and
+      // a bogus code cannot be exchanged for a venue token.
+      const probe = await sb.from("gyms").select("qr_code_id").limit(1);
+      expect(probe.error).not.toBeNull();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/venue-access`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ action: "claim", venueType: "gym", code: "definitely-not-a-real-qr-code-xyz-123" }),
+      });
+      expect(res.status).toBe(404);
     },
     TIMEOUT,
   );
@@ -203,13 +210,18 @@ describe("AUDIT D — QR entry-point integrity", () => {
   it(
     "a bogus qr_code_id resolves to no hotel",
     async () => {
-      const { data, error } = await sb
-        .from("hotels")
-        .select("id, name, qr_code_id, is_active")
-        .eq("qr_code_id", "definitely-not-a-real-qr-code-xyz-123")
-        .maybeSingle();
-      expect(error).toBeNull();
-      expect(data).toBeNull();
+      const probe = await sb.from("hotels").select("qr_code_id").limit(1);
+      expect(probe.error).not.toBeNull();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/venue-access`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ action: "claim", venueType: "hotel", code: "definitely-not-a-real-qr-code-xyz-123" }),
+      });
+      expect(res.status).toBe(404);
     },
     TIMEOUT,
   );

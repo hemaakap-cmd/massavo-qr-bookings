@@ -38,7 +38,7 @@ const HotelsCityPage = () => {
       const [cityRes, hotelsRes] = await Promise.all([
         supabase.from("cities").select("id, name, country").eq("id", cityId).maybeSingle(),
         supabase
-          .from("hotels")
+          .from("hotels_public")
           .select("id, name, address, image_url, star_rating, rating, open_hours")
           .eq("city_id", cityId)
           .eq("is_active", true)

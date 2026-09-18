@@ -26,7 +26,8 @@ const TIMEOUT = 25_000;
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 /** Claim a QR/venue token the same way a scanning customer does. */
-async function claimVenue(venueType: "gym" | "hotel", venueId: string) {
+/** A venue token is only obtainable with the venue's physical QR secret (H-1). */
+async function claimVenue(venueType: "gym" | "hotel", code: string) {
   const res = await fetch(`${FUNCTIONS_URL}/venue-access`, {
     method: "POST",
     headers: {
@@ -34,7 +35,7 @@ async function claimVenue(venueType: "gym" | "hotel", venueId: string) {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ action: "claim", venueType, venueId }),
+    body: JSON.stringify({ action: "claim", venueType, code }),
   });
   return (await res.json()) as { token?: string; venue?: { id: string }; error?: string };
 }
@@ -52,6 +53,8 @@ async function venueAccess(body: Record<string, unknown>) {
   return { status: res.status, body: (await res.json()) as Record<string, any> };
 }
 
+const GYM_QR = process.env.TEST_GYM_QR_CODE || "";
+const HOTEL_QR = process.env.TEST_HOTEL_QR_CODE || "";
 const TIMEOUT_LIVE = 30_000;
 
 
@@ -83,47 +86,23 @@ describe("E2E booking journey — Step 1: city / QR entry point", () => {
   );
 
   it(
-    "QR entry: gym lookup by qr_code_id resolves to an active gym",
+    "QR entry: the QR secret is NOT readable by anonymous clients (H-1)",
     async () => {
-      const { data, error } = await sb
-        .from("gyms")
-        .select("id, name, qr_code_id, city_id, country_id, is_active")
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      expect(error).toBeNull();
-      expect(data?.qr_code_id).toBeTruthy();
-
-      // Re-resolve by qr_code_id (simulates /qr/:code route)
-      const { data: byQr, error: e2 } = await sb
-        .from("gyms")
-        .select("id, name")
-        .eq("qr_code_id", data!.qr_code_id)
-        .maybeSingle();
-      expect(e2).toBeNull();
-      expect(byQr?.id).toBe(data!.id);
+      const gymQr = await sb.from("gyms").select("qr_code_id").limit(1);
+      expect(gymQr.error).not.toBeNull();
+      const hotelQr = await sb.from("hotels").select("qr_code_id").limit(1);
+      expect(hotelQr.error).not.toBeNull();
     },
     TIMEOUT,
   );
 
   it(
-    "QR entry: hotel lookup by qr_code_id resolves to an active hotel",
+    "QR entry: public venue views expose safe fields only",
     async () => {
-      const { data, error } = await sb
-        .from("hotels")
-        .select("id, name, qr_code_id, city_id, is_active")
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      expect(error).toBeNull();
-      if (!data) return; // no hotels = skip
-      const { data: byQr, error: e2 } = await sb
-        .from("hotels")
-        .select("id")
-        .eq("qr_code_id", data.qr_code_id)
-        .maybeSingle();
-      expect(e2).toBeNull();
-      expect(byQr?.id).toBe(data.id);
+      const gyms = await sb.from("gyms_public").select("id, name, address, city_id").limit(1);
+      expect(gyms.error).toBeNull();
+      const hotels = await sb.from("hotels_public").select("id, name, address, city_id").limit(1);
+      expect(hotels.error).toBeNull();
     },
     TIMEOUT,
   );
@@ -137,9 +116,8 @@ describe("E2E booking journey — Step 2: services per venue", () => {
     "gym service catalogue is served through the QR-authorized path only",
     async () => {
       const { data: gym } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       expect(gym?.id).toBeTruthy();
@@ -148,13 +126,14 @@ describe("E2E booking journey — Step 2: services per venue", () => {
       const direct = await sb.from("gym_services").select("service_id").eq("gym_id", gym!.id);
       expect(direct.error).not.toBeNull();
 
-      const claimed = await claimVenue("gym", gym!.id);
+      if (!GYM_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("gym", GYM_QR);
       expect(claimed.token).toBeTruthy();
 
       const cat = await venueAccess({
         action: "catalogue",
         venueType: "gym",
-        venueId: gym!.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
       });
       expect(cat.status).toBe(200);
@@ -172,9 +151,8 @@ describe("E2E booking journey — Step 2: services per venue", () => {
     "hotel service catalogue is served through the QR-authorized path only",
     async () => {
       const { data: hotel } = await sb
-        .from("hotels")
+        .from("hotels_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       if (!hotel?.id) return;
@@ -182,13 +160,14 @@ describe("E2E booking journey — Step 2: services per venue", () => {
       const direct = await sb.from("hotel_services").select("service_id").eq("hotel_id", hotel.id);
       expect(direct.error).not.toBeNull();
 
-      const claimed = await claimVenue("hotel", hotel.id);
+      if (!HOTEL_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("hotel", HOTEL_QR);
       expect(claimed.token).toBeTruthy();
 
       const cat = await venueAccess({
         action: "catalogue",
         venueType: "hotel",
-        venueId: hotel.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
       });
       expect(cat.status).toBe(200);
@@ -206,9 +185,8 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
     "gym availability is served through the QR-authorized path (anon denied)",
     async () => {
       const { data: gym } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
 
@@ -221,11 +199,12 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
       });
       expect(directRpc.error).not.toBeNull();
 
-      const claimed = await claimVenue("gym", gym!.id);
+      if (!GYM_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("gym", GYM_QR);
       const avail = await venueAccess({
         action: "availability",
         venueType: "gym",
-        venueId: gym!.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
         monthsAhead: 1,
       });
@@ -240,9 +219,8 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
     "hotel availability is served through the QR-authorized path (anon denied)",
     async () => {
       const { data: hotel } = await sb
-        .from("hotels")
+        .from("hotels_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       if (!hotel?.id) return;
@@ -253,11 +231,12 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
       });
       expect(directRpc.error).not.toBeNull();
 
-      const claimed = await claimVenue("hotel", hotel.id);
+      if (!HOTEL_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("hotel", HOTEL_QR);
       const avail = await venueAccess({
         action: "availability",
         venueType: "hotel",
-        venueId: hotel.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
         monthsAhead: 1,
       });
@@ -271,20 +250,20 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
     "booked slots for a gym require QR authorization",
     async () => {
       const { data: gym } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       const today = new Date().toISOString().slice(0, 10);
       const direct = await sb.rpc("get_booked_slots", { p_gym_id: gym!.id, p_date: today });
       expect(direct.error).not.toBeNull();
 
-      const claimed = await claimVenue("gym", gym!.id);
+      if (!GYM_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("gym", GYM_QR);
       const avail = await venueAccess({
         action: "availability",
         venueType: "gym",
-        venueId: gym!.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
         date: today,
       });
@@ -298,9 +277,8 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
     "booked slots for a hotel require QR authorization",
     async () => {
       const { data: hotel } = await sb
-        .from("hotels")
+        .from("hotels_public")
         .select("id")
-        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       if (!hotel?.id) return;
@@ -308,11 +286,12 @@ describe("E2E booking journey — Step 3: schedule + slot availability", () => {
       const direct = await sb.rpc("get_hotel_booked_slots", { p_hotel_id: hotel.id, p_date: today });
       expect(direct.error).not.toBeNull();
 
-      const claimed = await claimVenue("hotel", hotel.id);
+      if (!HOTEL_QR) return; // BLOCKED without the venue QR secret
+      const claimed = await claimVenue("hotel", HOTEL_QR);
       const avail = await venueAccess({
         action: "availability",
         venueType: "hotel",
-        venueId: hotel.id,
+        venueId: claimed.venue?.id,
         token: claimed.token,
         date: today,
       });

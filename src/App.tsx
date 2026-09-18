@@ -156,9 +156,12 @@ const App = () => (
           <Route path="/home-visit" element={<HomeVisit />} />
           <Route path="/cities" element={<QRGuard type="gym"><Cities /></QRGuard>} />
           <Route path="/city/:cityId" element={<QRGuard type="gym"><CityPage /></QRGuard>} />
+          {/* QR entry points: the printed QR carries the venue QR secret (H-1). */}
+          <Route path="/g/:code" element={<GymPage />} />
           <Route path="/gym/:gymId" element={<GymPage />} />
           <Route path="/hotels" element={<QRGuard type="hotel"><Hotels /></QRGuard>} />
           <Route path="/hotels/city/:cityId" element={<QRGuard type="hotel"><HotelsCityPage /></QRGuard>} />
+          <Route path="/h/:code" element={<HotelPage />} />
           <Route path="/hotel/:hotelId" element={<HotelPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -170,9 +173,9 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/print-qr" element={<PrintQR />} />
           <Route path="/bag-mockup" element={<BagMockup />} />
-          <Route path="/scan" element={<ScanQR />} />
-          <Route path="/share-qr" element={<ShareQR />} />
-          <Route path="/qr/:id" element={<QRCodeDetail />} />
+          <Route path="/scan" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><ScanQR /></ProtectedRoute>} />
+          <Route path="/share-qr" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><ShareQR /></ProtectedRoute>} />
+          <Route path="/qr/:id" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><QRCodeDetail /></ProtectedRoute>} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/impressum" element={<Impressum />} />

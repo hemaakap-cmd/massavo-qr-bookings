@@ -1,9 +1,16 @@
 /**
- * N-2 regression suite — server-side QR/venue authorization.
+ * N-2 + H-1 regression suite — server-side QR/venue authorization.
  *
- * The general public website must not expose gym/hotel catalogues, prices or
- * availability. Access is granted only by a signed, venue-scoped token issued
- * by the `venue-access` edge function; sessionStorage is never the boundary.
+ * H-1 rule: a venue token can ONLY be obtained by presenting the venue's
+ * physical QR secret (qr_code_id). Knowing or enumerating a venue id is never
+ * sufficient. N-2 rule: catalogue/availability require a token scoped to that
+ * exact venue.
+ *
+ * The positive ("valid QR") cases need a real QR secret, which is deliberately
+ * not readable by anonymous clients and never committed. Supply it through the
+ * TEST_GYM_QR_CODE / TEST_HOTEL_QR_CODE environment variables; without them the
+ * positive cases are skipped (reported as BLOCKED) while all denial paths still
+ * run.
  *
  * Read-only: only denial paths and read actions are exercised. No bookings,
  * no payments, no writes.
@@ -19,6 +26,8 @@ const SUPABASE_ANON_KEY =
 
 const TIMEOUT = 30_000;
 const FAKE_VENUE = "00000000-0000-4000-8000-000000000002";
+const GYM_QR = process.env.TEST_GYM_QR_CODE || "";
+const HOTEL_QR = process.env.TEST_HOTEL_QR_CODE || "";
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -48,20 +57,150 @@ let gymB: string | undefined;
 let hotelA: string | undefined;
 let hotelB: string | undefined;
 let tokenGymA: string | undefined;
+let tokenGymAVenue: string | undefined;
 let tokenHotelA: string | undefined;
+let tokenHotelAVenue: string | undefined;
 
 beforeAll(async () => {
-  const { data: gyms } = await sb.from("gyms").select("id").eq("is_active", true).limit(2);
+  // Public venue ids come from the column-limited public views (no qr_code_id).
+  const { data: gyms } = await sb.from("gyms_public").select("id").limit(2);
   gymA = gyms?.[0]?.id;
   gymB = gyms?.[1]?.id;
-  const { data: hotels } = await sb.from("hotels").select("id").eq("is_active", true).limit(2);
+  const { data: hotels } = await sb.from("hotels_public").select("id").limit(2);
   hotelA = hotels?.[0]?.id;
   hotelB = hotels?.[1]?.id;
 
-  if (gymA) tokenGymA = (await venueAccess({ action: "claim", venueType: "gym", venueId: gymA })).body.token;
-  if (hotelA)
-    tokenHotelA = (await venueAccess({ action: "claim", venueType: "hotel", venueId: hotelA })).body.token;
+  if (GYM_QR) {
+    const res = await venueAccess({ action: "claim", venueType: "gym", code: GYM_QR });
+    tokenGymA = res.body.token;
+    tokenGymAVenue = res.body.venue?.id;
+  }
+  if (HOTEL_QR) {
+    const res = await venueAccess({ action: "claim", venueType: "hotel", code: HOTEL_QR });
+    tokenHotelA = res.body.token;
+    tokenHotelAVenue = res.body.venue?.id;
+  }
 }, TIMEOUT);
+
+describe("H-1 — a venue token requires the physical QR secret", () => {
+  it(
+    "H-1.1 claim with a bare venue id (no QR secret) is rejected",
+    async () => {
+      const { status, body } = await venueAccess({ action: "claim", venueType: "gym", venueId: gymA });
+      expect(status).toBe(401);
+      expect(body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "H-1.2 claim with a bare hotel id (no QR secret) is rejected",
+    async () => {
+      const { status, body } = await venueAccess({ action: "claim", venueType: "hotel", venueId: hotelA });
+      expect(status).toBe(401);
+      expect(body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "H-1.3 empty, short or invalid QR codes are rejected",
+    async () => {
+      for (const code of ["", "   ", "abc"]) {
+        const { status, body } = await venueAccess({ action: "claim", venueType: "gym", code });
+        expect(status).toBe(401);
+        expect(body.token).toBeUndefined();
+      }
+      const unknown = await venueAccess({
+        action: "claim",
+        venueType: "gym",
+        code: "definitely-not-a-real-qr-code-xyz-123",
+      });
+      expect(unknown.status).toBe(404);
+      expect(unknown.body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "H-1.4 a random / unknown venue id yields no token",
+    async () => {
+      const { status, body } = await venueAccess({
+        action: "claim",
+        venueType: "gym",
+        venueId: FAKE_VENUE,
+      });
+      expect(status).toBe(401);
+      expect(body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "H-1.5 anonymous clients cannot read qr_code_id, commission_percentage or phone",
+    async () => {
+      const probes = await Promise.all([
+        sb.from("gyms").select("qr_code_id").limit(1),
+        sb.from("gyms").select("commission_percentage").limit(1),
+        sb.from("gyms").select("phone").limit(1),
+        sb.from("hotels").select("qr_code_id").limit(1),
+        sb.from("hotels").select("commission_percentage").limit(1),
+        sb.from("hotels").select("phone").limit(1),
+      ]);
+      for (const p of probes) expect(p.error).not.toBeNull();
+    },
+    TIMEOUT,
+  );
+
+  it(
+    "H-1.6 the public venue views expose only public fields",
+    async () => {
+      const gym = await sb.from("gyms_public").select("*").limit(1);
+      expect(gym.error).toBeNull();
+      const row = (gym.data?.[0] ?? {}) as Record<string, unknown>;
+      for (const forbidden of ["qr_code_id", "commission_percentage", "phone"]) {
+        expect(Object.keys(row)).not.toContain(forbidden);
+      }
+    },
+    TIMEOUT,
+  );
+
+  it.skipIf(!GYM_QR)(
+    "H-1.7 a valid gym QR secret yields a token for exactly that gym",
+    async () => {
+      expect(tokenGymA).toBeTruthy();
+      expect(tokenGymAVenue).toBeTruthy();
+    },
+    TIMEOUT,
+  );
+
+  it.skipIf(!GYM_QR)(
+    "H-1.8 a gym QR secret cannot be redirected at another venue id",
+    async () => {
+      const other = [gymA, gymB].find((id) => id && id !== tokenGymAVenue);
+      if (!other) return;
+      const { status, body } = await venueAccess({
+        action: "claim",
+        venueType: "gym",
+        venueId: other,
+        code: GYM_QR,
+      });
+      expect(status).toBe(403);
+      expect(body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+
+  it.skipIf(!GYM_QR)(
+    "H-1.9 a gym QR secret is not valid as a hotel QR secret",
+    async () => {
+      const { status, body } = await venueAccess({ action: "claim", venueType: "hotel", code: GYM_QR });
+      expect(status).toBe(404);
+      expect(body.token).toBeUndefined();
+    },
+    TIMEOUT,
+  );
+});
 
 describe("N-2 — protected venue data requires a valid QR token", () => {
   it(
@@ -86,29 +225,39 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     TIMEOUT,
   );
 
-  it(
-    "3. valid Gym A token → Gym A data allowed",
+  it.skipIf(!GYM_QR)(
+    "3. valid Gym A token → Gym A catalogue + availability allowed",
     async () => {
-      const { status, body } = await venueAccess({
+      const cat = await venueAccess({
         action: "catalogue",
         venueType: "gym",
-        venueId: gymA,
+        venueId: tokenGymAVenue,
         token: tokenGymA,
       });
-      expect(status).toBe(200);
-      expect(Array.isArray(body.services)).toBe(true);
+      expect(cat.status).toBe(200);
+      expect(Array.isArray(cat.body.services)).toBe(true);
+
+      const avail = await venueAccess({
+        action: "availability",
+        venueType: "gym",
+        venueId: tokenGymAVenue,
+        token: tokenGymA,
+      });
+      expect(avail.status).toBe(200);
+      expect(Array.isArray(avail.body.availableDates)).toBe(true);
     },
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!GYM_QR)(
     "4. Gym A token → Gym B denied",
     async () => {
-      if (!gymB) return;
+      const other = [gymA, gymB].find((id) => id && id !== tokenGymAVenue);
+      if (!other) return;
       const { status, body } = await venueAccess({
         action: "catalogue",
         venueType: "gym",
-        venueId: gymB,
+        venueId: other,
         token: tokenGymA,
       });
       expect(status).toBe(403);
@@ -117,7 +266,7 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!GYM_QR)(
     "5. Gym A token → hotel data denied",
     async () => {
       if (!hotelA) return;
@@ -132,14 +281,13 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!HOTEL_QR)(
     "6. valid Hotel A token → Hotel A allowed",
     async () => {
-      if (!hotelA) return;
       const { status, body } = await venueAccess({
         action: "catalogue",
         venueType: "hotel",
-        venueId: hotelA,
+        venueId: tokenHotelAVenue,
         token: tokenHotelA,
       });
       expect(status).toBe(200);
@@ -148,14 +296,15 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!HOTEL_QR)(
     "7. Hotel A token → Hotel B denied",
     async () => {
-      if (!hotelB) return;
+      const other = [hotelA, hotelB].find((id) => id && id !== tokenHotelAVenue);
+      if (!other) return;
       const { status } = await venueAccess({
         action: "catalogue",
         venueType: "hotel",
-        venueId: hotelB,
+        venueId: other,
         token: tokenHotelA,
       });
       expect(status).toBe(403);
@@ -163,10 +312,10 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     TIMEOUT,
   );
 
-  it(
+  it.skipIf(!HOTEL_QR)(
     "8. Hotel A token → gym data denied",
     async () => {
-      if (!hotelA || !gymA) return;
+      if (!gymA) return;
       const { status } = await venueAccess({
         action: "catalogue",
         venueType: "gym",
@@ -181,9 +330,13 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
   it(
     "9. forged / tampered tokens are rejected",
     async () => {
-      const tampered = `${tokenGymA!.slice(0, -2)}AA`;
-      const swapped = `${btoa(JSON.stringify({ t: "gym", v: gymB ?? FAKE_VENUE, iat: 1, exp: 9999999999, jti: "x" }))}.signature`;
-      for (const token of [tampered, swapped, "not-a-token", ""]) {
+      const forged = [
+        `${btoa(JSON.stringify({ t: "gym", v: gymA ?? FAKE_VENUE, iat: 1, exp: 9999999999, jti: "x" }))}.signature`,
+        "not-a-token",
+        "",
+      ];
+      if (tokenGymA) forged.push(`${tokenGymA.slice(0, -2)}AA`);
+      for (const token of forged) {
         const { status } = await venueAccess({
           action: "catalogue",
           venueType: "gym",
@@ -202,7 +355,7 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
       const { status, body } = await venueAccess({
         action: "claim",
         venueType: "gym",
-        venueId: FAKE_VENUE,
+        code: "revoked-or-unknown-code-000000",
       });
       expect(status).toBe(404);
       expect(body.token).toBeUndefined();
@@ -228,13 +381,14 @@ describe("N-2 — protected venue data requires a valid QR token", () => {
     "home visit stays public — it must NOT be gated by the gym/hotel QR token",
     async () => {
       const { data: city } = await sb.from("cities").select("id").eq("is_active", true).limit(1).maybeSingle();
-      if (!city?.id) return;
-      const { error } = await sb.rpc("get_home_available_dates", {
-        p_city_id: city.id,
-        p_start_date: new Date().toISOString().slice(0, 10),
-        p_months_ahead: 1,
-      });
+      expect(city?.id).toBeTruthy();
+      const { data: services, error } = await sb
+        .from("services")
+        .select("id, price, home_visit_enabled")
+        .eq("home_visit_enabled", true)
+        .limit(1);
       expect(error).toBeNull();
+      expect(Array.isArray(services)).toBe(true);
     },
     TIMEOUT,
   );
