@@ -151,7 +151,10 @@ describe("AUDIT C — public catalog exposure is scoped to active rows", () => {
   it(
     "gyms: every anon-visible row is active",
     async () => {
-      const { data, error } = await sb.from("gyms").select("id, is_active").limit(50);
+      // Base table is denied to anon; the public surface is the gyms_public view.
+      const denied = await sb.from("gyms").select("id, is_active").limit(50);
+      expect(denied.error).not.toBeNull();
+      const { data, error } = await sb.from("gyms_public").select("id, is_active").limit(50);
       expect(error).toBeNull();
       for (const g of data || []) expect(g.is_active).toBe(true);
     },
@@ -161,7 +164,9 @@ describe("AUDIT C — public catalog exposure is scoped to active rows", () => {
   it(
     "hotels: every anon-visible row is active",
     async () => {
-      const { data, error } = await sb.from("hotels").select("id, is_active").limit(50);
+      const denied = await sb.from("hotels").select("id, is_active").limit(50);
+      expect(denied.error).not.toBeNull();
+      const { data, error } = await sb.from("hotels_public").select("id, is_active").limit(50);
       expect(error).toBeNull();
       for (const h of data || []) expect(h.is_active).toBe(true);
     },
@@ -269,7 +274,7 @@ describe("AUDIT E — multi-country data isolation", () => {
     "filtering gyms by a non-existent country returns an empty set (no leak)",
     async () => {
       const { data, error } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id")
         .eq("country_id", RANDOM_UUID)
         .limit(5);

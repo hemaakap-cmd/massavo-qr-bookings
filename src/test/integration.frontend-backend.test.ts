@@ -57,10 +57,12 @@ describe("public catalog (anon) — schema contract", () => {
   );
 
   it(
-    "gyms: anon sees only active gyms (RLS public.is_active=true)",
+    "gyms: anon sees only active gyms (via gyms_public view; base table denied)",
     async () => {
+      const denied = await sb.from("gyms").select("id").limit(1);
+      expect(denied.error).not.toBeNull();
       const { data, error } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id, name, address, city_id, country_id, image_url, is_active")
         .limit(20);
       expect(error).toBeNull();
@@ -72,10 +74,12 @@ describe("public catalog (anon) — schema contract", () => {
   );
 
   it(
-    "hotels: anon sees only active hotels (used by city page Hotels section)",
+    "hotels: anon sees only active hotels (via hotels_public view; base table denied)",
     async () => {
+      const denied = await sb.from("hotels").select("id").limit(1);
+      expect(denied.error).not.toBeNull();
       const { data, error } = await sb
-        .from("hotels")
+        .from("hotels_public")
         .select("id, name, address, city_id, country_id, is_active")
         .limit(20);
       expect(error).toBeNull();

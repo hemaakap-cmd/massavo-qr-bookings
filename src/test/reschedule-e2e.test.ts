@@ -59,7 +59,7 @@ describe("E2E reschedule — Step 2: availability validation for the new slot", 
     "gym: availability RPCs are not reachable by anon (QR-gated)",
     async () => {
       const { data: gym } = await sb
-        .from("gyms")
+        .from("gyms_public")
         .select("id")
         .eq("is_active", true)
         .limit(1)
