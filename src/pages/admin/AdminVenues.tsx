@@ -68,7 +68,7 @@ const AdminVenues = () => {
         activeGyms: gyms.data?.filter((item) => item.is_active).length || 0,
         hotels: hotels.data?.length || 0,
         activeHotels: hotels.data?.filter((item) => item.is_active).length || 0,
-        homeCities: cities.data?.filter((item) => item.is_active && item.home_visit_travel_fee !== null).length || 0,
+        homeCities: cities.data?.filter((item) => item.is_active).length || 0,
         homeServices: services.data?.filter((item) => item.is_active && item.home_visit_enabled).length || 0,
       });
       setLoading(false);
