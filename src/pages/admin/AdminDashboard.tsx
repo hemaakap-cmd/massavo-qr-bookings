@@ -194,6 +194,8 @@ const AdminDashboard = () => {
     setDateTo(format(new Date(), "yyyy-MM-dd"));
   };
 
+  const homeBookingsCount = allBookings.filter((b) => !b.gym_id && !b.hotel_id).length;
+
   const statCards = [
     { title: "Total Revenue", value: `${currencySymbol}${stats.revenue.toFixed(0)}`, icon: Euro, trend: "+12%", up: true },
     { title: "Total Bookings", value: stats.bookings, icon: Calendar, trend: "+8%", up: true },
