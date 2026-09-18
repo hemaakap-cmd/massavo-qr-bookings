@@ -52,8 +52,20 @@ export default function AdminSchedules() {
     },
   });
 
+  const { data: cities = [] } = useQuery({
+    queryKey: ["admin-cities-schedules", selectedCountry?.id],
+    queryFn: async () => {
+      let q = supabase.from("cities").select("id, name").eq("is_active", true).order("name");
+      if (selectedCountry?.id) q = q.eq("country_id", selectedCountry.id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+  });
+
   const selectedGym = gyms.find((g) => g.id === selectedGymId);
   const selectedHotel = hotels.find((h) => h.id === selectedHotelId);
+  const selectedCity = cities.find((c) => c.id === selectedCityId);
 
   return (
     <AdminLayout>
