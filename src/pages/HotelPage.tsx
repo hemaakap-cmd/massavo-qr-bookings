@@ -111,7 +111,7 @@ const HotelPage = () => {
   );
 
   // Venue catalogue + prices come from the QR-authorized server path only (N-1/N-2).
-  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("hotel", hotelId);
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("hotel", hotelId, qrCode);
   const hotel: Hotel | null = useMemo(
     () =>
       venueInfo

@@ -110,7 +110,7 @@ const GymPage = () => {
   // Venue catalogue + prices come from the QR-authorized server path only.
   // (N-2: no public gym/hotel catalogue; N-1: server decides which services
   // the venue offers and at which price.)
-  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("gym", gymId);
+  const { token: venueToken, venue: venueInfo, services, loading, error: venueError } = useVenueSession("gym", gymId, qrCode);
   const gym: Gym | null = useMemo(
     () =>
       venueInfo
