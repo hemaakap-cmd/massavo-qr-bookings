@@ -143,7 +143,11 @@ export function AdminSidebar() {
   const collapsed = state === "collapsed";
   const { isSuperAdmin, countryId } = useAuth();
   const { countries, selectedCountry, setSelectedCountryId } = useCountryData(countryId);
-  const navGroups = createNavGroups(getAdminGeographyLabels(selectedCountry?.code));
+  const navGroups = createNavGroups(getAdminGeographyLabels(selectedCountry?.code))
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !item.superOnly || isSuperAdmin),
+    }));
 
   const handleMobileNavClick = () => {
     if (isMobile) {
