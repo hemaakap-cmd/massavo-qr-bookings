@@ -459,7 +459,13 @@ const AdminBookings = () => {
                           <Hotel className="w-3.5 h-3.5" /> {loc.name}
                         </span>
                       </SelectItem>
-                    ))}
+                     ))}
+                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Home</div>
+                  <SelectItem value="home:all">
+                    <span className="inline-flex items-center gap-2">
+                      <Home className="w-3.5 h-3.5" /> Home Visits
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -663,10 +669,12 @@ const AdminBookings = () => {
                             <span className="inline-flex items-center gap-1.5 text-sm">
                               {booking.hotel_id ? (
                                 <Hotel className="w-3.5 h-3.5 text-muted-foreground" />
-                              ) : (
+                              ) : booking.gym_id ? (
                                 <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                              ) : (
+                                <Home className="w-3.5 h-3.5 text-muted-foreground" />
                               )}
-                              {booking.hotels?.name || booking.gyms?.name || "—"}
+                              {booking.hotels?.name || booking.gyms?.name || "Home Visit"}
                             </span>
                           </TableCell>
                         )}
