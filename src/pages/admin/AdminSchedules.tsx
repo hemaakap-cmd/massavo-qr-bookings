@@ -9,16 +9,18 @@ import { AffectedBookingsDashboard } from "@/components/admin/schedules/Affected
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CalendarX, AlertCircle, Building2, Hotel as HotelIcon } from "lucide-react";
+import { HomeVisitScheduleManager } from "@/components/admin/schedules/HomeVisitScheduleManager";
+import { Calendar, CalendarX, AlertCircle, Building2, Hotel as HotelIcon, Home } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCountryData } from "@/hooks/useCountry";
 
 export default function AdminSchedules() {
   const { countryId } = useAuth();
   const { selectedCountry } = useCountryData(countryId);
-  const [venueType, setVenueType] = useState<"gym" | "hotel">("gym");
+  const [venueType, setVenueType] = useState<"gym" | "hotel" | "home">("gym");
   const [selectedGymId, setSelectedGymId] = useState<string>("");
   const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  const [selectedCityId, setSelectedCityId] = useState<string>("");
 
   const { data: gyms = [], isLoading: gymsLoading } = useQuery({
     queryKey: ["admin-gyms", selectedCountry?.id],
@@ -50,8 +52,20 @@ export default function AdminSchedules() {
     },
   });
 
+  const { data: cities = [] } = useQuery({
+    queryKey: ["admin-cities-schedules", selectedCountry?.id],
+    queryFn: async () => {
+      let q = supabase.from("cities").select("id, name").eq("is_active", true).order("name");
+      if (selectedCountry?.id) q = q.eq("country_id", selectedCountry.id);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+  });
+
   const selectedGym = gyms.find((g) => g.id === selectedGymId);
   const selectedHotel = hotels.find((h) => h.id === selectedHotelId);
+  const selectedCity = cities.find((c) => c.id === selectedCityId);
 
   return (
     <AdminLayout>
@@ -59,17 +73,20 @@ export default function AdminSchedules() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Venue Schedules</h1>
           <p className="text-muted-foreground">
-            Manage recurring weekly schedules and exceptions per gym or hotel
+            Manage recurring weekly schedules and exceptions per gym, hotel or home visit city
           </p>
         </div>
 
-        <Tabs value={venueType} onValueChange={(v) => setVenueType(v as "gym" | "hotel")} className="w-full">
+        <Tabs value={venueType} onValueChange={(v) => setVenueType(v as "gym" | "hotel" | "home")} className="w-full">
           <TabsList>
             <TabsTrigger value="gym" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" /> Gyms
             </TabsTrigger>
             <TabsTrigger value="hotel" className="flex items-center gap-2">
               <HotelIcon className="h-4 w-4" /> Hotels
+            </TabsTrigger>
+            <TabsTrigger value="home" className="flex items-center gap-2">
+              <Home className="h-4 w-4" /> Home Visits
             </TabsTrigger>
           </TabsList>
 
@@ -152,6 +169,33 @@ export default function AdminSchedules() {
               <div className="text-center py-12 text-muted-foreground border rounded-lg bg-muted/50">
                 <HotelIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Select a hotel to manage its schedule</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="home" className="space-y-6 mt-4">
+            <div className="max-w-sm">
+              <Label htmlFor="city-select">Select City</Label>
+              <Select value={selectedCityId} onValueChange={setSelectedCityId}>
+                <SelectTrigger id="city-select" className="mt-1">
+                  <SelectValue placeholder="Choose a city for home visits" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCityId && selectedCity ? (
+              <HomeVisitScheduleManager cityId={selectedCityId} cityName={selectedCity.name} />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground border rounded-lg bg-muted/50">
+                <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select a city to manage home visit availability</p>
               </div>
             )}
           </TabsContent>
