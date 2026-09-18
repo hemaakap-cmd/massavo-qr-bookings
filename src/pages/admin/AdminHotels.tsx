@@ -478,6 +478,7 @@ const AdminHotels = () => {
             {qrHotel && (
               <HotelQRCode
                 hotelId={qrHotel.id}
+                qrCodeId={qrHotel.qr_code_id}
                 hotelName={qrHotel.name}
                 cityName={cities.find((c) => c.id === qrHotel.city_id)?.name}
               />

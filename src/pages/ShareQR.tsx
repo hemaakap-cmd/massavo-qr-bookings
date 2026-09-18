@@ -19,6 +19,7 @@ interface City {
 interface Gym {
   id: string;
   name: string;
+  qr_code_id: string;
   address: string;
   cities?: { name: string };
 }
@@ -37,7 +38,7 @@ const ShareQR = () => {
     const [citiesRes, gymsRes] = await Promise.all([
       supabase.from("cities").select("*").eq("is_active", true).order("name"),
       // Use admin gyms table - QR sharing is an admin feature
-      supabase.from("gyms").select("id, name, address, cities(name)").order("name"),
+      supabase.from("gyms").select("id, name, qr_code_id, address, cities(name)").order("name"),
     ]);
 
     if (citiesRes.data) setCities(citiesRes.data);

@@ -489,6 +489,7 @@ const AdminGyms = () => {
             {qrGym && (
               <GymQRCode
                 gymId={qrGym.id}
+                qrCodeId={qrGym.qr_code_id}
                 gymName={qrGym.name}
                 cityName={qrGym.cities?.name}
               />
