@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Activity, Heart, Leaf, Package, Building2, Hotel as HotelIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Activity, Heart, Leaf, Package, Building2, Hotel as HotelIcon, Home } from "lucide-react";
 
 interface Service {
   id: string;
@@ -27,6 +27,7 @@ interface Service {
   icon: string | null;
   is_active: boolean;
   country_id: string | null;
+  home_visit_enabled: boolean;
 }
 
 interface GymServiceAssignment {
@@ -74,6 +75,7 @@ const AdminServices = () => {
     price: 0,
     icon: "relaxation",
     is_active: true,
+    home_visit_enabled: false,
   });
 
   const activeCountryId = selectedCountry?.id || null;
@@ -84,7 +86,7 @@ const AdminServices = () => {
 
   const fetchServices = async () => {
     setLoading(true);
-    let query = supabase.from("services").select("id, name, name_ar, description, description_ar, duration_minutes, price, icon, is_active, country_id").order("name");
+    let query = supabase.from("services").select("id, name, name_ar, description, description_ar, duration_minutes, price, icon, is_active, country_id, home_visit_enabled").order("name");
     if (activeCountryId) query = query.eq("country_id", activeCountryId);
     const { data, error } = await query;
     if (!error && data) setServices(data as Service[]);
@@ -93,7 +95,7 @@ const AdminServices = () => {
 
   const openCreate = () => {
     setEditingService(null);
-    setForm({ name: "", name_ar: "", description: "", description_ar: "", duration_minutes: 30, price: 0, icon: "relaxation", is_active: true });
+    setForm({ name: "", name_ar: "", description: "", description_ar: "", duration_minutes: 30, price: 0, icon: "relaxation", is_active: true, home_visit_enabled: false });
     setDialogOpen(true);
   };
 
@@ -108,6 +110,7 @@ const AdminServices = () => {
       price: service.price,
       icon: service.icon || "relaxation",
       is_active: service.is_active,
+      home_visit_enabled: service.home_visit_enabled,
     });
     setDialogOpen(true);
   };
@@ -126,6 +129,7 @@ const AdminServices = () => {
       icon: form.icon,
       is_active: form.is_active,
       country_id: activeCountryId,
+      home_visit_enabled: form.home_visit_enabled,
     };
 
     if (editingService) {
@@ -326,6 +330,7 @@ const AdminServices = () => {
                       <h3 className="font-semibold text-foreground">{service.name}</h3>
                       {service.name_ar && <span className="text-sm text-muted-foreground">({service.name_ar})</span>}
                       {!service.is_active && <Badge variant="secondary">Inactive</Badge>}
+                      {service.home_visit_enabled && <Badge variant="outline"><Home className="mr-1 h-3 w-3" />Home Visit</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-1">{service.description || "No description"}</p>
                     <div className="flex items-center gap-3 mt-1 text-sm">
@@ -399,6 +404,13 @@ const AdminServices = () => {
               <div className="flex items-center gap-3">
                 <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
                 <Label>Active</Label>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+                <Switch checked={form.home_visit_enabled} onCheckedChange={v => setForm(f => ({ ...f, home_visit_enabled: v }))} />
+                <div>
+                  <Label>Available for Home Visits</Label>
+                  <p className="text-xs text-muted-foreground">Offer this service in the public Home Visit booking flow.</p>
+                </div>
               </div>
             </div>
             <DialogFooter>

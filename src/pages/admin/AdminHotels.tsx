@@ -76,10 +76,13 @@ const AdminHotels = () => {
   const [qrAutoOpen, setQrAutoOpen] = useState(false);
   const [pricingHotel, setPricingHotel] = useState<Hotel | null>(null);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchData = async () => {
     setLoading(true);
+    setLoadError(null);
     let hotelsQ = supabase.from("hotels").select("*").order("name");
     let citiesQ = supabase.from("cities").select("id, name, country_id").eq("is_active", true).order("name");
     if (activeCountryId) {
@@ -87,6 +90,12 @@ const AdminHotels = () => {
       citiesQ = citiesQ.eq("country_id", activeCountryId);
     }
     const [hRes, cRes] = await Promise.all([hotelsQ, citiesQ]);
+    const firstError = hRes.error || cRes.error;
+    if (firstError) {
+      setLoadError(firstError.message);
+      setLoading(false);
+      return;
+    }
     setHotels((hRes.data || []) as Hotel[]);
     setCities((cRes.data || []) as City[]);
     setLoading(false);
@@ -146,10 +155,12 @@ const AdminHotels = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     if (!form.city_id || !form.name || !form.address) {
       toast({ title: "Required fields missing", variant: "destructive" });
       return;
     }
+    setSaving(true);
     const payload: any = {
       city_id: form.city_id,
       country_id: activeCountryId,
@@ -165,15 +176,17 @@ const AdminHotels = () => {
       const { error } = await supabase.from("hotels").update(payload).eq("id", editing.id);
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
+        setSaving(false);
         return;
       }
       toast({ title: "Updated" });
       setDialogOpen(false);
-      fetchData();
+      await fetchData();
     } else {
       const { data, error } = await supabase.from("hotels").insert(payload).select("*").single();
       if (error || !data) {
         toast({ title: "Error", description: error?.message || "Insert failed", variant: "destructive" });
+        setSaving(false);
         return;
       }
       toast({
@@ -187,8 +200,9 @@ const AdminHotels = () => {
         setQrHotel(data as Hotel);
         setQrAutoOpen(true);
       }
-      fetchData();
+      await fetchData();
     }
+    setSaving(false);
   };
 
   const handleDelete = async (h: Hotel) => {
@@ -294,12 +308,21 @@ const AdminHotels = () => {
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     {t("adminHotels.cancel")}
                   </Button>
-                  <Button type="submit">{t("adminHotels.save")}</Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {t("adminHotels.save")}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
         </div>
+
+        {loadError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            Hotels could not be loaded: {loadError}
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-muted/40 border border-border/50">
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">

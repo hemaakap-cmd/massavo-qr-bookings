@@ -1,6 +1,9 @@
 import { Globe } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useVenueContext } from "@/domain/venue/VenueContext";
+import type { VenueType } from "@/domain/venue/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Persistent venue-type filter chip — lives in the admin header.
@@ -9,12 +12,28 @@ import { cn } from "@/lib/utils";
  */
 export function VenueTypeFilter({ className }: { className?: string }) {
   const { activeType, setActiveType, shippable } = useVenueContext();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const baseChip =
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors";
-  const inactive =
-    "border-border/60 bg-background/40 text-muted-foreground hover:bg-background/70 hover:text-foreground";
-  const active = "border-primary bg-primary/15 text-primary";
+  const routeByType: Record<"all" | "gym" | "hotel" | "home", string> = {
+    all: "/admin/venues",
+    gym: "/admin/gyms",
+    hotel: "/admin/hotels",
+    home: "/admin/home-visits",
+  };
+  const routeType = location.pathname === "/admin/venues"
+    ? null
+    : location.pathname.startsWith("/admin/gyms")
+      ? "gym"
+      : location.pathname.startsWith("/admin/hotels")
+        ? "hotel"
+        : location.pathname.startsWith("/admin/home-visits")
+          ? "home"
+          : activeType;
+  const chooseType = (type: VenueType | null) => {
+    setActiveType(type);
+    navigate(routeByType[type === null ? "all" : type as "gym" | "hotel" | "home"] || "/admin/venues");
+  };
 
   return (
     <div
@@ -22,32 +41,36 @@ export function VenueTypeFilter({ className }: { className?: string }) {
       role="tablist"
       aria-label="Venue type filter"
     >
-      <button
+      <Button
         type="button"
         role="tab"
-        aria-selected={activeType === null}
-        onClick={() => setActiveType(null)}
-        className={cn(baseChip, activeType === null ? active : inactive)}
+        variant={routeType === null ? "default" : "outline"}
+        size="sm"
+        aria-selected={routeType === null}
+        onClick={() => chooseType(null)}
+        className="h-8 shrink-0 gap-1.5 rounded-full px-3 text-xs"
       >
         <Globe className="w-3.5 h-3.5" />
         <span>All</span>
-      </button>
+      </Button>
       {shippable.map((cfg) => {
         const Icon = cfg.icon;
-        const isActive = activeType === cfg.type;
+        const isActive = routeType === cfg.type;
         return (
-          <button
+          <Button
             key={cfg.type}
             type="button"
             role="tab"
             aria-selected={isActive}
-            onClick={() => setActiveType(cfg.type)}
-            className={cn(baseChip, isActive ? active : inactive)}
+            variant={isActive ? "default" : "outline"}
+            size="sm"
+            onClick={() => chooseType(cfg.type)}
+            className="h-8 shrink-0 gap-1.5 rounded-full px-3 text-xs"
             title={cfg.terminology.plural}
           >
             <Icon className="w-3.5 h-3.5" />
             <span>{cfg.terminology.plural}</span>
-          </button>
+          </Button>
         );
       })}
     </div>

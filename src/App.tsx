@@ -29,6 +29,8 @@ const AdminCounties = lazy(() => import("./pages/admin/AdminCounties"));
 const AdminCities = lazy(() => import("./pages/admin/AdminCities"));
 const AdminGyms = lazy(() => import("./pages/admin/AdminGyms"));
 const AdminHotels = lazy(() => import("./pages/admin/AdminHotels"));
+const AdminVenues = lazy(() => import("./pages/admin/AdminVenues"));
+const AdminHomeVisits = lazy(() => import("./pages/admin/AdminHomeVisits"));
 const AdminTherapists = lazy(() => import("./pages/admin/AdminTherapists"));
 const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
 const AdminQRCodes = lazy(() => import("./pages/admin/AdminQRCodes"));
@@ -199,8 +201,10 @@ const App = () => (
           <Route path="/admin/federal-states" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminFederalStates /></ProtectedRoute>} />
           <Route path="/admin/counties" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminCounties /></ProtectedRoute>} />
           <Route path="/admin/cities" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminCities /></ProtectedRoute>} />
+          <Route path="/admin/venues" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminVenues /></ProtectedRoute>} />
           <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminGyms /></ProtectedRoute>} />
           <Route path="/admin/hotels" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminHotels /></ProtectedRoute>} />
+          <Route path="/admin/home-visits" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminHomeVisits /></ProtectedRoute>} />
           <Route path="/admin/services" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminServices /></ProtectedRoute>} />
           <Route path="/admin/therapists" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminTherapists /></ProtectedRoute>} />
           <Route path="/admin/bookings" element={<ProtectedRoute allowedRoles={["admin", "super_admin"]}><AdminBookings /></ProtectedRoute>} />

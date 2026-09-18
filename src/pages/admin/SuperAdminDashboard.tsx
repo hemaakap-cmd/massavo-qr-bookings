@@ -11,7 +11,7 @@ import {
 import {
   Building2, BarChart3, Settings, Shield, ShieldAlert, ShieldOff,
   LogOut, Home, Globe, Loader2, Users, Heart, ArrowRight,
-  Package, Calendar, Activity,
+    Package, Calendar, Activity, Hotel, House,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import massavoLogo from "@/assets/massavo-logo-3d.png";
@@ -69,6 +69,8 @@ const SuperAdminDashboard = () => {
           {[
             { icon: Package, label: "Services", desc: "Manage services & pricing", url: "/admin/services" },
             { icon: Building2, label: "Gyms", desc: "Manage gym locations", url: "/admin/gyms" },
+            { icon: Hotel, label: "Hotels", desc: "Manage hotel locations", url: "/admin/hotels" },
+            { icon: House, label: "Home Visits", desc: "Manage cities, services & coverage", url: "/admin/home-visits" },
             { icon: Globe, label: "Countries", desc: "Multi-country settings", url: "/admin" },
             { icon: BarChart3, label: "Financials", desc: "Revenue overview", url: "/admin/financial" },
             { icon: Users, label: "Therapists", desc: "Team management", url: "/admin/therapists" },
