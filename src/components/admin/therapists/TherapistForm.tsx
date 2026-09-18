@@ -333,13 +333,18 @@ export function TherapistForm({
         </div>
       </div>
 
+      {isEditing && therapistId && (
+        <VenueAssignments
+          therapistId={therapistId}
+          cities={cities}
+          homeCityIds={formData.serviceable_city_ids}
+          onHomeCityIdsChange={(serviceable_city_ids) => onFormChange({ ...formData, serviceable_city_ids })}
+        />
+      )}
+
       <Button type="submit" variant="sage" className="w-full">
         {isEditing ? "Update Therapist" : "Create Therapist"}
       </Button>
-
-      {isEditing && therapistId && (
-        <VenueAssignments therapistId={therapistId} />
-      )}
     </form>
   );
 }

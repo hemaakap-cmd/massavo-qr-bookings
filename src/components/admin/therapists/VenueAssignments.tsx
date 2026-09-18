@@ -18,12 +18,29 @@ interface VenueOption {
   type: VenueType;
 }
 
+interface CityOption {
+  id: string;
+  name: string;
+}
+
 /**
  * Unified venue assignment panel — replaces the per-type list pickers.
  * One therapist can be assigned to any number of venues across any types
  * (gym, hotel, clinic, …) with a single Primary across all of them.
  */
-export function VenueAssignments({ therapistId }: { therapistId: string }) {
+interface VenueAssignmentsProps {
+  therapistId: string;
+  cities: CityOption[];
+  homeCityIds: string[];
+  onHomeCityIdsChange: (cityIds: string[]) => void;
+}
+
+export function VenueAssignments({
+  therapistId,
+  cities,
+  homeCityIds,
+  onHomeCityIdsChange,
+}: VenueAssignmentsProps) {
   const { countryId } = useAuth();
   const { selectedCountry } = useCountryData(countryId);
   const { toast } = useToast();
@@ -53,12 +70,21 @@ export function VenueAssignments({ therapistId }: { therapistId: string }) {
   }, [selectedCountry?.id]);
 
   const linkedKeys = new Set(links.map((l) => `${l.venue_type}:${l.venue_id}`));
-  const availableForType = options.filter(
-    (o) => o.type === pickerType && !linkedKeys.has(`${o.type}:${o.id}`),
-  );
+  const availableForType = pickerType === "home"
+    ? cities
+        .filter((city) => !homeCityIds.includes(city.id))
+        .map((city) => ({ ...city, type: "home" as VenueType }))
+    : options.filter(
+        (o) => o.type === pickerType && !linkedKeys.has(`${o.type}:${o.id}`),
+      );
 
   const handleAdd = async () => {
     if (!pickerVenueId) return;
+    if (pickerType === "home") {
+      onHomeCityIdsChange([...homeCityIds, pickerVenueId]);
+      setPickerVenueId("");
+      return;
+    }
     try {
       await assign.mutateAsync({ venueType: pickerType, venueId: pickerVenueId });
       setPickerVenueId("");
@@ -96,7 +122,7 @@ export function VenueAssignments({ therapistId }: { therapistId: string }) {
         {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       </div>
       <p className="text-xs text-muted-foreground">
-        A therapist can serve any number of venues across types — gym, hotel, and more.
+        Assign gyms and hotels, or select the cities where this therapist can provide Home Visits.
       </p>
 
       {/* Add venue picker */}
@@ -113,9 +139,15 @@ export function VenueAssignments({ therapistId }: { therapistId: string }) {
           </Select>
         </div>
         <div className="flex-1 space-y-1">
-          <Label className="text-xs">Venue</Label>
+          <Label className="text-xs">{pickerType === "home" ? "City" : "Venue"}</Label>
           <Select value={pickerVenueId} onValueChange={setPickerVenueId}>
-            <SelectTrigger><SelectValue placeholder={availableForType.length ? "Select…" : "No venues available"} /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue
+                placeholder={availableForType.length
+                  ? pickerType === "home" ? "Select city…" : "Select venue…"
+                  : pickerType === "home" ? "No cities available" : "No venues available"}
+              />
+            </SelectTrigger>
             <SelectContent>
               {availableForType.map((o) => (
                 <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
@@ -130,7 +162,37 @@ export function VenueAssignments({ therapistId }: { therapistId: string }) {
 
       {/* Grouped lists */}
       <div className="space-y-3">
+        {homeCityIds.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              {(() => {
+                const HomeIcon = getVenueConfig("home").icon;
+                return <HomeIcon className="h-3.5 w-3.5" />;
+              })()}
+              Home Visit Cities
+            </div>
+            <div className="space-y-1.5">
+              {homeCityIds.map((cityId) => {
+                const city = cities.find((item) => item.id === cityId);
+                return (
+                  <div key={cityId} className="flex items-center justify-between rounded-md border bg-card px-3 py-2 text-sm">
+                    <span className="truncate">{city?.name || cityId.slice(0, 8)}</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onHomeCityIdsChange(homeCityIds.filter((id) => id !== cityId))}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {shippableTypes.map((cfg) => {
+          if (cfg.type === "home") return null;
           const rows = groupedByType[cfg.type] || [];
           if (rows.length === 0) return null;
           const Icon = cfg.icon;
@@ -166,8 +228,8 @@ export function VenueAssignments({ therapistId }: { therapistId: string }) {
             </div>
           );
         })}
-        {links.length === 0 && !isLoading && (
-          <p className="text-xs text-muted-foreground italic">No venues assigned yet.</p>
+        {links.length === 0 && homeCityIds.length === 0 && !isLoading && (
+          <p className="text-xs text-muted-foreground italic">No venues or Home Visit cities assigned yet.</p>
         )}
       </div>
     </div>

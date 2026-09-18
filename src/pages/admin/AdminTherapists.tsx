@@ -88,33 +88,35 @@ const AdminTherapists = () => {
     if (!gymsRes.error) setGyms(gymsRes.data || []);
     if (!citiesRes.error) setCities(citiesRes.data || []);
 
-    // Fetch therapists - filter by gym_ids belonging to selected country
-    let therapistsQuery = supabase
+    // Fetch therapists and include Home Visit city coverage. Country isolation
+    // remains enforced by RLS; the client filter includes gym and home-only staff.
+    const therapistsQuery = supabase
       .from("therapists")
-      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address, notes), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name)))")
+      .select("*, gyms(name, address), cities(name), therapist_private_info(phone, email, address, notes), therapist_gyms(gym_id, is_primary, gyms(id, name, cities:city_id(name))), therapist_cities(city_id)")
       .order("name");
-
-    if (selectedCountry?.id && countryGymIds.length > 0) {
-      therapistsQuery = therapistsQuery.in("gym_id", countryGymIds);
-    } else if (selectedCountry?.id && countryGymIds.length === 0) {
-      // No gyms in this country = no therapists to show
-      setTherapists([]);
-      setLoading(false);
-      return;
-    }
 
     const therapistsRes = await therapistsQuery;
 
     if (therapistsRes.error) {
       toast({ title: "Error", description: therapistsRes.error.message, variant: "destructive" });
     } else {
-      const mappedTherapists = (therapistsRes.data || []).map((therapist: any) => ({
-        ...therapist,
-        phone: therapist.therapist_private_info?.phone ?? null,
-        email: therapist.therapist_private_info?.email ?? null,
-        address: therapist.therapist_private_info?.address ?? null,
-        notes: therapist.therapist_private_info?.notes ?? null,
-      }));
+      const countryCityIds = new Set((citiesRes.data || []).map((city) => city.id));
+      const mappedTherapists = (therapistsRes.data || [])
+        .filter((therapist: any) => {
+          if (!selectedCountry?.id) return true;
+          const hasCountryGym = countryGymIds.includes(therapist.gym_id)
+            || (therapist.therapist_gyms || []).some((assignment: any) => countryGymIds.includes(assignment.gym_id));
+          const hasCountryHomeVisit = (therapist.therapist_cities || [])
+            .some((assignment: any) => countryCityIds.has(assignment.city_id));
+          return hasCountryGym || hasCountryHomeVisit;
+        })
+        .map((therapist: any) => ({
+          ...therapist,
+          phone: therapist.therapist_private_info?.phone ?? null,
+          email: therapist.therapist_private_info?.email ?? null,
+          address: therapist.therapist_private_info?.address ?? null,
+          notes: therapist.therapist_private_info?.notes ?? null,
+        }));
       setTherapists(mappedTherapists as unknown as Therapist[]);
     }
     
@@ -248,12 +250,18 @@ const AdminTherapists = () => {
     return null;
   };
 
-  const saveCityAssignments = async (therapistId: string, cityIds: string[]) => {
-    await (supabase as any).from("therapist_cities").delete().eq("therapist_id", therapistId);
+  const saveCityAssignments = async (therapistId: string, cityIds: string[]): Promise<string | null> => {
+    const { error: deleteError } = await (supabase as any)
+      .from("therapist_cities")
+      .delete()
+      .eq("therapist_id", therapistId);
+    if (deleteError) return deleteError.message;
     if (cityIds.length > 0) {
       const entries = cityIds.map((city_id) => ({ therapist_id: therapistId, city_id }));
-      await (supabase as any).from("therapist_cities").insert(entries);
+      const { error: insertError } = await (supabase as any).from("therapist_cities").insert(entries);
+      if (insertError) return insertError.message;
     }
+    return null;
   };
 
   const saveWeeklySchedules = async (therapistId: string, assignments: GymAssignment[]) => {
@@ -271,7 +279,8 @@ const AdminTherapists = () => {
       .from("therapist_weekly_schedules")
       .delete()
       .eq("therapist_id", therapistId)
-      .is("hotel_id", null);
+      .is("hotel_id", null)
+      .not("gym_id", "is", null);
 
     if (deleteError) {
       console.error("Failed to clear old schedules:", deleteError);
@@ -313,8 +322,8 @@ const AdminTherapists = () => {
     const primaryAssignment = formData.gym_assignments.find((a) => a.is_primary);
     const primaryGymId = primaryAssignment?.gym_id || formData.gym_id || null;
 
-    if (formData.gym_assignments.length === 0) {
-      toast({ title: "Error", description: "Please assign at least one gym", variant: "destructive" });
+    if (formData.gym_assignments.length === 0 && formData.serviceable_city_ids.length === 0) {
+      toast({ title: "Error", description: "Please assign at least one gym or Home Visit city", variant: "destructive" });
       return;
     }
 
@@ -385,7 +394,11 @@ const AdminTherapists = () => {
         toast({ title: "Gym assignments not saved", description: gymAssignError, variant: "destructive" });
         return;
       }
-      await saveCityAssignments(editingTherapist.id, formData.serviceable_city_ids);
+      const cityAssignError = await saveCityAssignments(editingTherapist.id, formData.serviceable_city_ids);
+      if (cityAssignError) {
+        toast({ title: "Home Visit cities not saved", description: cityAssignError, variant: "destructive" });
+        return;
+      }
       const scheduleSaved = await saveWeeklySchedules(editingTherapist.id, formData.gym_assignments);
       if (!scheduleSaved) {
         toast({ title: "Warning", description: "Therapist updated but schedules may not have saved completely", variant: "destructive" });
@@ -433,7 +446,11 @@ const AdminTherapists = () => {
           fetchData();
           return;
         }
-        await saveCityAssignments(data.id, formData.serviceable_city_ids);
+        const cityAssignError = await saveCityAssignments(data.id, formData.serviceable_city_ids);
+        if (cityAssignError) {
+          toast({ title: "Home Visit cities not saved", description: cityAssignError, variant: "destructive" });
+          return;
+        }
         const scheduleSaved = await saveWeeklySchedules(data.id, formData.gym_assignments);
 
         if (res.data?.was_existing) {
@@ -494,6 +511,7 @@ const AdminTherapists = () => {
     // Overlay weekly schedules
     if (schedules) {
       for (const s of schedules) {
+        if (!s.gym_id) continue;
         if (!gymMap.has(s.gym_id)) {
           const gym = gyms.find((g) => g.id === s.gym_id);
           gymMap.set(s.gym_id, {
