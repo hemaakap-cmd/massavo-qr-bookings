@@ -49,6 +49,15 @@ const sbAny = supabase as unknown as {
 // city therapist pool is busy (get_home_booked_slots).
 const SLOTS = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
 
+// Render "2026-09-22" as "Di, 22. Sept." (locale-aware). Falls back to the
+// raw ISO string if parsing ever fails so a date is never blank.
+const formatFriendlyDate = (iso: string, language: string): string => {
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  const locale = language === "ar" ? "ar-EG" : language === "en" ? "en-GB" : "de-DE";
+  return d.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
+};
+
 const HomeVisit = () => {
   const { t, i18n } = useTranslation();
   const { selectedCountry, formatPrice } = usePublicCountry();
