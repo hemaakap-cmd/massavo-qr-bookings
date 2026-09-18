@@ -82,12 +82,15 @@ export default function AdminStaffAdvanced() {
       return data || [];
     },
   });
-  const venueOptions = activeType === "hotel" ? hotels : activeType === "home" ? homeCities : gyms;
-  const venueLabel = activeType === "hotel" ? "Hotels" : activeType === "home" ? "Home Visit Cities" : "Gyms";
+  const dashboardVenueType = activeType === "hotel" || activeType === "home" || activeType === "gym"
+    ? activeType
+    : null;
+  const venueOptions = dashboardVenueType === "hotel" ? hotels : dashboardVenueType === "home" ? homeCities : gyms;
+  const venueLabel = dashboardVenueType === "hotel" ? "Hotels" : dashboardVenueType === "home" ? "Home Visit Cities" : "Gyms";
   const { data: bookings = [], isLoading } = useAdminAllBookings({
     dateFrom,
     dateTo,
-    venueType: activeType,
+    venueType: dashboardVenueType,
     venueId: selectedVenueId !== "all" ? selectedVenueId : null,
     therapistId: selectedTherapistId !== "all" ? selectedTherapistId : null,
   });
@@ -98,7 +101,7 @@ export default function AdminStaffAdvanced() {
 
   useEffect(() => {
     setSelectedVenueId("all");
-  }, [activeType]);
+  }, [dashboardVenueType]);
 
   // Realtime subscription
   useEffect(() => {
@@ -183,7 +186,7 @@ export default function AdminStaffAdvanced() {
                   <SelectItem value="all">All {venueLabel}</SelectItem>
                   {venueOptions.map((venue: any) => (
                     <SelectItem key={venue.id} value={venue.id}>
-                      {venue.name}{activeType !== "home" ? ` – ${venue.cityName}` : ""}
+                      {venue.name}{dashboardVenueType !== "home" ? ` – ${venue.cityName}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
