@@ -19,7 +19,7 @@ export interface TherapistWeeklySchedule {
   gym_name?: string;
   hotel_name?: string;
   venue_name?: string;
-  venue_type?: "gym" | "hotel";
+  venue_type?: "gym" | "hotel" | "home";
 }
 
 export function useWeeklySchedules() {
@@ -38,8 +38,8 @@ export function useWeeklySchedules() {
         therapist_name: s.therapists?.name,
         gym_name: s.gyms?.name,
         hotel_name: s.hotels?.name,
-        venue_name: s.hotels?.name || s.gyms?.name,
-        venue_type: s.hotel_id ? "hotel" : "gym",
+        venue_name: s.hotels?.name || s.gyms?.name || "Home Visit",
+        venue_type: s.hotel_id ? "hotel" : s.gym_id ? "gym" : "home",
       })) as TherapistWeeklySchedule[];
     },
   });

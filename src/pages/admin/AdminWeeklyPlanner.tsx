@@ -10,7 +10,7 @@ import { useWeeklySchedules, useWeeklyScheduleMutations, type TherapistWeeklySch
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, Users, Clock, Trash2, Building2, Hotel } from "lucide-react";
+import { Plus, X, Users, Clock, Building2, Hotel, House } from "lucide-react";
 import type { DayOfWeek } from "@/types/schedule";
 import { DAY_OF_WEEK_LABELS } from "@/types/schedule";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,7 +28,7 @@ const AdminWeeklyPlanner = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>("monday");
   const [selectedTherapist, setSelectedTherapist] = useState("");
-  const [selectedVenue, setSelectedVenue] = useState(""); // composite: "gym:<id>" | "hotel:<id>"
+  const [selectedVenue, setSelectedVenue] = useState(""); // gym:<id> | hotel:<id> | home
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
   const { toast } = useToast();
@@ -56,18 +56,46 @@ const AdminWeeklyPlanner = () => {
     },
   });
 
-  const { data: therapists = [] } = useQuery({
-    queryKey: ["therapists-planner", selectedCountry?.id],
+  const { data: cities = [] } = useQuery({
+    queryKey: ["cities-planner", selectedCountry?.id],
     queryFn: async () => {
-      const gymIds = gyms.map(g => g.id);
-      if (selectedCountry?.id && gymIds.length === 0) return [];
-      let query = supabase.from("therapists").select("id, name").eq("is_available", true).order("name");
-      if (selectedCountry?.id && gymIds.length > 0) query = query.in("gym_id", gymIds);
-      const { data } = await query;
+      let query = supabase.from("cities").select("id, name").eq("is_active", true).order("name");
+      if (selectedCountry?.id) query = query.eq("country_id", selectedCountry.id);
+      const { data, error } = await query;
+      if (error) throw error;
       return data || [];
     },
-    enabled: !selectedCountry?.id || gyms.length > 0,
   });
+
+  const { data: therapists = [] } = useQuery({
+    queryKey: ["therapists-planner", selectedCountry?.id, gyms.length, cities.length],
+    queryFn: async () => {
+      const gymIds = new Set(gyms.map((gym) => gym.id));
+      const cityIds = new Set(cities.map((city) => city.id));
+      const { data, error } = await supabase
+        .from("therapists")
+        .select("id, name, gym_id, therapist_gyms(gym_id), therapist_cities(city_id)")
+        .eq("is_available", true)
+        .order("name");
+      if (error) throw error;
+      return (data || []).filter((therapist: any) => {
+        if (!selectedCountry?.id) return true;
+        const hasGym = gymIds.has(therapist.gym_id)
+          || (therapist.therapist_gyms || []).some((item: any) => gymIds.has(item.gym_id));
+        const hasHomeCity = (therapist.therapist_cities || [])
+          .some((item: any) => cityIds.has(item.city_id));
+        return hasGym || hasHomeCity;
+      });
+    },
+    enabled: !selectedCountry?.id || gyms.length > 0 || cities.length > 0,
+  });
+
+  const homeTherapistIds = useMemo(
+    () => new Set(therapists
+      .filter((therapist: any) => (therapist.therapist_cities || []).length > 0)
+      .map((therapist) => therapist.id)),
+    [therapists],
+  );
 
   // Build grid: therapist rows × day columns (each cell can have multiple gyms)
   const grid = useMemo(() => {
@@ -91,6 +119,14 @@ const AdminWeeklyPlanner = () => {
   const handleAdd = async () => {
     if (!selectedTherapist || !selectedVenue) return;
     const [vType, vId] = selectedVenue.split(":");
+    if (vType === "home" && !homeTherapistIds.has(selectedTherapist)) {
+      toast({
+        title: "Home Visit city required",
+        description: "Assign this therapist to at least one Home Visit city first.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       await createSchedule.mutateAsync({
         therapist_id: selectedTherapist,
@@ -177,11 +213,11 @@ const AdminWeeklyPlanner = () => {
                             {entries.map(entry => (
                               <div
                                 key={entry.id}
-                                className={`relative group inline-flex flex-col items-center px-2 py-1.5 rounded-md text-xs font-medium w-full ${entry.hotel_id ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-primary/10 text-primary"}`}
+                                className={`relative group inline-flex flex-col items-center px-2 py-1.5 rounded-md text-xs font-medium w-full ${entry.hotel_id ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : entry.gym_id ? "bg-primary/10 text-primary" : "bg-success/10 text-success"}`}
                               >
                                 <span className="truncate max-w-[100px] flex items-center gap-1">
-                                  {entry.hotel_id ? <Hotel className="w-3 h-3 shrink-0" /> : <Building2 className="w-3 h-3 shrink-0" />}
-                                  {entry.venue_name || entry.gym_name || entry.hotel_name}
+                                  {entry.hotel_id ? <Hotel className="w-3 h-3 shrink-0" /> : entry.gym_id ? <Building2 className="w-3 h-3 shrink-0" /> : <House className="w-3 h-3 shrink-0" />}
+                                  {entry.venue_name || entry.gym_name || entry.hotel_name || "Home Visit"}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground">
                                   {entry.start_time.slice(0, 5)}–{entry.end_time.slice(0, 5)}
@@ -240,7 +276,7 @@ const AdminWeeklyPlanner = () => {
               </Select>
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Venue (Gym or Hotel)</label>
+              <label className="text-sm text-muted-foreground mb-1 block">Service location</label>
               <Select value={selectedVenue} onValueChange={setSelectedVenue}>
                 <SelectTrigger><SelectValue placeholder="Select venue" /></SelectTrigger>
                 <SelectContent>
@@ -260,6 +296,10 @@ const AdminWeeklyPlanner = () => {
                       ))}
                     </>
                   )}
+                  <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 mt-1"><House className="w-3 h-3" />Home Visit</div>
+                  <SelectItem value="home:general" disabled={!homeTherapistIds.has(selectedTherapist)}>
+                    Home Visit{selectedTherapist && !homeTherapistIds.has(selectedTherapist) ? " — assign a city first" : ""}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

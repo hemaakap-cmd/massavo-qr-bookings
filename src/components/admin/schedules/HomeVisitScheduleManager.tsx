@@ -74,11 +74,13 @@ export function HomeVisitScheduleManager({ cityId, cityName }: Props) {
         .from("therapist_weekly_schedules")
         .select("*, gyms(name), hotels(name)")
         .in("therapist_id", therapistIds)
+        .is("gym_id", null)
+        .is("hotel_id", null)
         .order("day_of_week");
       if (error) throw error;
       return (data || []).map((s: any) => ({
         ...s,
-        venue_label: s.hotels?.name || s.gyms?.name || "Home Visit / General",
+        venue_label: "Home Visit",
       })) as Row[];
     },
     enabled: therapistIds.length > 0,
