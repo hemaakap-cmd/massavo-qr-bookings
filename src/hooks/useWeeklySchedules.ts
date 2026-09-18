@@ -8,6 +8,7 @@ export interface TherapistWeeklySchedule {
   therapist_id: string;
   gym_id: string | null;
   hotel_id: string | null;
+  city_id?: string | null;
   day_of_week: DayOfWeek;
   start_time: string;
   end_time: string;
@@ -18,6 +19,7 @@ export interface TherapistWeeklySchedule {
   therapist_name?: string;
   gym_name?: string;
   hotel_name?: string;
+  city_name?: string;
   venue_name?: string;
   venue_type?: "gym" | "hotel" | "home";
 }
