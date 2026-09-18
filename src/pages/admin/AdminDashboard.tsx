@@ -201,6 +201,8 @@ const AdminDashboard = () => {
       ? { title: "Active Hotels", value: stats.hotels, icon: venueConfig.icon, trend: null, up: null }
       : activeType === "gym"
       ? { title: "Active Gyms", value: stats.gyms, icon: venueConfig.icon, trend: null, up: null }
+      : activeType === "home"
+      ? { title: "Home Visits", value: homeBookingsCount, icon: venueConfig.icon, trend: null, up: null }
       : { title: "Active Venues", value: stats.venues, icon: Building2, trend: null, up: null },
     { title: "Therapists", value: stats.therapists, icon: Users, trend: null, up: null },
     { title: "Cities", value: stats.cities, icon: MapPin, trend: null, up: null },
