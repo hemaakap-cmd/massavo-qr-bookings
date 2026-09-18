@@ -2651,6 +2651,7 @@ export type Database = {
       }
       therapist_weekly_schedules: {
         Row: {
+          city_id: string | null
           created_at: string
           day_of_week: Database["public"]["Enums"]["day_of_week"]
           end_time: string
@@ -2664,6 +2665,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          city_id?: string | null
           created_at?: string
           day_of_week: Database["public"]["Enums"]["day_of_week"]
           end_time?: string
@@ -2677,6 +2679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          city_id?: string | null
           created_at?: string
           day_of_week?: Database["public"]["Enums"]["day_of_week"]
           end_time?: string
@@ -2690,6 +2693,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "therapist_weekly_schedules_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "therapist_weekly_schedules_gym_id_fkey"
             columns: ["gym_id"]

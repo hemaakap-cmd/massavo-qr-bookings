@@ -29,6 +29,7 @@ interface Row {
   is_active: boolean;
   gym_id: string | null;
   hotel_id: string | null;
+  city_id: string | null;
   venue_label: string;
 }
 
@@ -76,6 +77,7 @@ export function HomeVisitScheduleManager({ cityId, cityName }: Props) {
         .in("therapist_id", therapistIds)
         .is("gym_id", null)
         .is("hotel_id", null)
+        .or(`city_id.eq.${cityId},city_id.is.null`)
         .order("day_of_week");
       if (error) throw error;
       return (data || []).map((s: any) => ({
@@ -116,6 +118,7 @@ export function HomeVisitScheduleManager({ cityId, cityName }: Props) {
           therapist_id: formData.therapist_id,
           gym_id: null,
           hotel_id: null,
+          city_id: cityId,
           day_of_week: formData.day_of_week,
           start_time: formData.start_time,
           end_time: formData.end_time,
@@ -184,7 +187,8 @@ export function HomeVisitScheduleManager({ cityId, cityName }: Props) {
         <div className="flex gap-2 text-sm text-muted-foreground border rounded-lg p-3 bg-muted/40">
           <Info className="h-4 w-4 mt-0.5 shrink-0" />
           <p>
-            Home Visit slots come from the therapists assigned to this city and their active weekly shifts.
+            Home Visit slots come from the therapists assigned to this city and their active weekly shifts
+            for this city. A shift added here only makes the therapist available for {cityName}.
             A session must fit completely inside a shift (service duration + 5 min buffer), and a therapist
             can only hold one booking per time window across all cities.
           </p>
@@ -222,10 +226,10 @@ export function HomeVisitScheduleManager({ cityId, cityName }: Props) {
                     {row.start_time?.slice(0, 5)} – {row.end_time?.slice(0, 5)}
                   </TableCell>
                   <TableCell>
-                    {row.gym_id || row.hotel_id ? (
-                      <Badge variant="outline">{row.venue_label}</Badge>
+                    {row.city_id ? (
+                      <Badge>Home Visit — {cityName}</Badge>
                     ) : (
-                      <Badge>Home Visit / General</Badge>
+                      <Badge variant="outline">Home Visit — all cities</Badge>
                     )}
                   </TableCell>
                   <TableCell>

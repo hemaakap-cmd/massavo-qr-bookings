@@ -97,6 +97,13 @@ const AdminWeeklyPlanner = () => {
     [therapists],
   );
 
+  // Home Visit shifts are per city: only cities the selected therapist covers.
+  const therapistHomeCities = useMemo(() => {
+    const therapist: any = therapists.find((item) => item.id === selectedTherapist);
+    const assigned = new Set((therapist?.therapist_cities || []).map((item: any) => item.city_id));
+    return cities.filter((city) => assigned.has(city.id));
+  }, [therapists, selectedTherapist, cities]);
+
   // Build grid: therapist rows × day columns (each cell can have multiple gyms)
   const grid = useMemo(() => {
     const map = new Map<string, Map<DayOfWeek, TherapistWeeklySchedule[]>>();
@@ -119,7 +126,7 @@ const AdminWeeklyPlanner = () => {
   const handleAdd = async () => {
     if (!selectedTherapist || !selectedVenue) return;
     const [vType, vId] = selectedVenue.split(":");
-    if (vType === "home" && !homeTherapistIds.has(selectedTherapist)) {
+    if (vType === "home" && (!homeTherapistIds.has(selectedTherapist) || !vId)) {
       toast({
         title: "Home Visit city required",
         description: "Assign this therapist to at least one Home Visit city first.",
@@ -132,6 +139,7 @@ const AdminWeeklyPlanner = () => {
         therapist_id: selectedTherapist,
         gym_id: vType === "gym" ? vId : null,
         hotel_id: vType === "hotel" ? vId : null,
+        city_id: vType === "home" ? vId : null,
         day_of_week: selectedDay,
         start_time: startTime,
         end_time: endTime,
@@ -297,9 +305,17 @@ const AdminWeeklyPlanner = () => {
                     </>
                   )}
                   <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 mt-1"><House className="w-3 h-3" />Home Visit</div>
-                  <SelectItem value="home:general" disabled={!homeTherapistIds.has(selectedTherapist)}>
-                    Home Visit{selectedTherapist && !homeTherapistIds.has(selectedTherapist) ? " — assign a city first" : ""}
-                  </SelectItem>
+                  {therapistHomeCities.length === 0 ? (
+                    <SelectItem value="home:none" disabled>
+                      Assign a Home Visit city to this therapist first
+                    </SelectItem>
+                  ) : (
+                    therapistHomeCities.map(city => (
+                      <SelectItem key={`home:${city.id}`} value={`home:${city.id}`}>
+                        Home Visit — {city.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

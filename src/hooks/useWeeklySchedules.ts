@@ -8,6 +8,7 @@ export interface TherapistWeeklySchedule {
   therapist_id: string;
   gym_id: string | null;
   hotel_id: string | null;
+  city_id?: string | null;
   day_of_week: DayOfWeek;
   start_time: string;
   end_time: string;
@@ -18,6 +19,7 @@ export interface TherapistWeeklySchedule {
   therapist_name?: string;
   gym_name?: string;
   hotel_name?: string;
+  city_name?: string;
   venue_name?: string;
   venue_type?: "gym" | "hotel" | "home";
 }
@@ -28,7 +30,7 @@ export function useWeeklySchedules() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("therapist_weekly_schedules")
-        .select("*, therapists(name), gyms(name), hotels(name)")
+        .select("*, therapists(name), gyms(name), hotels(name), cities(name)")
         .eq("is_active", true)
         .order("day_of_week");
 
@@ -38,7 +40,11 @@ export function useWeeklySchedules() {
         therapist_name: s.therapists?.name,
         gym_name: s.gyms?.name,
         hotel_name: s.hotels?.name,
-        venue_name: s.hotels?.name || s.gyms?.name || "Home Visit",
+        city_name: s.cities?.name,
+        venue_name:
+          s.hotels?.name ||
+          s.gyms?.name ||
+          (s.cities?.name ? `Home – ${s.cities.name}` : "Home Visit"),
         venue_type: s.hotel_id ? "hotel" : s.gym_id ? "gym" : "home",
       })) as TherapistWeeklySchedule[];
     },
@@ -53,6 +59,7 @@ export function useWeeklyScheduleMutations() {
       therapist_id: string;
       gym_id?: string | null;
       hotel_id?: string | null;
+      city_id?: string | null;
       day_of_week: DayOfWeek;
       start_time: string;
       end_time: string;
