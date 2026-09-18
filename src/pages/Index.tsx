@@ -16,9 +16,10 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <SEO
-        title="MASSAVO – Premium Massage Buchung im Fitnessstudio"
-        description="Buche professionelle Sport- und Klassische Massage in deinem Fitnessstudio per QR-Code. Schnell, einfach und vor Ort verfügbar."
+        title="MASSAVO – Premium Sportmassage Köln & Umgebung"
+        description="Sportmassage und klassische Massage buchen in Köln, Leverkusen, Düsseldorf und Bergisch Gladbach – im Fitnessstudio, Partnerhotel oder als Hausbesuch. Schnell per QR-Code."
         path="/"
+        keywords="Sportmassage Köln, Sportmassage Leverkusen, Sportmassage Düsseldorf, Sportmassage Bergisch Gladbach, Massage Köln, Massage buchen, Fitnessstudio Massage, Hotel Massage, Hausbesuch Massage"
       />
       <Header />
       <main>
