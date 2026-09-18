@@ -73,17 +73,20 @@ export default function AdminSchedules() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Venue Schedules</h1>
           <p className="text-muted-foreground">
-            Manage recurring weekly schedules and exceptions per gym or hotel
+            Manage recurring weekly schedules and exceptions per gym, hotel or home visit city
           </p>
         </div>
 
-        <Tabs value={venueType} onValueChange={(v) => setVenueType(v as "gym" | "hotel")} className="w-full">
+        <Tabs value={venueType} onValueChange={(v) => setVenueType(v as "gym" | "hotel" | "home")} className="w-full">
           <TabsList>
             <TabsTrigger value="gym" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" /> Gyms
             </TabsTrigger>
             <TabsTrigger value="hotel" className="flex items-center gap-2">
               <HotelIcon className="h-4 w-4" /> Hotels
+            </TabsTrigger>
+            <TabsTrigger value="home" className="flex items-center gap-2">
+              <Home className="h-4 w-4" /> Home Visits
             </TabsTrigger>
           </TabsList>
 
