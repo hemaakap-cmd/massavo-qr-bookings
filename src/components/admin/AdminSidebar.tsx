@@ -44,6 +44,8 @@ import {
   LayoutGrid,
   CreditCard,
   Home as HomeIcon,
+  ShieldCheck,
+  type LucideIcon,
 } from "lucide-react";
 import massavoLogo from "@/assets/massavo-logo.png";
 import { getAdminGeographyLabels } from "@/constants/adminGeography";
