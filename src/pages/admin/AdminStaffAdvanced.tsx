@@ -42,14 +42,16 @@ import { StaffPainEvolutionCard } from "@/components/staff/StaffPainEvolutionCar
 import { useQuery } from "@tanstack/react-query";
 import { format, addDays, subDays } from "date-fns";
 import { toast } from "sonner";
+import { useVenueContext } from "@/domain/venue/VenueContext";
 
 export default function AdminStaffAdvanced() {
   const { user, isSuperAdmin } = useAuth();
+  const { activeType } = useVenueContext();
   const queryClient = useQueryClient();
 
   // Filters
   const [selectedTherapistId, setSelectedTherapistId] = useState<string>("all");
-  const [selectedGymId, setSelectedGymId] = useState<string>("all");
+  const [selectedVenueId, setSelectedVenueId] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState(format(new Date(), "yyyy-MM-dd"));
   const [dateTo, setDateTo] = useState(format(addDays(new Date(), 7), "yyyy-MM-dd"));
 
@@ -64,16 +66,42 @@ export default function AdminStaffAdvanced() {
 
   const { data: therapists = [] } = useAdminAllTherapists();
   const { data: gyms = [] } = useAdminAllGyms();
+  const { data: hotels = [] } = useQuery({
+    queryKey: ["admin-staff-hotels"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("hotels").select("id, name, cities:city_id(name)").eq("is_active", true).order("name");
+      if (error) throw error;
+      return (data || []).map((hotel: any) => ({ ...hotel, cityName: hotel.cities?.name || "—" }));
+    },
+  });
+  const { data: homeCities = [] } = useQuery({
+    queryKey: ["admin-staff-home-cities"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("cities").select("id, name").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const dashboardVenueType = activeType === "hotel" || activeType === "home" || activeType === "gym"
+    ? activeType
+    : null;
+  const venueOptions = dashboardVenueType === "hotel" ? hotels : dashboardVenueType === "home" ? homeCities : gyms;
+  const venueLabel = dashboardVenueType === "hotel" ? "Hotels" : dashboardVenueType === "home" ? "Home Visit Cities" : "Gyms";
   const { data: bookings = [], isLoading } = useAdminAllBookings({
     dateFrom,
     dateTo,
-    gymId: selectedGymId !== "all" ? selectedGymId : null,
+    venueType: dashboardVenueType,
+    venueId: selectedVenueId !== "all" ? selectedVenueId : null,
     therapistId: selectedTherapistId !== "all" ? selectedTherapistId : null,
   });
   const updateBooking = useAdminUpdateBooking();
   const cancelBooking = useAdminCancelBooking();
 
   const selectedTherapist = therapists.find((t: any) => t.id === selectedTherapistId);
+
+  useEffect(() => {
+    setSelectedVenueId("all");
+  }, [dashboardVenueType]);
 
   // Realtime subscription
   useEffect(() => {
@@ -151,13 +179,15 @@ export default function AdminStaffAdvanced() {
                 </SelectContent>
               </Select>
 
-              {/* Gym */}
-              <Select value={selectedGymId} onValueChange={setSelectedGymId}>
-                <SelectTrigger><SelectValue placeholder="All Gyms" /></SelectTrigger>
+              {/* Venue / Home Visit city */}
+              <Select value={selectedVenueId} onValueChange={setSelectedVenueId}>
+                <SelectTrigger><SelectValue placeholder={`All ${venueLabel}`} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Gyms</SelectItem>
-                  {gyms.map((g: any) => (
-                    <SelectItem key={g.id} value={g.id}>{g.name} – {g.cityName}</SelectItem>
+                  <SelectItem value="all">All {venueLabel}</SelectItem>
+                  {venueOptions.map((venue: any) => (
+                    <SelectItem key={venue.id} value={venue.id}>
+                      {venue.name}{dashboardVenueType !== "home" ? ` – ${venue.cityName}` : ""}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -344,6 +374,18 @@ function AdminBookingCard({
                 <span className="flex items-center gap-1">
                   <Building2 className="w-3 h-3" />
                   {booking.gym.name}
+                </span>
+              )}
+              {booking.hotel && (
+                <span className="flex items-center gap-1">
+                  <Building2 className="w-3 h-3" />
+                  {booking.hotel.name}
+                </span>
+              )}
+              {booking.homeCity && !booking.gym && !booking.hotel && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  Home Visit · {booking.homeCity.name}
                 </span>
               )}
               {booking.therapist && (

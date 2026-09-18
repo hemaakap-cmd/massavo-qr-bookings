@@ -18,7 +18,9 @@ export interface AdminBooking {
   notes: string | null;
   communication_preference: string | null;
   therapist_id: string | null;
-  gym_id: string;
+  gym_id: string | null;
+  hotel_id: string | null;
+  home_city_id: string | null;
   service_id: string;
   gender: string | null;
   pregnancy_status: string | null;
@@ -28,29 +30,34 @@ export interface AdminBooking {
   salutation: string | null;
   service: { name: string; duration_minutes: number } | null;
   gym: { id: string; name: string; address: string; phone: string | null } | null;
+  hotel: { id: string; name: string; address: string; phone: string | null } | null;
+  homeCity: { id: string; name: string } | null;
   therapist: { id: string; name: string } | null;
 }
 
 interface AdminBookingsParams {
   dateFrom: string;
   dateTo: string;
-  gymId?: string | null;
+  venueType?: "gym" | "hotel" | "home" | null;
+  venueId?: string | null;
   therapistId?: string | null;
 }
 
-export function useAdminAllBookings({ dateFrom, dateTo, gymId, therapistId }: AdminBookingsParams) {
+export function useAdminAllBookings({ dateFrom, dateTo, venueType, venueId, therapistId }: AdminBookingsParams) {
   return useQuery({
-    queryKey: ["admin-staff-bookings", dateFrom, dateTo, gymId, therapistId],
+    queryKey: ["admin-staff-bookings", dateFrom, dateTo, venueType, venueId, therapistId],
     queryFn: async () => {
       let query = (supabase as any)
         .from("bookings")
         .select(`
           id, booking_date, booking_time, customer_name, customer_email,
           status, payment_status, total_amount, notes, communication_preference,
-          therapist_id, gym_id, service_id,
+          therapist_id, gym_id, hotel_id, home_city_id, service_id,
           gender, pregnancy_status, client_phone, client_address, date_of_birth, salutation,
           services:service_id(name, duration_minutes),
           gyms:gym_id(id, name, address, phone),
+          hotels:hotel_id(id, name, address, phone),
+          home_cities:home_city_id(id, name),
           therapists:therapist_id(id, name)
         `)
         .gte("booking_date", dateFrom)
@@ -59,7 +66,11 @@ export function useAdminAllBookings({ dateFrom, dateTo, gymId, therapistId }: Ad
         .order("booking_date", { ascending: true })
         .order("booking_time", { ascending: true });
 
-      if (gymId) query = query.eq("gym_id", gymId);
+      if (venueType === "gym") query = venueId ? query.eq("gym_id", venueId) : query.not("gym_id", "is", null);
+      if (venueType === "hotel") query = venueId ? query.eq("hotel_id", venueId) : query.not("hotel_id", "is", null);
+      if (venueType === "home") query = venueId
+        ? query.eq("home_city_id", venueId).is("gym_id", null).is("hotel_id", null)
+        : query.not("home_city_id", "is", null).is("gym_id", null).is("hotel_id", null);
       if (therapistId) query = query.eq("therapist_id", therapistId);
 
       const { data, error } = await query;
@@ -69,6 +80,8 @@ export function useAdminAllBookings({ dateFrom, dateTo, gymId, therapistId }: Ad
         ...b,
         service: b.services,
         gym: b.gyms,
+        hotel: b.hotels,
+        homeCity: b.home_cities,
         therapist: b.therapists,
       })) as AdminBooking[];
     },
