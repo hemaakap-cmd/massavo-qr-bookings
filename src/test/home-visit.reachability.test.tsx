@@ -40,6 +40,14 @@ const iso = (daysAhead: number) => {
   return d.toISOString().slice(0, 10);
 };
 const DATES = [iso(14), iso(21)];
+/** The UI renders friendly labels (e.g. "Fr., 18. Sept.") instead of raw ISO dates. */
+const dateLabel = (isoDate: string) =>
+  new Date(`${isoDate}T12:00:00`).toLocaleDateString("de-DE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+const DATE_LABELS = DATES.map(dateLabel);
 
 /** Slots the server reports as unusable. Overridden per test. */
 let bookedSlots: string[] = [];
