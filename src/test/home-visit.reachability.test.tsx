@@ -40,6 +40,14 @@ const iso = (daysAhead: number) => {
   return d.toISOString().slice(0, 10);
 };
 const DATES = [iso(14), iso(21)];
+/** The UI renders friendly labels (e.g. "Fr., 18. Sept.") instead of raw ISO dates. */
+const dateLabel = (isoDate: string) =>
+  new Date(`${isoDate}T12:00:00`).toLocaleDateString("de-DE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+const DATE_LABELS = DATES.map(dateLabel);
 
 /** Slots the server reports as unusable. Overridden per test. */
 let bookedSlots: string[] = [];
@@ -147,7 +155,7 @@ async function walkToSlots() {
   fireEvent.click(await screen.findByRole("button", { name: /Köln/i }));
   const service = await screen.findByRole("button", { name: /Klassische Massage 50/i });
   fireEvent.click(service);
-  const date = await screen.findByRole("button", { name: DATES[0] });
+  const date = await screen.findByRole("button", { name: DATE_LABELS[0] });
   fireEvent.click(date);
 }
 
@@ -167,10 +175,10 @@ describe("Home Visit — the customer can reach the booking step", () => {
     expect(screen.queryByText(/keine Behandlungen als Hausbesuch/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Klassische Massage 50/i }));
-    expect(await screen.findByRole("button", { name: DATES[0] })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: DATE_LABELS[0] })).toBeInTheDocument();
     expect(screen.queryByText(/keine Termine verfügbar/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: DATES[0] }));
+    fireEvent.click(screen.getByRole("button", { name: DATE_LABELS[0] }));
 
     // At least one slot must be clickable. This is the exact production
     // failure: slots rendered, every one refused by the server.
@@ -218,9 +226,9 @@ describe("Home Visit — the customer can reach the booking step", () => {
     await i18n.changeLanguage("de");
     await renderPage();
     // Before a city is chosen the page must not pretend anything is bookable.
-    expect(screen.queryByRole("button", { name: DATES[0] })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: DATE_LABELS[0] })).not.toBeInTheDocument();
     fireEvent.click(await screen.findByRole("button", { name: /Köln/i }));
     fireEvent.click(await screen.findByRole("button", { name: /Klassische Massage 50/i }));
-    expect(await screen.findByRole("button", { name: DATES[0] })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: DATE_LABELS[0] })).toBeInTheDocument();
   });
 });

@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar, Clock, Mail, Printer, Building2, Hotel, User, AlertTriangle, Wifi, FileDown, Search } from "lucide-react";
+import { Loader2, Calendar, Clock, Mail, Printer, Building2, Hotel, Home, User, AlertTriangle, Wifi, FileDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -70,7 +70,7 @@ interface Booking {
 interface Location {
   id: string;
   name: string;
-  type: "gym" | "hotel";
+  type: "gym" | "hotel" | "home";
 }
 
 interface Therapist {
@@ -112,6 +112,7 @@ const AdminBookings = () => {
     setLocations([
       ...((gymsRes.data || []).map((g) => ({ id: g.id, name: g.name, type: "gym" as const }))),
       ...((hotelsRes.data || []).map((h) => ({ id: h.id, name: h.name, type: "hotel" as const }))),
+      { id: "all", name: "Home Visits", type: "home" as const },
     ]);
   };
 
@@ -156,12 +157,12 @@ const AdminBookings = () => {
       ]);
       countryGymIds = (cg || []).map((g) => g.id);
       countryHotelIds = (ch || []).map((h) => h.id);
-      if (countryGymIds.length === 0 && countryHotelIds.length === 0) {
-        setBookings([]);
-        setLoading(false);
-        return;
-      }
     }
+
+    // Venue-type scope: gym / hotel / home visits (home = no gym and no hotel).
+    const includeGyms = activeType === null || activeType === "gym";
+    const includeHotels = activeType === null || activeType === "hotel";
+    const includeHome = activeType === null || activeType === "home";
 
     let query = supabase
       .from("bookings")
@@ -169,12 +170,34 @@ const AdminBookings = () => {
       .order("booking_date", { ascending: true })
       .order("booking_time", { ascending: true });
 
-    if (selectedCountry?.id) {
-      const parts: string[] = [];
-      if (countryGymIds.length > 0 && activeType !== "hotel") parts.push(`gym_id.in.(${countryGymIds.join(",")})`);
-      if (countryHotelIds.length > 0 && activeType !== "gym") parts.push(`hotel_id.in.(${countryHotelIds.join(",")})`);
-      if (parts.length > 0) query = query.or(parts.join(","));
+    const parts: string[] = [];
+    if (includeGyms) {
+      if (selectedCountry?.id) {
+        if (countryGymIds.length > 0) parts.push(`gym_id.in.(${countryGymIds.join(",")})`);
+      } else {
+        parts.push("gym_id.not.is.null");
+      }
     }
+    if (includeHotels) {
+      if (selectedCountry?.id) {
+        if (countryHotelIds.length > 0) parts.push(`hotel_id.in.(${countryHotelIds.join(",")})`);
+      } else {
+        parts.push("hotel_id.not.is.null");
+      }
+    }
+    if (includeHome) {
+      parts.push(
+        selectedCountry?.id
+          ? `and(gym_id.is.null,hotel_id.is.null,home_country_id.eq.${selectedCountry.id})`
+          : "and(gym_id.is.null,hotel_id.is.null)",
+      );
+    }
+    if (parts.length === 0) {
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedCountry?.id || activeType !== null) query = query.or(parts.join(","));
 
     if (statusFilter !== "all") query = query.eq("status", statusFilter);
 
@@ -182,6 +205,7 @@ const AdminBookings = () => {
       const [type, id] = locationFilter.split(":");
       if (type === "gym") query = query.eq("gym_id", id);
       else if (type === "hotel") query = query.eq("hotel_id", id);
+      else if (type === "home") query = query.is("gym_id", null).is("hotel_id", null);
     }
 
     if (therapistFilter !== "all") query = query.eq("therapist_id", therapistFilter);
@@ -435,7 +459,13 @@ const AdminBookings = () => {
                           <Hotel className="w-3.5 h-3.5" /> {loc.name}
                         </span>
                       </SelectItem>
-                    ))}
+                     ))}
+                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Home</div>
+                  <SelectItem value="home:all">
+                    <span className="inline-flex items-center gap-2">
+                      <Home className="w-3.5 h-3.5" /> Home Visits
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
@@ -639,10 +669,12 @@ const AdminBookings = () => {
                             <span className="inline-flex items-center gap-1.5 text-sm">
                               {booking.hotel_id ? (
                                 <Hotel className="w-3.5 h-3.5 text-muted-foreground" />
-                              ) : (
+                              ) : booking.gym_id ? (
                                 <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                              ) : (
+                                <Home className="w-3.5 h-3.5 text-muted-foreground" />
                               )}
-                              {booking.hotels?.name || booking.gyms?.name || "—"}
+                              {booking.hotels?.name || booking.gyms?.name || "Home Visit"}
                             </span>
                           </TableCell>
                         )}
@@ -775,8 +807,8 @@ function BookingDetailContent({ booking, onOpenPdf }: { booking: Booking; onOpen
           <span className="font-medium text-foreground">{booking.services?.name}</span>
         </div>
         <div>
-          <span className="text-muted-foreground">{booking.hotel_id ? "Hotel:" : "Gym:"}</span>{" "}
-          <span className="font-medium text-foreground">{booking.hotels?.name || booking.gyms?.name || "—"}</span>
+          <span className="text-muted-foreground">{booking.hotel_id ? "Hotel:" : booking.gym_id ? "Gym:" : "Location:"}</span>{" "}
+          <span className="font-medium text-foreground">{booking.hotels?.name || booking.gyms?.name || "Home Visit"}</span>
         </div>
         <div>
           <span className="text-muted-foreground">Status:</span>{" "}
