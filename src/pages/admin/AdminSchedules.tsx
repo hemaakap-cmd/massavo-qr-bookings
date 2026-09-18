@@ -17,9 +17,10 @@ import { useCountryData } from "@/hooks/useCountry";
 export default function AdminSchedules() {
   const { countryId } = useAuth();
   const { selectedCountry } = useCountryData(countryId);
-  const [venueType, setVenueType] = useState<"gym" | "hotel">("gym");
+  const [venueType, setVenueType] = useState<"gym" | "hotel" | "home">("gym");
   const [selectedGymId, setSelectedGymId] = useState<string>("");
   const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  const [selectedCityId, setSelectedCityId] = useState<string>("");
 
   const { data: gyms = [], isLoading: gymsLoading } = useQuery({
     queryKey: ["admin-gyms", selectedCountry?.id],
