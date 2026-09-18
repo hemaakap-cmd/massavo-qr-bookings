@@ -807,8 +807,8 @@ function BookingDetailContent({ booking, onOpenPdf }: { booking: Booking; onOpen
           <span className="font-medium text-foreground">{booking.services?.name}</span>
         </div>
         <div>
-          <span className="text-muted-foreground">{booking.hotel_id ? "Hotel:" : "Gym:"}</span>{" "}
-          <span className="font-medium text-foreground">{booking.hotels?.name || booking.gyms?.name || "—"}</span>
+          <span className="text-muted-foreground">{booking.hotel_id ? "Hotel:" : booking.gym_id ? "Gym:" : "Location:"}</span>{" "}
+          <span className="font-medium text-foreground">{booking.hotels?.name || booking.gyms?.name || "Home Visit"}</span>
         </div>
         <div>
           <span className="text-muted-foreground">Status:</span>{" "}
