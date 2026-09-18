@@ -141,7 +141,7 @@ const ScanQR = () => {
                     <div className="p-6 bg-white rounded-2xl shadow-lg">
                       <QRCodeCanvas
                         id={`qr-${selectedGym.id}`}
-                        value={getBookingUrl(selectedGym.id)}
+                        value={getBookingUrl(selectedGym)}
                         size={240}
                         level="H"
                         includeMargin
@@ -160,7 +160,7 @@ const ScanQR = () => {
                   <div className="bg-muted/50 rounded-lg p-3 mb-6">
                     <p className="text-xs text-muted-foreground mb-1">Buchungs-URL:</p>
                     <p className="text-sm font-mono text-foreground break-all">
-                      {getBookingUrl(selectedGym.id)}
+                      {getBookingUrl(selectedGym)}
                     </p>
                   </div>
 
