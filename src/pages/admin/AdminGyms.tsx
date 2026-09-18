@@ -67,6 +67,8 @@ const AdminGyms = () => {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [pricingGym, setPricingGym] = useState<Gym | null>(null);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -86,6 +88,7 @@ const AdminGyms = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setLoadError(null);
 
     // Build queries scoped to country
     let gymsQuery = supabase.from("gyms").select("*, cities(name)").order("name");
@@ -104,6 +107,13 @@ const AdminGyms = () => {
       servicesQuery,
     ]);
 
+    const firstError = gymsRes.error || citiesRes.error || servicesRes.error;
+    if (firstError) {
+      setLoadError(firstError.message);
+      setLoading(false);
+      return;
+    }
+
     setGyms((gymsRes.data || []) as Gym[]);
     setCities((citiesRes.data || []) as City[]);
     setCountryServices((servicesRes.data || []) as ServiceOption[]);
@@ -119,6 +129,12 @@ const AdminGyms = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    if (!formData.city_id) {
+      toast({ title: "City required", description: "Select a city before saving the gym.", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
 
     const gymData = {
       city_id: formData.city_id,
@@ -136,6 +152,7 @@ const AdminGyms = () => {
       const { error } = await supabase.from("gyms").update(gymData).eq("id", editingGym.id);
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
+        setSaving(false);
         return;
       }
 
@@ -143,16 +160,18 @@ const AdminGyms = () => {
       const syncError = await syncGymServices(editingGym.id, selectedServiceIds);
       if (syncError) {
         toast({ title: "Services not saved", description: syncError, variant: "destructive" });
+        setSaving(false);
         return;
       }
 
       toast({ title: "Success", description: "Gym updated successfully" });
       setIsDialogOpen(false);
-      fetchData();
+      await fetchData();
     } else {
       const { data, error } = await supabase.from("gyms").insert(gymData).select("*, cities(name)").single();
       if (error || !data) {
         toast({ title: "Error", description: error?.message || "Unknown error", variant: "destructive" });
+        setSaving(false);
         return;
       }
 
@@ -173,7 +192,8 @@ const AdminGyms = () => {
             variant: "destructive",
           });
           setIsDialogOpen(false);
-          fetchData();
+          await fetchData();
+          setSaving(false);
           return;
         }
       }
@@ -187,8 +207,9 @@ const AdminGyms = () => {
         setQrGym(data as Gym);
         setQrDialogOpen(true);
       }
-      fetchData();
+      await fetchData();
     }
+    setSaving(false);
   };
 
   /**
@@ -468,7 +489,8 @@ const AdminGyms = () => {
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {editingGym ? "Update Gym" : "Create Gym"}
                   </Button>
                 </DialogFooter>
@@ -496,6 +518,12 @@ const AdminGyms = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {loadError && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            Gyms could not be loaded: {loadError}
+          </div>
+        )}
 
         {/* Table */}
         {loading ? (
