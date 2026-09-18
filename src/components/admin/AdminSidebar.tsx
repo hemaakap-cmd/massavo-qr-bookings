@@ -48,11 +48,20 @@ import {
 import massavoLogo from "@/assets/massavo-logo.png";
 import { getAdminGeographyLabels } from "@/constants/adminGeography";
 
-const createNavGroups = (geoLabels: ReturnType<typeof getAdminGeographyLabels>) => [
+type NavItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  /** Visible to super admins only (route itself is super-admin protected). */
+  superOnly?: boolean;
+};
+
+const createNavGroups = (geoLabels: ReturnType<typeof getAdminGeographyLabels>): { label: string; items: NavItem[] }[] => [
   {
     label: "Overview",
     items: [
       { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+      { title: "Super Admin", url: "/super-admin", icon: ShieldCheck, superOnly: true },
       { title: "Monitoring", url: "/admin/monitoring", icon: Activity },
       { title: "System Health", url: "/admin/system-health", icon: HeartPulse },
       { title: "AI Assistant", url: "/admin/ai-assistant", icon: Bot },
@@ -75,24 +84,21 @@ const createNavGroups = (geoLabels: ReturnType<typeof getAdminGeographyLabels>) 
       { title: "Therapists", url: "/admin/therapists", icon: Users },
       { title: "Therapist Analytics", url: "/admin/therapist-analytics", icon: BarChart3 },
       { title: "Weekly Planner", url: "/admin/weekly-planner", icon: CalendarRange },
-      { title: "Staff Dashboard", url: "/admin/staff-advanced", icon: Users },
-      { title: "Work Tracking", url: "/admin/work-tracking", icon: Briefcase },
+      { title: "Staff Monitor", url: "/admin/staff-advanced", icon: Users },
+      { title: "Work Tracking", url: "/admin/work-tracking", icon: Briefcase, superOnly: true },
       { title: "Abwesenheit", url: "/admin/therapist-absence", icon: UserX },
       { title: "Urlaubsverwaltung", url: "/admin/therapist-leaves", icon: Palmtree },
     ],
   },
   {
-    // Unified Venues group — replaces the old Gyms / Gym Profiles / Hotels
-    // siblings. Individual type pages remain reachable for backward compat
-    // until the AdminVenues page lands in Week 3 of the refactor roadmap.
     label: "Venues",
     items: [
-      { title: "All Venues", url: "/admin/venues", icon: LayoutGrid },
+      { title: "Venue Overview", url: "/admin/venues", icon: LayoutGrid },
       { title: "Gyms", url: "/admin/gyms", icon: Building2 },
       { title: "Hotels", url: "/admin/hotels", icon: HotelIcon },
       { title: "Home Visits", url: "/admin/home-visits", icon: HomeIcon },
-      { title: "Gym Profiles", url: "/admin/gym-profiles", icon: Contact },
-      { title: "Hotel Profiles", url: "/admin/hotel-profiles", icon: Contact },
+      { title: "Gym Contacts", url: "/admin/gym-profiles", icon: Contact },
+      { title: "Hotel Contacts", url: "/admin/hotel-profiles", icon: Contact },
     ],
   },
   {
@@ -116,7 +122,7 @@ const createNavGroups = (geoLabels: ReturnType<typeof getAdminGeographyLabels>) 
     items: [
       { title: "Enterprise BI", url: "/admin/business-intelligence", icon: Brain },
       { title: "Advanced Analytics", url: "/admin/advanced-analytics", icon: PieChart },
-      { title: "Client Data", url: "/admin/client-data", icon: FileBarChart },
+      { title: "Client Data", url: "/admin/client-data", icon: FileBarChart, superOnly: true },
       { title: "Reviews", url: "/admin/reviews", icon: MessageSquare },
     ],
   },

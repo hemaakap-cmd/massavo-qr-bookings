@@ -71,7 +71,7 @@ const SuperAdminDashboard = () => {
             { icon: Building2, label: "Gyms", desc: "Manage gym locations", url: "/admin/gyms" },
             { icon: Hotel, label: "Hotels", desc: "Manage hotel locations", url: "/admin/hotels" },
             { icon: House, label: "Home Visits", desc: "Manage cities, services & coverage", url: "/admin/home-visits" },
-            { icon: Globe, label: "Countries", desc: "Multi-country settings", url: "/admin" },
+            { icon: Globe, label: "Venue Overview", desc: "Gyms, hotels & home visits", url: "/admin/venues" },
             { icon: BarChart3, label: "Financials", desc: "Revenue overview", url: "/admin/financial" },
             { icon: Users, label: "Therapists", desc: "Team management", url: "/admin/therapists" },
             { icon: Calendar, label: "Bookings", desc: "All bookings", url: "/admin/bookings" },
