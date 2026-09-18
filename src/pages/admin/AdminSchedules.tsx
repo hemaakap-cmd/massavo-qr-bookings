@@ -9,7 +9,8 @@ import { AffectedBookingsDashboard } from "@/components/admin/schedules/Affected
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, CalendarX, AlertCircle, Building2, Hotel as HotelIcon } from "lucide-react";
+import { HomeVisitScheduleManager } from "@/components/admin/schedules/HomeVisitScheduleManager";
+import { Calendar, CalendarX, AlertCircle, Building2, Hotel as HotelIcon, Home } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCountryData } from "@/hooks/useCountry";
 
