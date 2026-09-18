@@ -172,6 +172,33 @@ export default function AdminSchedules() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="home" className="space-y-6 mt-4">
+            <div className="max-w-sm">
+              <Label htmlFor="city-select">Select City</Label>
+              <Select value={selectedCityId} onValueChange={setSelectedCityId}>
+                <SelectTrigger id="city-select" className="mt-1">
+                  <SelectValue placeholder="Choose a city for home visits" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCityId && selectedCity ? (
+              <HomeVisitScheduleManager cityId={selectedCityId} cityName={selectedCity.name} />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground border rounded-lg bg-muted/50">
+                <Home className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Select a city to manage home visit availability</p>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </AdminLayout>
