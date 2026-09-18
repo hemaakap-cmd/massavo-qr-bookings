@@ -152,8 +152,9 @@ export function TherapistForm({
         </div>
       </div>
 
-      {/* Serviceable Cities */}
-      <div className="space-y-4">
+      {/* New therapists need a city picker before a venue-assignment record exists.
+          Existing therapists manage Home Visit cities once in Venue Assignments below. */}
+      {!isEditing && <div className="space-y-4">
         <h4 className="font-medium text-sm text-muted-foreground border-b pb-2 flex items-center gap-2">
           <MapPin className="w-4 h-4" />
           Serviceable Cities (Einsatzgebiete)
@@ -209,7 +210,7 @@ export function TherapistForm({
               ))}
           </SelectContent>
         </Select>
-      </div>
+      </div>}
 
       {/* Gym Assignments & Schedules — filtered by serviceable cities */}
       <TherapistGymAssignments

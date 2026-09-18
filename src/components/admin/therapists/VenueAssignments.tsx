@@ -145,7 +145,9 @@ export function VenueAssignments({
               <SelectValue
                 placeholder={availableForType.length
                   ? pickerType === "home" ? "Select city…" : "Select venue…"
-                  : pickerType === "home" ? "No cities available" : "No venues available"}
+                  : pickerType === "home"
+                    ? homeCityIds.length > 0 ? "All cities assigned" : "No cities configured"
+                    : "No venues available"}
               />
             </SelectTrigger>
             <SelectContent>
