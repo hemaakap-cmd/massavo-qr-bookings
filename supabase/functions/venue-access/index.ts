@@ -71,26 +71,31 @@ serve(async (req: Request): Promise<Response> => {
       );
       if (!rl.allowed) return tooManyRequests(cors, rl);
 
-      const code = typeof body.code === "string" ? body.code.trim() : null;
+      // H-1: the ONLY accepted authorization for a claim is the venue's physical
+      // QR secret (qr_code_id). A bare venue id is NEVER sufficient — knowing or
+      // enumerating a public venue id must not yield a venue token.
+      const code = typeof body.code === "string" ? body.code.trim() : "";
+      if (!code || code.length < 6 || code.length > 128) {
+        return json({ error: "QR code required" }, 401, cors);
+      }
+
       // `star_rating` only exists on hotels; hotels have no FK embed to cities,
       // so the city name is resolved with a separate lookup below.
       const columns = venueType === "hotel"
         ? "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active, star_rating"
         : "id, name, address, city_id, rating, review_count, image_url, open_hours, is_active";
-      let query = supabase.from(table).select(columns).eq("is_active", true);
-
-      if (code) {
-        query = query.eq("qr_code_id", code);
-      } else if (venueId && UUID_RE.test(venueId)) {
-        // Legacy printed QR codes encode /gym/<uuid> or /hotel/<uuid>.
-        query = query.eq("id", venueId);
-      } else {
-        return json({ error: "QR code required" }, 400, cors);
-      }
-
-      const { data: venue, error: venueErr } = await query.maybeSingle<Record<string, unknown>>();
+      const { data: venue, error: venueErr } = await supabase
+        .from(table)
+        .select(columns)
+        .eq("is_active", true)
+        .eq("qr_code_id", code)
+        .maybeSingle<Record<string, unknown>>();
       if (venueErr) console.error("venue claim lookup failed", venueErr);
       if (!venue) return json({ error: "Unknown or inactive QR code" }, 404, cors);
+      // A QR secret for one venue can never be redirected at another venue id.
+      if (venueId && UUID_RE.test(venueId) && venueId !== (venue.id as string)) {
+        return json({ error: "QR code does not match this venue" }, 403, cors);
+      }
 
       const { token: issued, expiresAt } = await issueVenueToken(venueType, venue.id as string);
       let cityName: string | null = null;
