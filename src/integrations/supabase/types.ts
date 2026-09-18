@@ -292,6 +292,13 @@ export type Database = {
             referencedRelation: "hotels"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "booking_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       booking_feedback: {
@@ -379,6 +386,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_feedback_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
             referencedColumns: ["id"]
           },
           {
@@ -645,6 +659,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
             referencedColumns: ["id"]
           },
           {
@@ -1423,6 +1444,13 @@ export type Database = {
             referencedRelation: "hotels"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hotel_contacts_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       hotel_schedules: {
@@ -1468,6 +1496,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_schedules_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1518,6 +1553,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_services_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
             referencedColumns: ["id"]
           },
           {
@@ -1927,6 +1969,13 @@ export type Database = {
             referencedRelation: "hotels"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedule_exceptions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       services: {
@@ -2156,6 +2205,13 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "therapist_assignments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
             referencedColumns: ["id"]
           },
           {
@@ -2421,6 +2477,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "therapist_hotels_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "therapist_hotels_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
@@ -2649,6 +2712,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "therapist_weekly_schedules_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "therapist_weekly_schedules_therapist_id_fkey"
             columns: ["therapist_id"]
             isOneToOne: false
@@ -2839,6 +2909,7 @@ export type Database = {
         Row: {
           address: string | null
           city_id: string | null
+          country_id: string | null
           created_at: string | null
           id: string | null
           image_url: string | null
@@ -2852,6 +2923,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city_id?: string | null
+          country_id?: string | null
           created_at?: string | null
           id?: string | null
           image_url?: string | null
@@ -2865,6 +2937,7 @@ export type Database = {
         Update: {
           address?: string | null
           city_id?: string | null
+          country_id?: string | null
           created_at?: string | null
           id?: string | null
           image_url?: string | null
@@ -2881,6 +2954,69 @@ export type Database = {
             columns: ["city_id"]
             isOneToOne: false
             referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gyms_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotels_public: {
+        Row: {
+          address: string | null
+          city_id: string | null
+          country_id: string | null
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          name: string | null
+          open_hours: string | null
+          rating: number | null
+          review_count: number | null
+          star_rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          open_hours?: string | null
+          rating?: number | null
+          review_count?: number | null
+          star_rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city_id?: string | null
+          country_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          open_hours?: string | null
+          rating?: number | null
+          review_count?: number | null
+          star_rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotels_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
             referencedColumns: ["id"]
           },
         ]
