@@ -312,7 +312,7 @@ const HomeVisit = () => {
                       onClick={() => { setSelectedDate(d); setSelectedTime(""); }}
                       className={`px-3 py-2 rounded-lg border text-sm ${selectedDate === d ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"}`}
                     >
-                      {d}
+                      {formatFriendlyDate(d, i18n.language)}
                     </button>
                   ))}
                 </div>
