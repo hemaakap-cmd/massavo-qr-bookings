@@ -317,8 +317,11 @@ const HotelPage = () => {
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-display text-2xl font-bold text-foreground mb-4">
-              {t("hotels.noHotels")}
+              {venueError === "QR_REQUIRED" ? t("gymPage.qrRequiredTitle") : t("hotels.noHotels")}
             </h1>
+            {venueError === "QR_REQUIRED" && (
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">{t("gymPage.qrRequiredText")}</p>
+            )}
             <Button variant="sage" asChild>
               <Link to="/hotels">{t("hotels.pageTitle")}</Link>
             </Button>

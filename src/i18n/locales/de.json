@@ -401,7 +401,9 @@
     "intensitySurcharge": "Intensitätszuschlag",
     "total": "Gesamt",
     "upgradeActivated": "Intensiv-Tiefengewebe-Upgrade aktiviert!",
-    "timeUnit": "Uhr"
+    "timeUnit": "Uhr",
+    "qrRequiredTitle": "QR-Code erforderlich",
+    "qrRequiredText": "Bitte scanne den QR-Code vor Ort, um die Angebote und Termine dieses Standorts zu sehen."
   },
   "serviceSelector": {
     "title": "Wähle deinen Service",
