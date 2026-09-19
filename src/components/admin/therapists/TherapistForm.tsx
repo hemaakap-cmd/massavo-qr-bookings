@@ -15,6 +15,7 @@ import {
 import { TherapistFormData, professionLabels, ProfessionType } from "@/types/therapist";
 import { TherapistGymAssignments } from "./TherapistGymAssignments";
 import { VenueAssignments } from "./VenueAssignments";
+import { HomeVisitWorkingHours } from "./HomeVisitWorkingHours";
 import { MapPin, X } from "lucide-react";
 import { useMemo } from "react";
 
@@ -335,12 +336,19 @@ export function TherapistForm({
       </div>
 
       {isEditing && therapistId && (
-        <VenueAssignments
-          therapistId={therapistId}
-          cities={cities}
-          homeCityIds={formData.serviceable_city_ids}
-          onHomeCityIdsChange={(serviceable_city_ids) => onFormChange({ ...formData, serviceable_city_ids })}
-        />
+        <>
+          <VenueAssignments
+            therapistId={therapistId}
+            cities={cities}
+            homeCityIds={formData.serviceable_city_ids}
+            onHomeCityIdsChange={(serviceable_city_ids) => onFormChange({ ...formData, serviceable_city_ids })}
+          />
+          <HomeVisitWorkingHours
+            therapistId={therapistId}
+            cities={cities}
+            assignedCityIds={formData.serviceable_city_ids}
+          />
+        </>
       )}
 
       <Button type="submit" variant="sage" className="w-full">
