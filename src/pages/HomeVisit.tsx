@@ -348,6 +348,11 @@ const HomeVisit = () => {
                   <label className="block text-foreground font-medium mb-3">
                     {t("homeVisit.selectTime", "Uhrzeit")}
                   </label>
+                  {timeSlots.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {t("homeVisit.noSlots", "Für diesen Tag sind keine Zeiten verfügbar.")}
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     {timeSlots.map((slot) => {
                       // A slot that has already passed today is not bookable.
