@@ -78,7 +78,14 @@ export function useWeeklyScheduleMutations() {
   });
 
   const updateSchedule = useMutation({
-    mutationFn: async (params: { id: string; start_time?: string; end_time?: string; is_active?: boolean }) => {
+    mutationFn: async (params: {
+      id: string;
+      city_id?: string | null;
+      day_of_week?: DayOfWeek;
+      start_time?: string;
+      end_time?: string;
+      is_active?: boolean;
+    }) => {
       const { id, ...updates } = params;
       const { error } = await supabase
         .from("therapist_weekly_schedules")
