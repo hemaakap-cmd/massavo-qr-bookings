@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
     const emailHtml = `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px; background: #ffffff;">
         <div style="text-align: center; margin-bottom: 32px;">
-          <img src="https://lugzhjfguftlfcgjfnbj.supabase.co/storage/v1/object/public/email-assets/massavo-email-logo.png" alt="MASSAVO" style="height: 48px;" />
+          <img src="https://massavo.com/android-chrome-512x512.png" alt="MASSAVO" width="72" height="72" style="display: block; width: 72px; height: 72px; margin: 0 auto; border: 0; border-radius: 14px;" />
         </div>
         <div style="text-align: center; margin-bottom: 32px;">
           <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px;">Your Verification Code</h1>
