@@ -76,6 +76,30 @@ export function useHomeAvailableDates(cityId?: string, durationMinutes?: number)
  * 50-minute one. Omitting it falls back to the server's 60-minute default,
  * which would understate conflicts for longer services.
  */
+/**
+ * Dynamic bookable start times for a home visit.
+ *
+ * The server owns the calculation (therapist shifts, existing bookings,
+ * 5 + duration + 5 + 30 occupied time), so the picker never renders a
+ * hardcoded grid and recalculates whenever city / date / duration change.
+ */
+export function useHomeAvailableSlots(cityId?: string, date?: string, durationMinutes?: number) {
+  return useQuery({
+    queryKey: ["home-available-slots", cityId, date, durationMinutes],
+    queryFn: async () => {
+      if (!cityId || !date) return [] as string[];
+      const { data, error } = await sb.rpc("get_home_available_slots", {
+        p_city_id: cityId,
+        p_date: date,
+        ...(durationMinutes ? { p_duration_minutes: durationMinutes } : {}),
+      });
+      if (error) return [] as string[];
+      return ((data as { slot_time: string }[]) || []).map((r) => r.slot_time);
+    },
+    enabled: !!cityId && !!date,
+  });
+}
+
 export function useHomeBookedSlots(cityId?: string, date?: string, durationMinutes?: number) {
   return useQuery({
     queryKey: ["home-booked-slots", cityId, date, durationMinutes],
