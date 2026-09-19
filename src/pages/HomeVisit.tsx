@@ -45,9 +45,9 @@ const sbAny = supabase as unknown as {
   from: (t: string) => any;
 };
 
-// Standard home-visit slot grid; individual slots are disabled when the whole
-// city therapist pool is busy (get_home_booked_slots).
-const SLOTS = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
+// Slot times are NOT hardcoded: they are calculated server-side from the
+// therapist shifts, existing bookings and the occupied time of the selected
+// service (5 prep + duration + 5 after + 30 fixed travel).
 
 // Render "2026-09-22" as "Di, 22. Sept." (locale-aware). Falls back to the
 // raw ISO string if parsing ever fails so a date is never blank.
@@ -333,11 +333,11 @@ const HomeVisit = () => {
                     {t("homeVisit.selectTime", "Uhrzeit")}
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {SLOTS.map((slot) => {
+                    {timeSlots.map((slot) => {
                       // A slot that has already passed today is not bookable.
-                      // The gym/hotel picker applies the same rule in
-                      // generateAvailableTimeSlots; the home grid is static, so
-                      // it has to be applied here.
+                      // Everything else (shift hours, existing bookings,
+                      // 5 + duration + 5 + 30 occupied time) is already applied
+                      // server-side by get_home_available_slots.
                       const booked = bookedSlots.includes(slot) || isPastSlot(selectedDate, slot);
                       return (
                         <button
