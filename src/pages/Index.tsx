@@ -17,7 +17,7 @@ const Index = () => {
     <div className="min-h-screen">
       <SEO
         title="MASSAVO – Premium Massage"
-        description="Sportmassage und klassische Massage buchen in Köln, Leverkusen, Düsseldorf und Bergisch Gladbach – im Fitnessstudio, Partnerhotel oder als Hausbesuch. Schnell per QR-Code."
+        description="Premium Massage in Köln, Leverkusen, Düsseldorf und Bergisch Gladbach – Sportmassage und klassische Massage im Fitnessstudio, Partnerhotel oder als Hausbesuch buchen."
         path="/"
         keywords="Sportmassage Köln, Sportmassage Leverkusen, Sportmassage Düsseldorf, Sportmassage Bergisch Gladbach, Massage Köln, Massage buchen, Fitnessstudio Massage, Hotel Massage, Hausbesuch Massage"
       />
