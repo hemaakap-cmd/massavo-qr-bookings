@@ -110,14 +110,4 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://massavo.com/hotel/2b8e8e40-7be6-4f30-a52d-f1597d511650</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://massavo.com/hotel/fe82d1bb-ece5-4cb7-87cd-5754b815c65d</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
 </urlset>
