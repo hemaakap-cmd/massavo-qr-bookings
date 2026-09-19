@@ -3286,6 +3286,12 @@ export type Database = {
               available_date: string
             }[]
           }
+      get_home_available_slots: {
+        Args: { p_city_id: string; p_date: string; p_duration_minutes?: number }
+        Returns: {
+          slot_time: string
+        }[]
+      }
       get_home_booked_slots: {
         Args: { p_city_id: string; p_date: string; p_duration_minutes?: number }
         Returns: {
@@ -3383,6 +3389,7 @@ export type Database = {
       home_free_therapists: {
         Args: {
           p_buffer_after_minutes?: number
+          p_buffer_before_minutes?: number
           p_city_id: string
           p_date: string
           p_duration_minutes?: number
