@@ -169,11 +169,21 @@ export function generateAvailableTimeSlots(
   existingBookings: ExistingBooking[],
   selectedDate: string,
   serviceBufferBefore?: number | null,
-  serviceBufferAfter?: number | null
+  serviceBufferAfter?: number | null,
+  /**
+   * Extra transition minutes occupied after the session (Home Visit travel
+   * time). Part of the reserved window, so it spaces the next slot and blocks
+   * overlapping bookings, but it is never required to fit inside the shift.
+   */
+  extraAfterMinutes: number = 0
 ): TimeSlot[] {
   const slots: TimeSlot[] = [];
 
-  const buffers = getServiceBuffers(serviceBufferBefore, serviceBufferAfter);
+  const rawBuffers = getServiceBuffers(serviceBufferBefore, serviceBufferAfter);
+  const buffers = {
+    before: rawBuffers.before,
+    after: rawBuffers.after + Math.max(extraAfterMinutes, 0),
+  };
   const scheduleStart = parseTimeToMinutes(schedule.start_time);
   const scheduleEnd = parseTimeToMinutes(schedule.end_time);
 
