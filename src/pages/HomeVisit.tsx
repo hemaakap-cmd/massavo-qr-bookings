@@ -21,7 +21,7 @@ import { getFinalSurcharge, shouldOfferDeepTissue, calculateIntensitySurcharge }
 import { supabase } from "@/integrations/supabase/client";
 import { usePublicCountry } from "@/contexts/CountryContext";
 import { usePayment } from "@/hooks/usePayment";
-import { useHomeAvailableDates, useHomeBookedSlots, useHomeTravelFee } from "@/hooks/useHomeAvailability";
+import { useHomeAvailableDates, useHomeAvailableSlots, useHomeBookedSlots, useHomeTravelFee } from "@/hooks/useHomeAvailability";
 import { isPastSlot } from "@/utils/timeSlotCalculator";
 
 interface HomeCity {
@@ -100,6 +100,22 @@ const HomeVisit = () => {
     selectedDate,
     selectedService?.duration_minutes,
   );
+  // Dynamic start times — recalculated whenever the city, date or the selected
+  // service duration changes, with no page reload.
+  const { data: timeSlots = [] } = useHomeAvailableSlots(
+    cityId,
+    selectedDate,
+    selectedService?.duration_minutes,
+  );
+
+  // A time that is no longer offered (e.g. after switching 50 → 90 min) must not
+  // stay selected.
+  useEffect(() => {
+    if (selectedTime && timeSlots.length > 0 && !timeSlots.includes(selectedTime)) {
+      setSelectedTime("");
+    }
+  }, [timeSlots, selectedTime]);
+
   // create-payment adds this to the Stripe amount, so it has to appear in the
   // summary too — otherwise the customer is quoted less than they are charged.
   const { data: travelFee = 0 } = useHomeTravelFee(cityId);
