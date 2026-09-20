@@ -80,6 +80,12 @@ vi.mock("@/hooks/usePayment", () => ({
 vi.mock("@/hooks/useHomeAvailability", () => ({
   useHomeAvailableDates: (cityId?: string) => ({ data: cityId ? DATES : [] }),
   useHomeBookedSlots: (cityId?: string) => ({ data: cityId ? bookedSlots : [] }),
+  // Dynamic start times now come from the server; the grid stands in for them.
+  useHomeAvailableSlots: (cityId?: string, date?: string) => ({
+    data: cityId && date
+      ? ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"]
+      : [],
+  }),
   useHomeTravelFee: (cityId?: string) => ({ data: cityId ? 12 : 0 }),
 }));
 
