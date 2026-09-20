@@ -195,7 +195,11 @@ export function generateAvailableTimeSlots(
   // Max hours is a soft target — the schedule window (start_time to end_time)
   // is the real boundary. When demand is high, allow bookings to fill the full window.
 
-  const earliestBookableTime = scheduleStart + buffers.before;
+  // The customer-facing start time is the shift start itself. The preparation
+  // buffer is internal therapist time only and must never push the displayed
+  // first appointment forward (09:00 stays 09:00, not 09:05). Spacing to the
+  // NEXT slot still adds it (occupied window + next appointment's prep).
+  const earliestBookableTime = scheduleStart;
   let currentTime = earliestBookableTime;
   let slotId = 1;
   let breakSlotAdded = false;
