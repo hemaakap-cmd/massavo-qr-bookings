@@ -1,7 +1,41 @@
 // Default buffer times for massage sessions (in minutes)
-// Only a 5-minute gap between sessions (post-session transition)
-export const DEFAULT_BUFFER_BEFORE = 0;
+// 5 minutes preparation before the treatment, 5 minutes after-treatment time.
+// Both count as real, unavailable therapist time.
+export const DEFAULT_BUFFER_BEFORE = 5;
 export const DEFAULT_BUFFER_AFTER = 5;
+
+/**
+ * Fixed travel/transition time added to every Home Visit.
+ * Deliberately FIXED — never derived from the customer address or routing.
+ */
+export const HOME_VISIT_TRANSITION_MINUTES = 30;
+
+export type BookingVenueType = "gym" | "hotel" | "home";
+
+/** Extra transition minutes occupied after a session for a given venue type. */
+export function getVenueTransitionMinutes(venueType: BookingVenueType = "gym"): number {
+  return venueType === "home" ? HOME_VISIT_TRANSITION_MINUTES : 0;
+}
+
+/**
+ * Single source of truth for "how long does this booking occupy the therapist".
+ *   gym/hotel: 5 + duration + 5
+ *   home:      5 + duration + 5 + 30
+ */
+export function calculateOccupiedMinutes(
+  serviceDurationMinutes: number,
+  venueType: BookingVenueType = "gym",
+  bufferBefore?: number | null,
+  bufferAfter?: number | null,
+): number {
+  const buffers = getServiceBuffers(bufferBefore, bufferAfter);
+  return (
+    buffers.before +
+    serviceDurationMinutes +
+    buffers.after +
+    getVenueTransitionMinutes(venueType)
+  );
+}
 
 // Legacy aliases for backward compatibility
 export const BUFFER_BEFORE_SESSION = DEFAULT_BUFFER_BEFORE;

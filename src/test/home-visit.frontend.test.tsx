@@ -47,6 +47,7 @@ vi.mock("@/hooks/usePayment", () => ({
 vi.mock("@/hooks/useHomeAvailability", () => ({
   useHomeAvailableDates: () => ({ data: ["2099-01-05", "2099-01-06"] }),
   useHomeBookedSlots: () => ({ data: ["12:00"] }),
+  useHomeAvailableSlots: () => ({ data: ["09:00", "10:30", "12:00", "13:30"] }),
   // Non-zero so the summary assertions below exercise the travel-fee line.
   useHomeTravelFee: () => ({ data: 15 }),
 }));
