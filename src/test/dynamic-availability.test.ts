@@ -35,7 +35,7 @@ describe("occupied time rules", () => {
 describe("dynamic slot generation", () => {
   it("spaces 50-minute gym slots by 60 minutes", () => {
     const times = bookable(generateAvailableTimeSlots(schedule, 50, [], FUTURE_DATE));
-    expect(times[0]).toBe("09:05");
+    expect(times[0]).toBe("09:00");
     const step = parseTimeToMinutes(times[1]) - parseTimeToMinutes(times[0]);
     expect(step).toBe(60);
   });
