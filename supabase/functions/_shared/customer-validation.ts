@@ -132,3 +132,10 @@ export function validateCustomer(input: CustomerInput, countryCode?: string | nu
   }
   return errors;
 }
+
+/** Gym/Hotel guests may live abroad: a 5-digit code is treated as German, anything else as international. */
+export function inferAddressCountry(postal: unknown, fallback = "DE"): string {
+  const s = norm(postal);
+  if (/^\d{5}$/.test(s)) return fallback;
+  return /^\d+$/.test(s) && s.length < 5 ? fallback : "XX";
+}

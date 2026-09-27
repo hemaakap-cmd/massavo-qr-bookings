@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { validateCustomer } from "../../supabase/functions/_shared/customer-validation";
+import { validateCustomer, inferAddressCountry } from "../../supabase/functions/_shared/customer-validation";
 import ClientInfoForm, { ClientInfo, calculateAge, inferGender } from "@/components/booking/ClientInfoForm";
 import { BodyDiagram, SelectedArea, BodyArea } from "@/components/body-diagram/BodyDiagram";
 import { useDisallowedAreaCodes } from "@/hooks/useBodyAreaRestrictions";
@@ -195,8 +195,8 @@ const HomeVisit = () => {
 
   const canBook =
     !!cityId && !!serviceId && !!selectedDate && !!selectedTime &&
-    !!clientInfo.firstName && !!clientInfo.email && !!clientInfo.street &&
-    !!clientInfo.postalCode && clientInfo.healthConfirmed && policyAccepted && !!communicationPreference;
+    validateCustomer(clientInfo, selectedCountry?.code || "DE").length === 0 &&
+    cityNameMatches && clientInfo.healthConfirmed && policyAccepted && !!communicationPreference;
 
   const handleBook = useCallback(async () => {
     if (!canBook || !selectedService) return;
@@ -229,7 +229,7 @@ const HomeVisit = () => {
         homePostalCode: clientInfo.postalCode,
         homeAddressNotes: clientInfo.notes?.trim() || undefined,
         customerEmail: clientInfo.email,
-        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: CUSTOMER_COUNTRY },
+        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: (selectedCountry?.code || "DE") },
         clientName: fullName,
         clientAge: calculateAge(clientInfo.dateOfBirth),
         clientPhone: clientInfo.phone,
@@ -395,7 +395,7 @@ const HomeVisit = () => {
               <p className="text-sm text-muted-foreground mb-5">
                 {t("homeVisit.addressHint", "Die angegebene Adresse ist der Ort des Hausbesuchs.")}
               </p>
-              <ClientInfoForm clientInfo={clientInfo} onChange={setClientInfo} />
+              <ClientInfoForm clientInfo={clientInfo} onChange={setClientInfo} countryCode={selectedCountry?.code || "DE"} expectedCity={cities.find((c) => c.id === cityId)?.name} />
 
               {/* Body areas + pressure intensity */}
               <div className="mt-8 pt-6 border-t border-border">

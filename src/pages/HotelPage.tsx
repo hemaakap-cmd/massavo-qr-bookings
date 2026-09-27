@@ -9,7 +9,7 @@ import SEO from "@/components/SEO";
 import { Helmet } from "react-helmet-async";
 import ServiceSelector from "@/components/booking/ServiceSelector";
 import { ScheduleAwareTimeSlotPicker } from "@/components/booking/ScheduleAwareTimeSlotPicker";
-import { validateCustomer } from "../../supabase/functions/_shared/customer-validation";
+import { validateCustomer, inferAddressCountry } from "../../supabase/functions/_shared/customer-validation";
 import ClientInfoForm, { ClientInfo, calculateAge, inferGender } from "@/components/booking/ClientInfoForm";
 import BotProtection from "@/components/booking/BotProtection";
 import { Button } from "@/components/ui/button";
@@ -154,8 +154,7 @@ const HotelPage = () => {
     clientInfo.salutation && 
     clientInfo.firstName.trim() && 
     clientInfo.lastName.trim() && 
-    clientInfo.email.trim() && 
-    isValidEmail(clientInfo.email) &&
+    validateCustomer(clientInfo, inferAddressCountry(clientInfo.postalCode)).length === 0 &&
     clientInfo.dateOfBirth && 
     isValidDateOfBirth(clientInfo.dateOfBirth) &&
     clientInfo.phone.trim() && 
@@ -163,7 +162,7 @@ const HotelPage = () => {
     clientInfo.street.trim() && 
     clientInfo.houseNumber.trim() && 
     clientInfo.postalCode && 
-    isValidPostalCode(clientInfo.postalCode) &&
+
     clientInfo.city.trim() && 
     clientInfo.healthConfirmed &&
     isPregnancyAnswered &&
@@ -263,7 +262,7 @@ const HotelPage = () => {
         venueToken: venueToken || undefined,
         venueType: "hotel",
         customerEmail: clientInfo.email,
-        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: CUSTOMER_COUNTRY },
+        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: inferAddressCountry(clientInfo.postalCode) },
         clientName: fullName,
         clientAge: calculatedAge,
         clientPhone: clientInfo.phone,
