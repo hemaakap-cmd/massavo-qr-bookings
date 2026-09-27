@@ -86,6 +86,10 @@ export function ScheduleAwareTimeSlotPicker({
       })) as ExistingBooking[];
     },
     enabled: !!venueId && !!venueToken && !!selectedDate,
+    // Live: pick up bookings made by other customers without a page reload.
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   const selectedSchedule = useMemo(() => {
