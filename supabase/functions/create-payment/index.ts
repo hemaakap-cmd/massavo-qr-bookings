@@ -259,7 +259,19 @@ serve(async (req) => {
 
 
     const body = await req.json();
-    const input = validatePaymentInput(body);
+    let input: ValidatedInput;
+    try {
+      input = validatePaymentInput(body);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Invalid input";
+      console.warn("create-payment input rejected:", msg);
+      const friendly = msg.startsWith("Invalid customer details")
+        ? "Bitte überprüfe deine Angaben (Name, E-Mail, Telefon und Adresse)."
+        : msg;
+      return new Response(JSON.stringify({ error: friendly, fields: msg.startsWith("Invalid customer details") ? msg.split(": ")[1]?.split(", ") : undefined }), {
+        headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+      });
+    }
 
     // SECURITY (remediation item 4): the booking window is enforced HERE, at the
     // authoritative layer, before Stripe is ever contacted. The UI calendar is
@@ -437,11 +449,19 @@ serve(async (req) => {
       // 1) The city must actually exist and be active. Never trust a client id.
       const { data: cityRow, error: cityErr } = await supabase
         .from("cities")
-        .select("id, is_active")
+        .select("id, is_active, name, countries(code)")
         .eq("id", input.homeCityId)
         .maybeSingle();
       if (cityErr || !cityRow || (cityRow as { is_active?: boolean }).is_active === false) {
         return new Response(JSON.stringify({ error: "Diese Stadt ist für Hausbesuche nicht verfügbar." }), {
+          headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+        });
+      }
+      // The postcode must fit the selected home-visit city and its country.
+      const cityName = (cityRow as { name?: string }).name || "";
+      const cityCountry = ((cityRow as { countries?: { code?: string } | null }).countries?.code) || "DE";
+      if (!isValidPostalFor(input.homePostalCode, cityCountry) || !cityMatchesPostalCode(cityName, input.homePostalCode, cityCountry)) {
+        return new Response(JSON.stringify({ error: "Die Postleitzahl passt nicht zur gewählten Stadt.", fields: ["postalCode"] }), {
           headers: { ...cors, "Content-Type": "application/json" }, status: 400,
         });
       }
