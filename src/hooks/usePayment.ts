@@ -36,6 +36,7 @@ interface PaymentDetails {
   communicationPreference?: string;
   selectedBodyAreas?: Array<{ code: string; label?: string; painIntensity: number }>;
   deepTissueUpgradeActive?: boolean;
+  customer?: { firstName: string; lastName: string; street: string; houseNumber: string; postalCode: string; city: string; countryCode?: string };
 }
 
 export const usePayment = () => {

@@ -8,6 +8,7 @@ import SEO from "@/components/SEO";
 import { Helmet } from "react-helmet-async";
 import ServiceSelector from "@/components/booking/ServiceSelector";
 import { ScheduleAwareTimeSlotPicker } from "@/components/booking/ScheduleAwareTimeSlotPicker";
+import { validateCustomer } from "../../supabase/functions/_shared/customer-validation";
 import ClientInfoForm, { ClientInfo, calculateAge, inferGender } from "@/components/booking/ClientInfoForm";
 import BotProtection from "@/components/booking/BotProtection";
 import { Button } from "@/components/ui/button";
@@ -258,6 +259,7 @@ const GymPage = () => {
         gymId: gym.id,
         venueToken: venueToken || undefined,
         customerEmail: clientInfo.email,
+        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: CUSTOMER_COUNTRY },
         clientName: fullName,
         clientAge: calculatedAge,
         clientPhone: clientInfo.phone,

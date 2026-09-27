@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { validateCustomer } from "../../supabase/functions/_shared/customer-validation";
 import ClientInfoForm, { ClientInfo, calculateAge, inferGender } from "@/components/booking/ClientInfoForm";
 import { BodyDiagram, SelectedArea, BodyArea } from "@/components/body-diagram/BodyDiagram";
 import { useDisallowedAreaCodes } from "@/hooks/useBodyAreaRestrictions";
@@ -228,6 +229,7 @@ const HomeVisit = () => {
         homePostalCode: clientInfo.postalCode,
         homeAddressNotes: clientInfo.notes?.trim() || undefined,
         customerEmail: clientInfo.email,
+        customer: { firstName: clientInfo.firstName.trim(), lastName: clientInfo.lastName.trim(), street: clientInfo.street.trim(), houseNumber: clientInfo.houseNumber.trim(), postalCode: clientInfo.postalCode.trim(), city: clientInfo.city.trim(), countryCode: CUSTOMER_COUNTRY },
         clientName: fullName,
         clientAge: calculateAge(clientInfo.dateOfBirth),
         clientPhone: clientInfo.phone,
