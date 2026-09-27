@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { validateCustomer, inferAddressCountry } from "../../supabase/functions/_shared/customer-validation";
+import { validateCustomer, cityMatchesPostalCode } from "../../supabase/functions/_shared/customer-validation";
 import ClientInfoForm, { ClientInfo, calculateAge, inferGender } from "@/components/booking/ClientInfoForm";
 import { BodyDiagram, SelectedArea, BodyArea } from "@/components/body-diagram/BodyDiagram";
 import { useDisallowedAreaCodes } from "@/hooks/useBodyAreaRestrictions";
@@ -192,6 +192,9 @@ const HomeVisit = () => {
   const handleToggleFocus = useCallback((code: string) => {
     setSelectedBodyAreas((prev) => prev.map((a) => (a.code === code ? { ...a, isFocus: !a.isFocus } : a)));
   }, []);
+
+  const selectedCityName = cities.find((c) => c.id === cityId)?.name || "";
+  const cityNameMatches = cityMatchesPostalCode(selectedCityName, clientInfo.postalCode, selectedCountry?.code || "DE");
 
   const canBook =
     !!cityId && !!serviceId && !!selectedDate && !!selectedTime &&
