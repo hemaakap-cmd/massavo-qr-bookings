@@ -1,3 +1,4 @@
+import { validateCustomer, isValidPostalCode as isValidPostalFor, cityMatchesPostalCode } from "../_shared/customer-validation.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -104,6 +105,30 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
   if (!isValidUUID(serviceId)) throw new Error("Invalid service ID format");
   if (!customerEmail || customerEmail === "") throw new Error("Email address is required");
   if (!isValidEmail(customerEmail)) throw new Error("Invalid email format");
+
+  // Customer/address validation — same rules as the booking form (shared module).
+  // Mandatory: a request without the structured customer block is rejected, so
+  // the form checks cannot be bypassed by calling this endpoint directly.
+  const customer = (body.customer && typeof body.customer === "object") ? body.customer as Record<string, unknown> : null;
+  if (!customer) throw new Error("Customer details are required");
+  const customerCountry = sanitizeString(customer.countryCode, 2) || "DE";
+  const customerErrors = validateCustomer({
+    firstName: sanitizeString(customer.firstName, 60),
+    lastName: sanitizeString(customer.lastName, 60),
+    email: customerEmail as string,
+    phone: sanitizeString(clientPhone, 30),
+    street: sanitizeString(customer.street, 100),
+    houseNumber: sanitizeString(customer.houseNumber, 20),
+    postalCode: sanitizeString(customer.postalCode, 10),
+    city: sanitizeString(customer.city, 60),
+  }, customerCountry);
+  if (customerErrors.length > 0) throw new Error(`Invalid customer details: ${customerErrors.join(", ")}`);
+  if (venueType === "home" &&
+      (sanitizeString(homeStreet, 200) !== sanitizeString(customer.street, 100) ||
+       sanitizeString(homePostalCode, 20) !== sanitizeString(customer.postalCode, 10) ||
+       sanitizeString(homeHouseNo, 30) !== sanitizeString(customer.houseNumber, 20))) {
+    throw new Error("Invalid customer details: address mismatch");
+  }
 
   let parsedAge: number | null = null;
   if (clientAge !== undefined && clientAge !== null) {
@@ -235,7 +260,19 @@ serve(async (req) => {
 
 
     const body = await req.json();
-    const input = validatePaymentInput(body);
+    let input: ValidatedInput;
+    try {
+      input = validatePaymentInput(body);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Invalid input";
+      console.warn("create-payment input rejected:", msg);
+      const friendly = msg.startsWith("Invalid customer details")
+        ? "Bitte überprüfe deine Angaben (Name, E-Mail, Telefon und Adresse)."
+        : msg;
+      return new Response(JSON.stringify({ error: friendly, fields: msg.startsWith("Invalid customer details") ? msg.split(": ")[1]?.split(", ") : undefined }), {
+        headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+      });
+    }
 
     // SECURITY (remediation item 4): the booking window is enforced HERE, at the
     // authoritative layer, before Stripe is ever contacted. The UI calendar is
@@ -413,11 +450,19 @@ serve(async (req) => {
       // 1) The city must actually exist and be active. Never trust a client id.
       const { data: cityRow, error: cityErr } = await supabase
         .from("cities")
-        .select("id, is_active")
+        .select("id, is_active, name, countries(code)")
         .eq("id", input.homeCityId)
         .maybeSingle();
       if (cityErr || !cityRow || (cityRow as { is_active?: boolean }).is_active === false) {
         return new Response(JSON.stringify({ error: "Diese Stadt ist für Hausbesuche nicht verfügbar." }), {
+          headers: { ...cors, "Content-Type": "application/json" }, status: 400,
+        });
+      }
+      // The postcode must fit the selected home-visit city and its country.
+      const cityName = (cityRow as { name?: string }).name || "";
+      const cityCountry = ((cityRow as { countries?: { code?: string } | null }).countries?.code) || "DE";
+      if (!isValidPostalFor(input.homePostalCode, cityCountry) || !cityMatchesPostalCode(cityName, input.homePostalCode, cityCountry)) {
+        return new Response(JSON.stringify({ error: "Die Postleitzahl passt nicht zur gewählten Stadt.", fields: ["postalCode"] }), {
           headers: { ...cors, "Content-Type": "application/json" }, status: 400,
         });
       }

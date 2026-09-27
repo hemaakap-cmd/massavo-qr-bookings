@@ -12,6 +12,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { User, Phone, MapPin, Calendar, Mail, Home, Hash, Building, ShieldAlert, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "react-i18next";
+import {
+  isValidEmail, isValidName, isValidPhone, isValidPostalCode, isValidStreet,
+  isValidHouseNumber, isValidCity, cityMatchesPostalCode, inferAddressCountry,
+} from "../../../supabase/functions/_shared/customer-validation";
 
 export interface ClientInfo {
   firstName: string;
@@ -32,21 +36,11 @@ export interface ClientInfo {
 interface ClientInfoFormProps {
   clientInfo: ClientInfo;
   onChange: (info: ClientInfo) => void;
+  /** Country of the address; omitted for Gym/Hotel guests (inferred from the postcode). */
+  countryCode?: string;
+  /** Home Visit: the city the visit was booked for — postcode must match it. */
+  expectedCity?: string;
 }
-
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-const isValidPostalCode = (code: string): boolean => {
-  return /^\d{5}$/.test(code);
-};
-
-const isValidPhone = (phone: string): boolean => {
-  const digits = phone.replace(/\D/g, '');
-  return digits.length >= 6;
-};
 
 const isValidDateOfBirth = (dob: string): boolean => {
   if (!/^\d{2}\.\d{2}\.\d{4}$/.test(dob)) return false;
@@ -85,7 +79,7 @@ const formatDateInput = (value: string): string => {
   return `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4, 8)}`;
 };
 
-const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
+const ClientInfoForm = ({ clientInfo, onChange, countryCode, expectedCity }: ClientInfoFormProps) => {
   const { t } = useTranslation();
 
   const updateField = (field: keyof ClientInfo, value: string | boolean | null) => {
@@ -96,9 +90,21 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
     onChange(updated);
   };
 
+  const cc = countryCode || inferAddressCountry(clientInfo.postalCode);
   const emailError = clientInfo.email && !isValidEmail(clientInfo.email);
-  const postalCodeError = clientInfo.postalCode && !isValidPostalCode(clientInfo.postalCode);
-  const phoneError = clientInfo.phone && !isValidPhone(clientInfo.phone);
+  const postalCodeError = clientInfo.postalCode && !isValidPostalCode(clientInfo.postalCode, cc);
+  const phoneError = clientInfo.phone && !isValidPhone(clientInfo.phone, cc);
+  const firstNameError = clientInfo.firstName.trim().length >= 2 && !isValidName(clientInfo.firstName);
+  const lastNameError = clientInfo.lastName.trim().length >= 2 && !isValidName(clientInfo.lastName);
+  const streetError = clientInfo.street.trim().length >= 3 && !isValidStreet(clientInfo.street);
+  const houseNumberError = clientInfo.houseNumber.trim() !== "" && !isValidHouseNumber(clientInfo.houseNumber);
+  const cityError = clientInfo.city.trim().length >= 2 && !isValidCity(clientInfo.city);
+  const mismatchError = !postalCodeError && clientInfo.postalCode.length >= 4 && (
+    (expectedCity && !cityMatchesPostalCode(expectedCity, clientInfo.postalCode, cc)) ||
+    (clientInfo.city.trim() && !cityError && !cityMatchesPostalCode(clientInfo.city, clientInfo.postalCode, cc))
+  );
+  const err = (show: unknown, key: string, fallback: string) =>
+    show ? <p className="text-xs text-destructive">{t(key, fallback)}</p> : null;
   const dobError = clientInfo.dateOfBirth && clientInfo.dateOfBirth.length === 10 && !isValidDateOfBirth(clientInfo.dateOfBirth);
 
   return (
@@ -148,6 +154,7 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
               className="bg-background/50 border-border/50 focus:border-primary"
               required
             />
+            {err(firstNameError, "clientForm.nameError", "Bitte gib einen gültigen Namen ein.")}
           </div>
           <div className="space-y-2">
             <Label htmlFor="lastName" className="flex items-center gap-2 text-foreground">
@@ -162,6 +169,7 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
               className="bg-background/50 border-border/50 focus:border-primary"
               required
             />
+            {err(lastNameError, "clientForm.nameError", "Bitte gib einen gültigen Namen ein.")}
           </div>
         </div>
 
@@ -257,6 +265,7 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
                 className="bg-background/50 border-border/50 focus:border-primary"
                 required
               />
+              {err(streetError, "clientForm.streetError", "Bitte gib eine gültige Adresse ein.")}
             </div>
 
             <div className="space-y-2">
@@ -273,6 +282,7 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
                 className="bg-background/50 border-border/50 focus:border-primary"
                 required
               />
+              {err(houseNumberError, "clientForm.houseNumberError", "Bitte gib eine gültige Hausnummer ein.")}
             </div>
           </div>
 
@@ -285,10 +295,10 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
                 id="postalCode"
                 type="text"
                 placeholder="12345"
-                maxLength={5}
+                maxLength={10}
                 value={clientInfo.postalCode}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                  const value = e.target.value.replace(/[^A-Za-z0-9 -]/g, '').slice(0, 10);
                   updateField("postalCode", value);
                 }}
                 className={`bg-background/50 border-border/50 focus:border-primary ${
@@ -315,6 +325,8 @@ const ClientInfoForm = ({ clientInfo, onChange }: ClientInfoFormProps) => {
                 className="bg-background/50 border-border/50 focus:border-primary"
                 required
               />
+              {err(cityError, "clientForm.cityError", "Bitte gib eine gültige Stadt ein.")}
+              {err(mismatchError, "clientForm.cityPostalMismatch", "Postleitzahl und Stadt passen nicht zusammen.")}
             </div>
           </div>
         </div>
