@@ -105,6 +105,30 @@ function validatePaymentInput(body: Record<string, unknown>): ValidatedInput {
   if (!customerEmail || customerEmail === "") throw new Error("Email address is required");
   if (!isValidEmail(customerEmail)) throw new Error("Invalid email format");
 
+  // Customer/address validation — same rules as the booking form (shared module).
+  // Mandatory: a request without the structured customer block is rejected, so
+  // the form checks cannot be bypassed by calling this endpoint directly.
+  const customer = (body.customer && typeof body.customer === "object") ? body.customer as Record<string, unknown> : null;
+  if (!customer) throw new Error("Customer details are required");
+  const customerCountry = sanitizeString(customer.countryCode, 2) || "DE";
+  const customerErrors = validateCustomer({
+    firstName: sanitizeString(customer.firstName, 60),
+    lastName: sanitizeString(customer.lastName, 60),
+    email: customerEmail as string,
+    phone: sanitizeString(clientPhone, 30),
+    street: sanitizeString(customer.street, 100),
+    houseNumber: sanitizeString(customer.houseNumber, 20),
+    postalCode: sanitizeString(customer.postalCode, 10),
+    city: sanitizeString(customer.city, 60),
+  }, customerCountry);
+  if (customerErrors.length > 0) throw new Error(`Invalid customer details: ${customerErrors.join(", ")}`);
+  if (venueType === "home" &&
+      (sanitizeString(homeStreet, 200) !== sanitizeString(customer.street, 100) ||
+       sanitizeString(homePostalCode, 20) !== sanitizeString(customer.postalCode, 10) ||
+       sanitizeString(homeHouseNo, 30) !== sanitizeString(customer.houseNumber, 20))) {
+    throw new Error("Invalid customer details: address mismatch");
+  }
+
   let parsedAge: number | null = null;
   if (clientAge !== undefined && clientAge !== null) {
     parsedAge = typeof clientAge === "number" ? clientAge : parseInt(String(clientAge), 10);
