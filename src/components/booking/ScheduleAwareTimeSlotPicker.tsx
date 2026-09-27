@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { callVenueAccess } from "@/hooks/useVenueSession";
 import { format, parseISO } from "date-fns";
@@ -114,6 +114,14 @@ export function ScheduleAwareTimeSlotPicker({
       serviceBufferAfter
     );
   }, [selectedSchedule, existingBookings, serviceDurationMinutes, selectedDate, serviceBufferBefore, serviceBufferAfter]);
+
+  // If the chosen time was just taken (live refresh) or no longer fits the
+  // selected duration, drop it so the customer picks from the updated times.
+  useEffect(() => {
+    if (!selectedTime || bookingsLoading) return;
+    const still = timeSlots.find((s) => s.time === selectedTime);
+    if (!still || !still.available) onSelectTime("");
+  }, [timeSlots, selectedTime, bookingsLoading, onSelectTime]);
 
   if (datesLoading) {
     return (
