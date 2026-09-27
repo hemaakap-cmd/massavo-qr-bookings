@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, Calendar, Clock, AlertCircle, Sparkles, Coffee } from "lucide-react";
 import type { AvailableDate } from "@/types/schedule";
 import {
+  applyTentativeSelection,
   generateAvailableTimeSlots,
   type ExistingBooking,
 } from "@/utils/timeSlotCalculator";
@@ -87,7 +88,7 @@ export function ScheduleAwareTimeSlotPicker({
     },
     enabled: !!venueId && !!venueToken && !!selectedDate,
     // Live: pick up bookings made by other customers without a page reload.
-    refetchInterval: 15_000,
+    refetchInterval: 3_000,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
@@ -114,6 +115,17 @@ export function ScheduleAwareTimeSlotPicker({
       serviceBufferAfter
     );
   }, [selectedSchedule, existingBookings, serviceDurationMinutes, selectedDate, serviceBufferBefore, serviceBufferAfter]);
+
+  const displayedTimeSlots = useMemo(
+    () => applyTentativeSelection(
+      timeSlots,
+      selectedTime,
+      serviceDurationMinutes,
+      serviceBufferBefore,
+      serviceBufferAfter,
+    ),
+    [timeSlots, selectedTime, serviceDurationMinutes, serviceBufferBefore, serviceBufferAfter],
+  );
 
   // If the chosen time was just taken (live refresh) or no longer fits the
   // selected duration, drop it so the customer picks from the updated times.
@@ -174,7 +186,7 @@ export function ScheduleAwareTimeSlotPicker({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ) : timeSlots.length === 0 ? (
+          ) : displayedTimeSlots.length === 0 ? (
             <div className="text-center py-8 bg-secondary/50 rounded-lg">
               <p className="text-muted-foreground">
                 {t("scheduleSlots.noSlots")}
@@ -182,7 +194,7 @@ export function ScheduleAwareTimeSlotPicker({
             </div>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {timeSlots.map((slot) => (
+              {displayedTimeSlots.map((slot) => (
                 slot.isBreak ? (
                   <div
                     key={slot.id}
@@ -218,13 +230,13 @@ export function ScheduleAwareTimeSlotPicker({
 
           {/* Legend */}
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            {timeSlots.some(s => s.recommended) && (
+            {displayedTimeSlots.some(s => s.recommended) && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Sparkles className="h-3 w-3 text-primary" />
                 <span>Empfohlene Zeiten</span>
               </div>
             )}
-            {timeSlots.some(s => s.isBreak) && (
+            {displayedTimeSlots.some(s => s.isBreak) && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Coffee className="h-3 w-3 text-accent-foreground/70" />
                 <span>Therapeuten-Pause</span>

@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePublicCountry } from "@/contexts/CountryContext";
 import { usePayment } from "@/hooks/usePayment";
 import { useHomeAvailableDates, useHomeAvailableSlots, useHomeBookedSlots, useHomeTravelFee } from "@/hooks/useHomeAvailability";
+import { applyTentativeSelection, isPastSlot } from "@/utils/timeSlotCalculator";
 import { isPastSlot } from "@/utils/timeSlotCalculator";
 
 interface HomeCity {
@@ -107,6 +108,17 @@ const HomeVisit = () => {
     cityId,
     selectedDate,
     selectedService?.duration_minutes,
+  );
+  const displayedTimeSlots = useMemo(
+    () => applyTentativeSelection(
+      timeSlots.map((time) => ({ time })),
+      selectedTime,
+      selectedService?.duration_minutes ?? 0,
+      null,
+      null,
+      HOME_VISIT_TRANSITION_MINUTES,
+    ).map((slot) => slot.time),
+    [timeSlots, selectedTime, selectedService?.duration_minutes],
   );
 
   // A time that is no longer offered (e.g. after switching 50 → 90 min) must not
@@ -353,13 +365,13 @@ const HomeVisit = () => {
                   <label className="block text-foreground font-medium mb-3">
                     {t("homeVisit.selectTime", "Uhrzeit")}
                   </label>
-                  {timeSlots.length === 0 && (
+                  {displayedTimeSlots.length === 0 && (
                     <p className="text-sm text-muted-foreground">
                       {t("homeVisit.noSlots", "Für diesen Tag sind keine Zeiten verfügbar.")}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2">
-                    {timeSlots.map((slot) => {
+                    {displayedTimeSlots.map((slot) => {
                       // A slot that has already passed today is not bookable.
                       // Everything else (shift hours, existing bookings,
                       // 5 + duration + 5 + 30 occupied time) is already applied
