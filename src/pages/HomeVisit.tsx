@@ -24,7 +24,7 @@ import { usePublicCountry } from "@/contexts/CountryContext";
 import { usePayment } from "@/hooks/usePayment";
 import { useHomeAvailableDates, useHomeAvailableSlots, useHomeBookedSlots, useHomeTravelFee } from "@/hooks/useHomeAvailability";
 import { applyTentativeSelection, isPastSlot } from "@/utils/timeSlotCalculator";
-import { isPastSlot } from "@/utils/timeSlotCalculator";
+import { HOME_VISIT_TRANSITION_MINUTES } from "@/constants/booking";
 
 interface HomeCity {
   id: string;
