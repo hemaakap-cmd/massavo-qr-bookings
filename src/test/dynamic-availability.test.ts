@@ -6,6 +6,7 @@ import {
   calculateOccupiedMinutes,
 } from "@/constants/booking";
 import {
+  applyTentativeSelection,
   generateAvailableTimeSlots,
   parseTimeToMinutes,
   type ExistingBooking,
@@ -88,5 +89,24 @@ describe("dynamic slot generation", () => {
     for (const t of times) {
       expect(parseTimeToMinutes(t)).not.toBe(parseTimeToMinutes("16:00"));
     }
+  });
+
+  it("reflows later gym times immediately around the selected appointment", () => {
+    const dense = ["09:00", "09:30", "10:00", "10:30", "11:00"].map((time) => ({ time }));
+    const times = applyTentativeSelection(dense, "09:00", 50).map((slot) => slot.time);
+    expect(times).toEqual(["09:00", "10:00", "10:30", "11:00"]);
+  });
+
+  it("reflows later Home Visit times with the fixed transition included", () => {
+    const dense = ["09:00", "09:30", "10:00", "10:30", "11:00"].map((time) => ({ time }));
+    const times = applyTentativeSelection(
+      dense,
+      "09:00",
+      50,
+      null,
+      null,
+      HOME_VISIT_TRANSITION_MINUTES,
+    ).map((slot) => slot.time);
+    expect(times).toEqual(["09:00", "10:30", "11:00"]);
   });
 });

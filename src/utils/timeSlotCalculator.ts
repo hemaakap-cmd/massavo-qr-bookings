@@ -116,6 +116,37 @@ export function windowsOverlap(
 }
 
 /**
+ * Keep the chosen customer-facing start and remove later candidates that fall
+ * inside its complete internal occupied window. The selected start itself is
+ * never shifted; buffers and Home Visit travel remain invisible to customers.
+ */
+export function applyTentativeSelection<T extends { time: string; isBreak?: boolean }>(
+  slots: T[],
+  selectedTime: string | null | undefined,
+  serviceDurationMinutes: number,
+  serviceBufferBefore?: number | null,
+  serviceBufferAfter?: number | null,
+  extraAfterMinutes: number = 0,
+): T[] {
+  if (!selectedTime) return slots;
+
+  const selectedStart = parseTimeToMinutes(selectedTime);
+  const buffers = getServiceBuffers(serviceBufferBefore, serviceBufferAfter);
+  const nextStart =
+    selectedStart +
+    serviceDurationMinutes +
+    buffers.after +
+    Math.max(extraAfterMinutes, 0) +
+    buffers.before;
+
+  return slots.filter((slot) => {
+    if (slot.isBreak || slot.time === selectedTime) return true;
+    const slotStart = parseTimeToMinutes(slot.time);
+    return slotStart < selectedStart || slotStart >= nextStart;
+  });
+}
+
+/**
  * Smart spreading: score a slot based on distance from existing bookings
  */
 function calculateSpreadScore(

@@ -97,7 +97,7 @@ export function useHomeAvailableSlots(cityId?: string, date?: string, durationMi
       return ((data as { slot_time: string }[]) || []).map((r) => r.slot_time);
     },
     enabled: !!cityId && !!date,
-    refetchInterval: 15_000,
+    refetchInterval: 3_000,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
@@ -117,7 +117,7 @@ export function useHomeBookedSlots(cityId?: string, date?: string, durationMinut
       return ((data as { slot_time: string }[]) || []).map((r) => r.slot_time);
     },
     enabled: !!cityId && !!date,
-    refetchInterval: 15_000,
+    refetchInterval: 3_000,
     refetchOnWindowFocus: true,
     staleTime: 0,
   });
